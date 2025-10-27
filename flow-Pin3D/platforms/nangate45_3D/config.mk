@@ -4,16 +4,13 @@ export PROCESS = 45
 #-----------------------------------------------------
 # Tech/Libs
 # ----------------------------------------------------
-# export TECH_LEF = $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech.lef
-# export SC_LEF = $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.macro.mod.lef
 export TECH_LEF = $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech.lef
-# export SC_LEF = $(PLATFORM_DIR)/lef_upper/NangateOpenCellLibrary.macro.mod.upper.lef \
-#                      $(PLATFORM_DIR)/lef_bottom/NangateOpenCellLibrary.macro.mod.bottom.lef
 export SC_LEF ?= $(PLATFORM_DIR)/lef_bottom/NangateOpenCellLibrary.macro.mod.bottom.lef
-
-# export LIB_FILES = $(PLATFORM_DIR)/lib/NangateOpenCellLibrary_typical.lib \
-#                      $(ADDITIONAL_LIBS)
-export LIB_FILES = $(ADDITIONAL_LIBS)
+export SC_LIB ?= $(PLATFORM_DIR)/lib_bottom/NangateOpenCellLibrary_typical.bottom.lib
+export LIB_FILES = $(SC_LIB) \
+                $(ADDITIONAL_LIBS)
+export LEF_FILES = $(TECH_LEF) $(SC_LEF) \
+                   $(ADDITIONAL_LEFS)
 
 export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
                      $(ADDITIONAL_GDS)
@@ -67,9 +64,6 @@ export PDN_TCL ?= $(PLATFORM_DIR)/grid_strategy-M1-M4-M7.tcl
 export TAPCELL_TCL ?= $(PLATFORM_DIR)/tapcell.tcl
 export TAP_CELL_NAME = TAPCELL_X1_bottom
 
-export MACRO_PLACE_HALO ?= 22.4 15.12
-export MACRO_PLACE_CHANNEL ?= 18.8 19.95
-
 #---------------------------------------------------------
 # Place
 # --------------------------------------------------------
@@ -91,22 +85,10 @@ export CTS_BUF_CELL   ?= BUF_X4_bottom
 # ---------------------------------------------------------
 # FastRoute options
 export MIN_ROUTING_LAYER = metal2
-export MAX_ROUTING_LAYER = metal20
+export MAX_ROUTING_LAYER = metal19
 
 # Define fastRoute tcl
 export FASTROUTE_TCL ?= $(PLATFORM_DIR)/fastroute.tcl
-
-# KLayout technology file
-export KLAYOUT_TECH_FILE = $(PLATFORM_DIR)/FreePDK45.lyt
-
-# KLayout DRC ruledeck
-# export KLAYOUT_DRC_FILE = $(PLATFORM_DIR)/drc/FreePDK45.lydrc
-
-# KLayout LVS ruledeck
-export KLAYOUT_LVS_FILE = $(PLATFORM_DIR)/lvs/FreePDK45.lylvs
-
-# Allow empty GDS cell
-export GDS_ALLOW_EMPTY ?= fakeram.*
 
 export CDL_FILE = $(PLATFORM_DIR)/cdl/NangateOpenCellLibrary.cdl
 

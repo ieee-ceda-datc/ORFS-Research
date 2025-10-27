@@ -51,7 +51,7 @@ puts "INFO: Dynamic PDN Pitch -> M4: $m4_pitch, M7: $m7_pitch"
 define_pdn_grid -name {grid} -voltage_domains {CORE}
 
 # M1 使用固定的 follow-pin 策略
-add_pdn_stripe -grid {grid} -layer {metal1} -width {0.17} -pitch {2.4} -offset {0} -followpins
+add_pdn_stripe -grid {grid} -layer {metal1} -width {0.17} -pitch {2.8} -offset {0} -followpins
 
 # M4 和 M7 使用动态计算的 pitch
 add_pdn_stripe -grid {grid} -layer {metal4} -width {0.48} -pitch $m4_pitch -offset {2}
@@ -60,22 +60,16 @@ add_pdn_stripe -grid {grid} -layer {metal7} -width {1.40} -pitch $m7_pitch -offs
 # 连接各层
 add_pdn_connect -grid {grid} -layers {metal1 metal4}
 add_pdn_connect -grid {grid} -layers {metal4 metal7}
-####################################
-# macro grids
-####################################
-####################################
-# grid for: CORE_macro_grid_1
-####################################
-# define_pdn_grid -name {CORE_macro_grid_1} -voltage_domains {CORE} -macro -orient {R0 R180 MX MY} -halo {2.0 2.0 2.0 2.0} -cells {.*} -grid_over_pg_pins
-# add_pdn_stripe -grid {CORE_macro_grid_1} -layer {metal16} -width {0.93} -pitch {10.0} -offset {2} -followpins
-# add_pdn_stripe -grid {CORE_macro_grid_1} -layer {metal15} -width {0.93} -pitch {10.0} -offset {2} -followpins
-# add_pdn_connect -grid {CORE_macro_grid_1} -layers {metal17 metal16}
-# add_pdn_connect -grid {CORE_macro_grid_1} -layers {metal16 metal15}
-# add_pdn_connect -grid {CORE_macro_grid_1} -layers {metal15 metal14}
-# ####################################
-# # grid for: CORE_macro_grid_2
-# ####################################
-# define_pdn_grid -name {CORE_macro_grid_2} -voltage_domains {CORE} -macro -orient {R90 R270 MXR90 MYR90} -halo {2.0 2.0 2.0 2.0} -cells {.*} -grid_over_pg_pins
-# add_pdn_stripe -grid {CORE_macro_grid_2} -layer {metal6} -width {0.93} -pitch {40.0} -offset {2} -followpins
-# add_pdn_connect -grid {CORE_macro_grid_2} -layers {metal4 metal6}
-# add_pdn_connect -grid {CORE_macro_grid_2} -layers {metal6 metal7}
+
+
+add_pdn_stripe -grid {grid} -layer {metal19} -width {0.17} -pitch {2.8} -offset {0}
+
+# M4 和 M7 使用动态计算的 pitch
+add_pdn_stripe -grid {grid} -layer {metal16} -width {0.48} -pitch $m4_pitch -offset {2}
+add_pdn_stripe -grid {grid} -layer {metal13} -width {1.40} -pitch $m7_pitch -offset {2}
+
+# 连接各层
+add_pdn_connect -grid {grid} -layers {metal19 metal16}
+add_pdn_connect -grid {grid} -layers {metal16 metal13}
+
+add_pdn_connect -grid {grid} -layers {metal7 metal13}

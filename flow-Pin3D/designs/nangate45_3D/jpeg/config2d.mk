@@ -1,6 +1,7 @@
 export DESIGN_NICKNAME = jpeg
 export DESIGN_NAME = jpeg_encoder
 export PLATFORM    = nangate45
+export FLOW_VARIANT = openroad
 
 export VERILOG_FILES = $(sort $(wildcard $(DESIGN_HOME)/src/$(DESIGN_NICKNAME)/*.v))
 export VERILOG_INCLUDE_DIRS = $(DESIGN_HOME)/src/$(DESIGN_NICKNAME)/include

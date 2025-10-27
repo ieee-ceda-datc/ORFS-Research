@@ -11,3 +11,5 @@ HotSpot/examples/3D_*
 HotSpot/scripts/output
 *.log
 versions.txt
+show.sh
+show.txt
