@@ -1,0 +1,4044 @@
+﻿FlowStage,ErrorMessage,LikelyCause,RecommendedFix,ExampleWrongCode
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'exportDef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Design.writeDb() got an unexpected keyword argument 'overwrite'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'executeTclCommand'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) referenced
+[WARNING ODB-0176] error: undefined layer (metal3) r",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'saveDef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'saveDb'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'generateVerilog'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'loadLiberty'
+. Did you mean: 'readLiberty
+'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'initializeLef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+TypeError: Tech.readLiberty() got an unexpected keyword argument 'verbose'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'saveDesignDef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'exportDb'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'runTclString'
+. Did you mean: 'evalTclString'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'importLiberty'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'loadLef'
+. Did you mean: 'readLef'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'processLef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'writeDefWithOptions'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'storeDatabase'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'exportVerilog'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'addLiberty'
+. Did you mean: 'readLiberty'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+TypeError: Tech.readLiberty() got an unexpected keyword argument 'verbose'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'saveDef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'commitDb'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'executeVerilogCommand'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'loadLef'
+. Did you mean: 'readLef'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_64x21.lef, created 1 library cells
+[INFO ODB-0227] LEF file: ../Design/nangate45/lef/fakeram45_256x32.lef, created 1 library ce",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"[INFO ODB-0227] LEF file: ../Design/nangate45/lef/NangateOpenCellLibrary.tech.lef, created 22 layers, 27 vias
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Tech' object has no attribute 'loadLef'
+. Did you mean: 'readLef'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'storeDef'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'saveDesign'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILE,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'executeVerilogCommand'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'createTrack",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""ifp_py.py"", line 321, in initFloorplan
+TypeError: Wrong number or type of arguments for overloaded function 'InitFloorplan_initFloorplan'.
+  Possible C/C++ prototypes are:
+    ifp::InitFloorplan::initFloorplan(double,doub",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'generateTra",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""ifp_py.py"", line 321, in initFloorplan
+TypeError: Wrong number or type of arguments for overloaded function 'InitFloorplan_initFloorplan'.
+  Possible C/C++ prototypes are:
+    ifp::InitFloorplan::initFloorplan(double,doub",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'setupTracks",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""ifp_py.py"", line 321, in initFloorplan
+TypeError: Wrong number or type of arguments for overloaded function 'InitFloorplan_initFloorplan'.
+  Possible C/C++ prototypes are:
+    ifp::InitFloorplan::initFloorplan(double,doub",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'makeTracksW",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""ifp_py.py"", line 321, in initFloorplan
+TypeError: Wrong number or type of arguments for overloaded function 'InitFloorplan_initFloorplan'.
+  Possible C/C++ prototypes are:
+    ifp::InitFloorplan::initFloorplan(double,doub",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'defineTrack",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (10.000, 10.000) snapped to (10.070, 11.200).
+[INFO IFP-0001] Added 256 rows of 1897 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'estab",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"[WARNING IFP-0028] Core area lower left (5.000, 5.000) snapped to (5.130, 5.600).
+[INFO IFP-0001] Added 28 rows of 262 site FreePDK45_38x28_10R_NP_162NW_34O.
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'setupTracks",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FLOORPLAN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'InitFloorplan' object has no attribute 'runFloorplan'
+. Did you mean: 'initFloorplan'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'addHorizontalLayer'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'printConfig'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'obtainTopLayer'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Parameters' object has no attribute 'defineMinSpacing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'configureHorizontalLength'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'configureVerticalLength'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'addVerticalLayer'
+. Did you mean: 'addVerLayer'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'printConfig'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'fetchIOPlacer'
+. Did you mean: 'getIOPlacer'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Parameters' object has no attribute 'configureMinDistance'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'setHorizontalLengthWithMode'
+. Did you mean: 'setHorizontalLengthExtend'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'updateVerticalLength'
+. Did you mean: 'getVerticalLength'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'executeAnnealing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'printConfig'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'fetchTopLayer'
+. Did you mean: 'getTopLayer
+'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'setMinDistanceInTracksWithMode'
+. Did you mean: 'setMinDistanceInTracks'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Parameters.setHorizontalLength() got an unexpected keyword argument 'mode'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'adjustVerticalLength'
+. Did you mean: 'getVerticalLength'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'runAnnealingWithConfig'
+. Did you mean: 'setAnnealingConfig'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'printConfig'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'retrieveIOPlacer'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Parameters' object has no attribute 'applyMinDistance'
+. Did you mean: 'getMinDistance'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'updateHorizontalLength'
+. Did you mean: 'getHorizontalLength'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'applyVerticalLength'
+. Did you mean: 'getVerticalLength'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: IOPlacer.runAnnealing() takes 2 positional arguments but 3 were given",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'showConfiguration'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'getUpperLayer'
+. Did you mean: 'getTopLayer'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Parameters' object has no attribute 'setMinimumSpacing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'setHorizontalLengthExtended'
+. Did you mean: 'setHorizontalLengthExtend'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Parameters.setVerticalLength() takes 2 positional arguments but 3 were given",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'startSimulatedAnnealing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'printConfig'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'IOPlacer' object has no attribute 'retrieveTopLayerInfo'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+TypeError: Parameters.setMinDistance() takes 2 positional arguments but 3 were given",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Parameters.setHorizontalLength() got an unexpected keyword argument 'scale'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IO,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Parameters' object has no attribute 'modifyVerticalLength'
+. Did you mean: 'getVerticalLength'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"[INFO GPL-0002] DBU: 2000
+[INFO GPL-0003] SiteSize: (  0.190  1.400 ) um
+[INFO GPL-0004] CoreBBox: ( 10.070 11.200 ) ( 56.430 56.000 ) um
+[INFO GPL-0006] NumInstances:               503
+[INFO GPL-0007] NumPlaceInstances:          503
+[INFO GPL-0008] NumFixedInstances:            0
+[INFO GPL-0009] Nu",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"[INFO GPL-0002] DBU: 2000
+[INFO GPL-0003] SiteSize: (  0.190  1.400 ) um
+[INFO GPL-0004] CoreBBox: ( 10.070 11.200 ) ( 56.430 56.000 ) um
+[INFO GPL-0006] NumInstances:               503
+[INFO GPL-0007] NumPlaceInstances:          503
+[INFO GPL-0008] NumFixedInstances:            0
+[INFO GPL-0009] Nu",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Replace' object has no attribute 'executeInitialPlacement'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"[INFO GPL-0002] DBU: 2000
+[INFO GPL-0003] SiteSize: (  0.190  1.400 ) um
+[INFO GPL-0004] CoreBBox: ( 10.070 11.200 ) ( 56.430 56.000 ) um
+[INFO GPL-0006] NumInstances:               503
+[INFO GPL-0007] NumPlaceInstances:          503
+[INFO GPL-0008] NumFixedInstances:            0
+[INFO GPL-0009] Nu",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Replace' object has no attribute 'setBalancedTargetDensityMode'
+. Did you mean: 'setUniformTargetDensityMode'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Replace' object has no attribute 'enableUniformDensitySetting'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 5, in <module>
+TypeError: MacroPlacer.placeMacro() got an unexpected keyword argument 'num_threads'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 5, in <module>
+TypeError: MacroPlacer.place() missing 1 required positional argument: 'max_num_macro'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Design' object has no attribute 'macroPlacer'
+. Did you mean: 'getMacroPlacer'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 5, in <module>
+TypeError: MacroPlacer.place() missing 1 required positional argument: 'halo_height'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 5, in <module>
+File ""mpl_py.py"", line 238, in place
+TypeError: in method 'MacroPlacer_place', argument 30 of type 'int'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+MPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'Design' object has no attribute 'getOpenROADMacroPlacer'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""dpl_py.py"", line 139, in detailedPlacement
+TypeError: Opendp_detailedPlacement expected at most 5 arguments, got 6
+Additional information:
+Wrong number or type of arguments for overloaded function 'Opendp_detailedPlacemen",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Opendp' object has no attribute 'clearFillers'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'dbRow' object has no attribute 'fetchSite'
+. Did you mean: 'getSite'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Opendp' object has no attribute 'clearFillerCells'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Opendp' object has no attribute 'executePlacement'
+. Did you mean: 'checkPlacement'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DPL,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Opendp' object has no attribute 'purgeFillers'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"invalid command name ""make_clock""'",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+
+File ""<stdin>"", line 1, in <module>
+
+AttributeError
+:
+'TritonCTS' object has no attribute 'setBufferListWithType'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"invalid command name ""initialize_clock""'",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'TritonCTS' object has no attribute 'assignBufferList'
+. Did you mean: 'setBufferList'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"wrong # args: should be ""define_clock_layer_range layers""'",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+
+File ""dpl_py.py"", line 139, in detailedPlacement
+
+TypeError
+:
+Opendp_detailedPlacement expected at most 5 arguments, got 6
+Additional information:
+Wrong number or type of arguments for overloaded function 'Opendp_detailedPlace",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"invalid command name ""setup_clock""'",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+File ""<stdin>"", line 1, in <module>
+
+AttributeError
+:
+'Opendp' object has no attribute 'advancedDetailedPlacement'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"[ERROR STA-0562] create_clock -target is not a known keyword or flag.
+'STA-0562'",OpenROAD执行阶段失败（配置或文件路径问题）,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'TritonCTS' object has no attribute 'configureBufferList'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"invalid command name ""assign_clock""'",未知错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+CTS,"Traceback (most recent call last):
+
+File ""<stdin>"", line 1, in <module>
+
+AttributeError
+:
+'TritonCTS' object has no attribute 'setFinalSinkBuffer'
+. Did you mean: '
+setSinkBuffer
+'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 3, in <module>
+AttributeError: 'dbMaster' object has no attribute 'getCellType'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'dbInst' object has no attribute 'remove'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+TypeError: Opendp.fillerPlacement() got an unexpected keyword argument 'filler_cell_naming_rule'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Design' object has no attribute 'removeFiller'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+TypeError: Opendp.fillerPlacement() got an unexpected keyword argument 'filler_cells'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Design' object has no attribute 'deleteFiller'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Design' object has no attribute 'getOpenROADFillerCellInsert'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 5, in <module>
+AttributeError: 'dbInst' object has no attribute 'destory'
+. Did you mean: 'destroy'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Opendp' object has no attribute 'fillerInsert'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Design' object has no attribute 'getOpenDp'
+. Did you mean: 'getOpendp'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Opendp' object has no attribute 'fillerCellPlacement'
+. Did you mean: 'fillerPlacement'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+FILLER,"[INFO DPL-0001] Placed 776 filler instances.
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'Design' object has no attribute 'getOpenDp'
+. Did you mean: 'getOpendp'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+0
+
+
+
+
+
+
+0
+
+
+
+
+
+
+503
+
+
+
+
+
+
+0
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 2, in <module>
+AttributeError: 'PdnGen' object has no attribute 'createRing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 4, in <module>
+AttributeError: 'dbNet' object has no attribute 'assignSigType'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File """,Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'PdnGen' object has no attribute 'removeGrid'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+0
+
+
+
+
+
+
+0
+
+
+
+
+
+
+503
+
+
+
+
+
+
+0
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 46, in <module>
+AttributeError: 'PdnGen' object has no attribute 'connectVia'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'createConnect'
+. Did you mean: 'm",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'createConnect'
+. Did you mean: 'm",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'PdnGen' object has no attribute 'disconnectGrid'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+0
+
+
+
+
+
+
+0
+
+
+
+
+
+
+503
+
+
+
+
+
+
+0
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 46, in <module>
+AttributeError: 'PdnGen' object has no attribute 'connectVia'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'connectLayers'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 8, in <module>
+TypeError: PdnGen.makeStrap() got an unexpected keyword argument 'alignment'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: PdnGen.ripUp() got an unexpected keyword argument 'force'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+0
+
+
+
+
+
+
+0
+
+
+
+
+
+
+503
+
+
+
+
+
+
+0
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 3, in <module>
+AttributeError: 'PdnGen' object has no attribute 'constructRing'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'connectLayers'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 8, in <module>
+TypeError: PdnGen.makeStrap() got an unexpected keyword argument 'optimize'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'PdnGen' object has no attribute 'removeGrid'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+0
+
+
+
+
+
+
+0
+
+
+
+
+
+
+503
+
+
+
+
+
+
+0
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 18, in <module>
+AttributeError: 'PdnGen' object has no attribute 'attachFollowp",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'connectLayers'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'linkConnect'
+. Did you mean: 'mak",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'PdnGen' object has no attribute 'destroyGrid'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'dbBlock' object has no attribute 'addPDNConnect'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 74, in <module>
+AttributeError: 'PdnGen' object has no attribute",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'establishConnectivity'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"503
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+0
+
+
+
+
+
+
+
+503
+
+
+
+
+
+
+
+0
+
+
+
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Traceback (most recent call last):
+  File ""<stdin>"", line 33, in <module>
+AttributeError: 'PdnGen' object has no attribute 'linkConnect'
+. Did you mean: 'mak",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+PDN,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: PdnGen.ripUp() got an unexpected keyword argument 'mode'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: GlobalRouter.setAdjustment() takes 2 positional arguments but 3 were given",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'GlobalRouter' object has no attribute 'executeGlobalRoute'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'GlobalRouter' object has no attribute 'executeGlobalRouting'
+. Did you mean: 'boxToGlobalRouting'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'GlobalRouter' object has no attribute 'setRoutingVerbose'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'GlobalRouter' object has no attribute 'enableVerbosity'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+GRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'GlobalRouter' object has no attribute 'enableLogging'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"[ERROR DRT-0002] Detailed routing has not been run yet.
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""drt_py.py"", line 122, in getNumDRVs
+RuntimeError: DRT-0002",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"[ERROR DRT-0002] Detailed routing has not been run yet.
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""drt_py.py"", line 122, in getNumDRVs
+RuntimeError: DRT-0002",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"[ERROR DRT-0002] Detailed routing has not been run yet.
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""drt_py.py"", line 122, in getNumDRVs
+RuntimeError: DRT-0002",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'TritonRoute' object has no attribute 'retrieveNumDRVs'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"[ERROR DRT-0002] Detailed routing has not been run yet.
+Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+File ""drt_py.py"", line 122, in getNumDRVs
+RuntimeError: DRT-0002",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'drt' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+DRT,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'TritonRoute' object has no attribute 'getDRVCount'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'executeTclCommand'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Design.evalTclString() got an unexpected keyword argument 'detailed'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'executePowerReport'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Design.evalTclString() got an unexpected keyword argument 'level'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+AttributeError: 'Design' object has no attribute 'evalTclScript'
+. Did you mean: 'evalTclString'?",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+NameError: name 'psm' is not defined",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,
+IR,"Traceback (most recent call last):
+  File ""<stdin>"", line 1, in <module>
+TypeError: Design.evalTclString() got an unexpected keyword argument 'mode'",Python语法或API调用错误,检查模块初始化顺序、输入文件路径、API调用参数是否正确。可参考相应的正确脚本示例。,

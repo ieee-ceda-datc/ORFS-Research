@@ -9,12 +9,47 @@ from dotenv import load_dotenv
 import anthropic # type: ignore
 import time # For retry delay
 import random # For placeholder BayesOpt, can be removed if BayesOpt is robust
+from pathlib import Path
 
 # For Bayesian Optimization
 from skopt import Optimizer
 from skopt.space import Real, Integer, Categorical
 from skopt.utils import use_named_args # For easier handling of parameters
 
+from rag.index import load_embeddings_and_docs, build_and_save_embeddings
+from rag.util import answerWithRAG, modelUtility
+from sentence_transformers import SentenceTransformer
+import torch
+
+## ========== New addition: Three QA data paths==========
+base_dir = Path(__file__).parent
+
+# Construct a relative path
+qa_paths = [
+    base_dir.parent.parent / "EDA-Corpus-main" / "Augmented_Data" / "Question-Answer" / "Flow" / "Flow.csv",
+    base_dir.parent.parent / "EDA-Corpus-main" / "Augmented_Data" / "Question-Answer" / "General" / "General.csv",
+    base_dir.parent.parent / "EDA-Corpus-main" / "Augmented_Data" / "Question-Answer" / "Tools" / "Tools.csv",
+]
+merged_csv_path = "RAGData/RAGFLOWGUIDE.csv"  # Unify the file path of the vector library
+os.makedirs("RAGData", exist_ok=True)
+
+def merge_qa_files(file_list, output_path):
+    dfs = []
+    for path in file_list:
+        if os.path.exists(path):
+            df = pd.read_csv(path)
+            # Clean up duplicates and blank lines
+            df = df.drop_duplicates().dropna(how="any")
+            dfs.append(df)
+            print(f"[RAG] Loaded file: {path}, containing {len(df)} records.")
+        else:
+            print(f"[Warning] The file does not exist: {path}")
+    if dfs:
+        merged = pd.concat(dfs, ignore_index=True)
+        merged.to_csv(output_path, index=False)
+        print(f"[RAG] The QA files have been merged into {output_path}, totaling {len(merged)} pieces of data.")
+    else:
+        raise FileNotFoundError("[Error] No valid QA files were found.")
 # --- Global State for Tools ---
 TOOL_STATE = {
     "current_df": pd.DataFrame(),
@@ -189,6 +224,17 @@ def get_sample_rows(n_rows=3, query_string=None):
              return header + ":\n(No rows to sample)"
         return header + ":\n" + df_to_sample.sample(actual_n_rows).to_string()
     except Exception as e: return "Error in get_sample_rows: " + str(e) + "\n" + traceback.format_exc()
+
+def get_rag_context(query, topk=6):
+    """
+    Answer questions using the RAG database.
+    query: Query strings of users or LLMS
+    topk: Search for the top k relevant documents
+    """
+    try:
+        return answerWithRAG(query, embeddings, embeddingModel, docs, docsDict, topk=topk)
+    except Exception as e:
+        return f"Error in RAG retrieval: {str(e)}"
 
 def suggest_bayesian_optimization_configs(target_metric_to_minimize, n_suggestions=5, training_data_query=None, validation_data_query=None):
     log_to_file_and_console("[BAYESOPT] Called suggest_bayesian_optimization_configs.")
@@ -383,6 +429,7 @@ PYTHON_TOOLS_MAP = {
     "get_sample_rows": get_sample_rows,
     "reset_data_to_all_valid_runs": reset_data_to_all_valid_runs,
     "suggest_bayesian_optimization_configs": suggest_bayesian_optimization_configs,
+    "get_rag_context": get_rag_context,
     "suggest_new_tool": lambda suggested_tool_name, suggested_tool_description: log_to_file_and_console("[LLM TOOL SUGGESTION]\nName: " + str(suggested_tool_name) + "\nDescription: " + str(suggested_tool_description)) or "New tool suggestion noted: " + str(suggested_tool_name) 
 }
 
@@ -506,7 +553,20 @@ ANTHROPIC_TOOL_SCHEMAS = [
             },
             "required": ["target_metric_to_minimize"]
         }
+    },
+    {
+        "name": "get_rag_context",
+        "description": "Retrieve the RAG database of OpenROAD-Agent and return relevant API documentation or code snippets for auxiliary analysis.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The question to be queried"},
+                "topk": {"type": "integer", "default": 6, "description": "The number of relevant documents returned"}
+            },
+            "required": ["query"]
+        }
     }
+
 ]
 
 def run_agent_workbench(main_df=None, circuit=None, pdk=None,
@@ -551,6 +611,20 @@ def run_agent_workbench(main_df=None, circuit=None, pdk=None,
     except Exception as e:
         print("Error initializing Anthropic client: " + str(e))
         return
+    
+    try:
+        embeddings_np, docs, docsDict = load_embeddings_and_docs()
+        embeddings = torch.tensor(embeddings_np)
+        embeddingModel = SentenceTransformer("mxbai-embed-large-v1")
+        print("[RAG] The vector database was successfully loaded.")
+    except FileNotFoundError:
+        print("[RAG] The vector library does not exist and is under construction...")
+        merge_qa_files(qa_paths, merged_csv_path)
+        build_and_save_embeddings(merged_csv_path)
+        embeddings_np, docs, docsDict = load_embeddings_and_docs()
+        embeddings = torch.tensor(embeddings_np)
+        embeddingModel = SentenceTransformer("mxbai-embed-large-v1")
+        print("[RAG] The vector library has been built and loaded.")
         
     session_uuid = uuid.uuid4()
     context_file_name = log_dir + "/" + args.circuit + "_" + args.pdk + "_" + args.optimization_goal + "_context_" + str(session_uuid) + ".txt"

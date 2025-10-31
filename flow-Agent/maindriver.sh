@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Default values
-TOTAL_ITERS=6
-PARALLEL_RUNS=50
+TOTAL_ITERS=20
+PARALLEL_RUNS=4
 TIMEOUT="45m"
-TOTAL_CPUS=110
-TOTAL_RAM=220
+TOTAL_CPUS=8
+TOTAL_RAM=16
 ECP_WEIGHT=0.5
 WL_WEIGHT=0.5
 ECP_WEIGHT_SURROGATE=0.5
@@ -82,6 +82,10 @@ if [[ "$objective" != "ECP" && "$objective" != "DWL" && "$objective" != "COMBO" 
 fi
 
 # Validate weights sum to 1
+export PLATFORM=$platform
+export DESIGN=$design
+export OBJECTIVE=$objective
+
 if [[ "$objective" == "COMBO" ]]; then
     # Ensure jq is installed
     if ! command -v jq &> /dev/null; then
@@ -197,7 +201,8 @@ create_backup() {
     mkdir -p "$backup_dir"
     
     # Move config and constraint files
-    mv designs/${platform}/${design}/config_*.mk "$backup_dir"/ 2>/dev/null
+    # mv designs/${platform}/${design}/config_*.mk "$backup_dir"/ 2>/dev/null
+    cp designs/${platform}/${design}/config_*.mk "$backup_dir"/ 2>/dev/null
     mv designs/${platform}/${design}/constraint_*.sdc "$backup_dir"/ 2>/dev/null
     if [[ "$platform" == "asap7" && "$design" == "jpeg" ]]; then
         mv designs/${platform}/${design}/jpeg_encoder15_7nm_*.sdc "$backup_dir"/ 2>/dev/null
@@ -222,7 +227,10 @@ for i in $(seq 1 $TOTAL_ITERS); do
     echo "Starting iteration $i of $TOTAL_ITERS"
     
     # Run sequential phase
+    # echo '"$platform" "$design" "$PARALLEL_RUNS" "$i"'
+    echo "${platform}, ${design}, ${PARALLEL_RUNS}, ${i}"
     ./run_sequential.sh "$platform" "$design" "$PARALLEL_RUNS" "$i"
+    echo "./run_sequential.sh \"$platform\" \"$design\" \"$PARALLEL_RUNS\" \"$i\""
     
     # Run parallel phase with timeout
     timeout "$TIMEOUT" ./run_parallel.sh "$platform" "$design" "$PARALLEL_RUNS" || true
@@ -235,8 +243,14 @@ for i in $(seq 1 $TOTAL_ITERS); do
     
     # Generate constraints for next iteration (skip for last iteration)
     if [ "$i" -lt "$TOTAL_ITERS" ]; then
+        for objective in "$objective"; do
+            echo "Running optimization for $objective"
+            python3 stage_optimize.py "$platform" "$design" "$objective" --max-react-steps 3
+            cp -r results/ results_${platform}_${design}_${objective}/
+        done
         echo "Running optimization for next iteration..."
-        python3 optimize.py "$platform" "$design" "$objective" "$PARALLEL_RUNS"
+        python3 optimize.py "$platform" "$design" "$objective" "$PARALLEL_RUNS" 
+        echo "python3 optimize.py \"$platform\" \"$design\" \"$PARALLEL_RUNS\" \"$i\""
     fi
 done
 
