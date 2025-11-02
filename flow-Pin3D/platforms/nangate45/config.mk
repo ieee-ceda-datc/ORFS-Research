@@ -9,8 +9,19 @@ export SC_LEF = $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.macro.mod.lef
 
 export LIB_FILES = $(PLATFORM_DIR)/lib/NangateOpenCellLibrary_typical.lib \
                      $(ADDITIONAL_LIBS)
+export LEF_FILES = $(TECH_LEF) $(SC_LEF) \
+                     $(ADDITIONAL_LEFS)
+
+export LIB_DIR ?= $(dir $(SC_LIB))
+export LEF_DIR ?= $(dir $(TECH_LEF))
+export QRC_FILE ?= $(PLATFORM_DIR)/qrc/NG45.tch
+
 export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
                      $(ADDITIONAL_GDS)
+
+# ---- Synthesis ----
+export RTL_SEARCH_DIRS ?= $(dir $(firstword $(VERILOG_FILES)))
+
 # Dont use cells to ease congestion
 # Specify at least one filler cell if none
 export DONT_USE_CELLS = TAPCELL_X1 FILLCELL_X1 AOI211_X1 OAI211_X1
@@ -50,8 +61,8 @@ export ABC_LOAD_IN_FF = 3.898
 export PLACE_SITE = FreePDK45_38x28_10R_NP_162NW_34O
 
 # IO Placer pin layers
-export IO_PLACER_H = metal5
-export IO_PLACER_V = metal6
+export IO_PLACER_H = M5
+export IO_PLACER_V = M6
 
 # Define default PDN config
 export PDN_TCL ?= $(PLATFORM_DIR)/grid_strategy-M1-M4-M7.tcl
@@ -82,8 +93,8 @@ export CTS_BUF_CELL   ?= BUF_X4
 #  Route
 # ---------------------------------------------------------
 # FastRoute options
-export MIN_ROUTING_LAYER = metal2
-export MAX_ROUTING_LAYER = metal10
+export MIN_ROUTING_LAYER = M2
+export MAX_ROUTING_LAYER = M10
 
 # Define fastRoute tcl
 export FASTROUTE_TCL ?= $(PLATFORM_DIR)/fastroute.tcl
@@ -115,4 +126,4 @@ export RCX_RULES               = $(PLATFORM_DIR)/rcx_patterns.rules
 # For multiple nets: PWR_NETS_VOLTAGES  = "VDD1 1.8 VDD2 1.2"
 export PWR_NETS_VOLTAGES  ?= "VDD 1.1"
 export GND_NETS_VOLTAGES  ?= "VSS 0.0"
-export IR_DROP_LAYER ?= metal1
+export IR_DROP_LAYER ?= M1

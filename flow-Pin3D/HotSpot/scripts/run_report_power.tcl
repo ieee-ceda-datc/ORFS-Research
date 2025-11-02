@@ -5,8 +5,10 @@ set grid_size 10
 set output_dir $env(HOTSPOT_OUTPUT)/
 
 # Load the necessary libraries
-foreach varName [array names env PLATFORMS_*] {
-    read_liberty $env($varName)
+puts "Loading libraries..."
+foreach lib_file $env(LIB_FILES) {
+    puts "Loading library: $lib_file"
+    read_liberty $lib_file
 }
 
 # Read the Verilog and SDC files

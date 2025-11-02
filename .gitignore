@@ -67,7 +67,7 @@ flow/private
 
 # network
 .nfs*
-
+.DS_Store
 # core dumps
 core
 core.*
