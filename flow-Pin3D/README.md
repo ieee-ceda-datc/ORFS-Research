@@ -141,8 +141,8 @@ High‑level stages and the **actual make targets** used in this repo are:
 ### 3D Clock Tree Synthesis
 
 <p align="center">
-  <img alt="CTS_ORD_gcd" height="400" src="./README.assets/CTS_ORD_gcd.png">
-  <img alt="CTS_CDS_gcd" height="400" src="./README.assets/CTS_CDS_gcd.png">
+  <img alt="CTS_ORD_gcd" height="200" src="./README.assets/CTS_ORD_gcd.png">
+  <img alt="CTS_CDS_gcd" height="200" src="./README.assets/CTS_CDS_gcd.png">
 </p>
 
 *   **CTS**: `ord-cts` / `cds-cts` builds bottom die trees with alignment constraints.
