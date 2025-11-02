@@ -11,3 +11,11 @@ HotSpot/examples/3D_*
 HotSpot/scripts/output
 *.log
 versions.txt
+.cadence
+fv
+mp_data*
+timingReports
+*.rpt
+*.tstamp
+*.bak
+test.scripts

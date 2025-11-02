@@ -1,25 +1,25 @@
-# set_global_routing_layer_adjustment metal2-metal3 0.5
-# set_global_routing_layer_adjustment metal4-$::env(MAX_ROUTING_LAYER) 0.25
+# set_global_routing_layer_adjustment M2-M3 0.5
+# set_global_routing_layer_adjustment M4-$::env(MAX_ROUTING_LAYER) 0.25
 
-make_tracks metal1 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch 0.14
-make_tracks metal2 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
-make_tracks metal3 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
-make_tracks metal4 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal5 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal6 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal7 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
-make_tracks metal8 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
-make_tracks metal9 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch  1.6
-make_tracks metal10 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch 1.6
-make_tracks metal11 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch  1.6
-make_tracks metal12 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch 1.6
-make_tracks metal13 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
-make_tracks metal14 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
-make_tracks metal15 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal16 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal17 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
-make_tracks metal18 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch 0.14
-make_tracks metal19 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
-make_tracks metal20 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
+make_tracks M1 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch 0.14
+make_tracks M2 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
+make_tracks M3 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
+make_tracks M4 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M5 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M6 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M7 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
+make_tracks M8 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
+make_tracks M9 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch  1.6
+make_tracks M10 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch 1.6
+# make_tracks M11 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch  1.6
+make_tracks M12 -x_offset 0.095 -x_pitch 1.6 -y_offset 0.07 -y_pitch 1.6
+make_tracks M13 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
+make_tracks M14 -x_offset 0.095 -x_pitch 0.8 -y_offset 0.07 -y_pitch  0.8
+make_tracks M15 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M16 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M17 -x_offset 0.095 -x_pitch 0.28 -y_offset 0.07 -y_pitch  0.28
+make_tracks M18 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch 0.14
+make_tracks M19 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
+make_tracks M20 -x_offset 0.095 -x_pitch 0.19 -y_offset 0.07 -y_pitch  0.14
 
 set_routing_layers -signal $::env(MIN_ROUTING_LAYER)-$::env(MAX_ROUTING_LAYER)
