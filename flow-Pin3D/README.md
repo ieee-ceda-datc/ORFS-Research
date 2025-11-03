@@ -59,7 +59,7 @@ We provide a minimal, research‑ready enablement to run a **2D‑tools–driven
 | RC lookup (for precise)  | `.rules`, `.tch` (QRC)                       |
 | Parasitic extraction     | OpenRCX / Quantus (QRC)                      |
 
-> Notes: (i) 3D F2F vertical interconnect (HBTs) is modeled via library pins/macros and/or pseudo‑layers; (ii) Our 2D and 3D PDK are takern from [[]].
+> Notes: (i) 3D F2F vertical interconnect (HBTs) is modeled via library pins/macros and/or pseudo‑layers; (ii) Our 2D and 3D PDK are takern and generated from [[nangate45]https://github.com/ieee-ceda-datc/ORFS-Research/tree/main/flow/platforms/nangate45].
 
 ## Our Method
 
@@ -74,19 +74,19 @@ Our flow targets **Face‑to‑Face (F2F) 3D ICs with Hybrid Bonding Terminals (
 High‑level stages and the **actual make targets** used in this repo are:
 
 1.  **Per‑die 2D Synthesis** → gate‑level netlists
-  *Targets:* `ord-synth` / `cds-synth` (with `config2d.mk`).
+    *Targets:* `ord-synth` / `cds-synth` (with `config2d.mk`).
 2.  **2D → 3D Floorplanning & Tiering** → floorplan/IO, tier partition, 3D view generation, PDN skeleton
-  *Targets:* `ord-preplace`, `ord-tier-partition`, `ord-pre`, `ord-3d-pdn` / `cds-preplace`, `cds-tier-partition`, `cds-pre`, `cds-3d-pdn`.
+    *Targets:* `ord-preplace`, `ord-tier-partition`, `ord-pre`, `ord-3d-pdn` / `cds-preplace`, `cds-tier-partition`, `cds-pre`, `cds-3d-pdn`.
 3.  **3D‑aware Placement** → init + alternating upper/bottom refinements with bottom/upper fixed and transparent
-  *Targets:* `ord-place-init`, `ord-place-upper`, `ord-place-bottom`, `ord-pre-cts` (loop); Cadence: `cds-place-init`, `cds-place-upper`, `cds-place-bottom`, `cds-place-finish`.
+    *Targets:* `ord-place-init`, `ord-place-upper`, `ord-place-bottom`, `ord-pre-cts` (loop); Cadence: `cds-place-init`, `cds-place-upper`, `cds-place-bottom`, `cds-place-finish`.
 4.  **Optimization & Legalization** → Optimize and Legalize bottom/upper with upper/bottom fixed and transparent
-  *Targets:* `ord-legalize-bottom`, `ord-legalize-upper` / `cds-legalize-bottom`, `cds-legalize-upper`
+    *Targets:* `ord-legalize-bottom`, `ord-legalize-upper` / `cds-legalize-bottom`, `cds-legalize-upper`
 5.  **CTS** → bottom die CTS with upper fixed and transparent
-  *Targets:* `ord-cts` / `cds-cts`.
+    *Targets:* `ord-cts` / `cds-cts`.
 6.  **3D Routing** → global+detail routing and get routing aware HBT positions
-  *Targets:* `ord-route` / `cds-route`.
+    *Targets:* `ord-route` / `cds-route`.
 7.  **Reporting & (Optional) Signoff Hooks** → final summaries, optional HotSpot (currently not enable for spef not done)
-  *Targets:* `ord-finish` (currently using cds-final for unified metrics and validation), `ord-hotspot` / `cds-final`, `cds-hotspot`.
+    *Targets:* `ord-finish` (currently using cds-final for unified metrics and validation), `ord-hotspot` / `cds-final`, `cds-hotspot`.
 
 > **Research hooks.** Swap in partitioners, placement objectives, or CTS policies by editing TCLs in `scripts_openroad/` or `scripts_cadence/` and the per‑stage configs under `designs/`.
 
@@ -141,9 +141,10 @@ High‑level stages and the **actual make targets** used in this repo are:
 ### 3D Clock Tree Synthesis
 
 <p align="center">
-  <img alt="CTS_ORD_gcd" height="200" src="./README.assets/CTS_ORD_gcd.png">
-  <img alt="CTS_CDS_gcd" height="200" src="./README.assets/CTS_CDS_gcd.png">
+  <img alt="CTS_ORD_gcd" height="300" src="./README.assets/CTS_ORD_gcd.png">
+  <img alt="CTS_CDS_gcd" height="300" src="./README.assets/CTS_CDS_gcd.png">
 </p>
+
 
 *   **CTS**: `ord-cts` / `cds-cts` builds bottom die trees with alignment constraints.
 
@@ -200,24 +201,24 @@ bash run_cds.sh
 
 > The rows below mirror your **actual bash pipelines** (`test/aes/ord/run.sh` and `test/aes/cds/run.sh`). Targets that consume specific configs are annotated.
 
-| Stage                  | OpenROAD target           | Cadence target            | Notes                                                              |
-| :--------------------  | :------------------------ | :------------------------ | :----------------------------------------------------------------- |
-| **Clean**              | `clean_all`               | `clean_all`               | Remove `results/ reports/ logs/ objects/`.                         |
-| **2D Synthesis**       | `ord-synth`               | `cds-synth`               | RTL → gate with 2D PDK. *(Uses `config2d.mk`)*                     |
-| **2D Pre‑place**       | `ord-preplace`            | `cds-preplace`            | Floorplan/IO staging for partitioning. *(Uses `config2d.mk`)*      |
-| **Tier Partition**     | `ord-tier-partition`      | `cds-tier-partition`      | Split into upper/bottom tiers. *(Uses `config2d.mk`)*              |
-| **3D Prep (views)**    | `ord-pre`                 | `cds-pre`                 | Generate 3D views / import partition artifacts. *(Uses `config.mk`)* |
-| **3D PDN**             | `ord-3d-pdn`              | `cds-3d-pdn`              | Per‑die PDN and HBT keepouts. *(Uses `config.mk`)*                 |
-| **Place Init**         | `ord-place-init`          | `cds-place-init`          | Initialize cross‑tier placement. *(Uses `config.mk`)*              |
-| **Place — Upper Tier** | `ord-place-upper`         | `cds-place-upper`         | Alternate with bottom for `iteration` loops. *(Uses `config_bottom_cover.mk`)* |
-| **Place — Bottom Tier**| `ord-place-bottom`        | `cds-place-bottom`        | Alternating cross‑tier refinement. *(Uses `config_upper_cover.mk`)* |
-| **Place Finish**       | `ord-pre_cts`             | `cds-place-finish`        | Refinement. *(Uses `config.mk`)*                                   |
-| **Legalize — Upper**   | `ord-legalize-upper`      | `cds-legalize-upper`      | Legalize upper tier. *(Uses `config_bottom_cover.mk`)*      |
-| **Legalize — Bottom**  | `ord-legalize-bottom`     | `cds-legalize-bottom`     | Legalize bottom tier and merge. *(Uses `config_upper_cover.mk`)* |
-| **CTS**                | `ord-cts`                 | `cds-cts`                 | Clock trees per die with cross‑die alignment. *(Uses `config.mk`)* |
-| **Route (3D)**         | `ord-route`               | `cds-route`               | Detailed routing with HBT abstractions. *(Uses `config.mk`)*       |
-| **Final / Reports**    | `ord-finish` *(optional)* | `cds-final`               | Report collation. *(Uses `config.mk`)*                             |
-| **Thermal / Hotspot**  | `ord-hotspot` *(optional)*| `cds-hotspot` *(optional)*| Reuses OpenROAD HotSpot harness.                                   |
+| Stage                   | OpenROAD target            | Cadence target             | Notes                                                        |
+| :---------------------- | :------------------------- | :------------------------- | :----------------------------------------------------------- |
+| **Clean**               | `clean_all`                | `clean_all`                | Remove `results/ reports/ logs/ objects/`.                   |
+| **2D Synthesis**        | `ord-synth`                | `cds-synth`                | RTL → gate with 2D PDK. *(Uses `config2d.mk`)*               |
+| **2D Pre‑place**        | `ord-preplace`             | `cds-preplace`             | Floorplan/IO staging for partitioning. *(Uses `config2d.mk`)* |
+| **Tier Partition**      | `ord-tier-partition`       | `cds-tier-partition`       | Split into upper/bottom tiers. *(Uses `config2d.mk`)*        |
+| **3D Prep (views)**     | `ord-pre`                  | `cds-pre`                  | Generate 3D views / import partition artifacts. *(Uses `config.mk`)* |
+| **3D PDN**              | `ord-3d-pdn`               | `cds-3d-pdn`               | Unified PDN. *(Uses `config.mk`)*                            |
+| **Place Init**          | `ord-place-init`           | `cds-place-init`           | Initialize cross‑tier placement. *(Uses `config.mk`)*        |
+| **Place — Upper Tier**  | `ord-place-upper`          | `cds-place-upper`          | Alternate with bottom for `iteration` loops. *(Uses `config_bottom_cover.mk`)* |
+| **Place — Bottom Tier** | `ord-place-bottom`         | `cds-place-bottom`         | Alternating cross‑tier refinement. *(Uses `config_upper_cover.mk`)* |
+| **Place Finish**        | `ord-pre_cts`              | `cds-place-finish`         | Refinement. *(Uses `config.mk`)*                             |
+| **Legalize — Upper**    | `ord-legalize-upper`       | `cds-legalize-upper`       | Legalize upper tier. *(Uses `config_bottom_cover.mk`)*       |
+| **Legalize — Bottom**   | `ord-legalize-bottom`      | `cds-legalize-bottom`      | Legalize bottom tier and merge. *(Uses `config_upper_cover.mk`)* |
+| **CTS**                 | `ord-cts`                  | `cds-cts`                  | Clock trees per die with cross‑die alignment. *(Uses `config.mk`)* |
+| **Route (3D)**          | `ord-route`                | `cds-route`                | Detailed routing and create HBT vias. (Uses `config.mk`)*    |
+| **Final / Reports**     | `ord-finish` *(optional)*  | `cds-final`                | Report collation. *(Uses `config.mk`)*                       |
+| **Thermal / Hotspot**   | `ord-hotspot` *(optional)* | `cds-hotspot` *(optional)* | Reuses OpenROAD HotSpot harness.                             |
 
 ## Outputs
 
