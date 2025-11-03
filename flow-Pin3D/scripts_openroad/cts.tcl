@@ -53,7 +53,9 @@ estimate_parasitics -placement
 #   save_progress 4_1_pre_repair_hold_setup
 # }
 
-set ::env(SKIP_CTS_REPAIR_TIMING) 0
+if { ![info exists ::env(SKIP_CTS_REPAIR_TIMING)] } {
+  set ::env(SKIP_CTS_REPAIR_TIMING) 1
+}
 if { !$::env(SKIP_CTS_REPAIR_TIMING) } {
 
   repair_timing_helper
