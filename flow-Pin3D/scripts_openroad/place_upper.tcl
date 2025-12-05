@@ -15,7 +15,7 @@ set place_density [calculate_placement_density]
 mark_insts_by_master "*bottom*" FIRM
 puts "Marked bottom instances as FIRM"
 
-tier_dont_use_strategy upper
+apply_tier_policy upper
 fastroute_setup
 
 set global_placement_args "-routability_driven -timing_driven"

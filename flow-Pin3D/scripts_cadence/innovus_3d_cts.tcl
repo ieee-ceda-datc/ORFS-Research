@@ -38,31 +38,19 @@ set_ccopt_property post_conditioning_enable_routing_eco 1
 set_ccopt_property -cts_def_lock_clock_sinks_after_routing true
 setOptMode -unfixClkInstForOpt false
 
-# 固定 upper，放置 bottom
-set _upper_match  "*_upper"
-set _bottom_match "*_bottom"
-set upper_insts_names  [dbGet [dbGet -p2 top.insts.cell.name $_upper_match].name]
-set bottom_insts_names [dbGet [dbGet -p2 top.insts.cell.name $_bottom_match].name]
-
-if {[llength $upper_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_upper_match].pStatus fixed
-  puts "INFO: upper tier fixed."
-}
-if {[llength $bottom_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_bottom_match].pStatus placed
-}
-
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+
+set_tier_placement_status upper fixed
 apply_tier_policy bottom
 
 # --- run ccopt ---
 create_ccopt_clock_tree_spec
-ccopt_design
-
-# 解固定 upper
-if {[llength $upper_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_upper_match].pStatus placed
+if { !([info exists ::env(UPPER_SITE)] && [info exists ::env(BOTTOM_SITE)]) } {
+  ccopt_design
 }
+
+set_tier_placement_status upper placed
+
 # --- 写出 DEF + Netlist（CTS 视图）---
 defOut -floorplan -routing [file join $RESULTS_DIR "4_1_cts.def"]
 saveNetlist [file join $RESULTS_DIR "4_1_cts.v"]

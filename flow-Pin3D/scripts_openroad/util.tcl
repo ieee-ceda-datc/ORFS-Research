@@ -42,6 +42,12 @@ proc repair_design_helper { } {
 }
 
 proc recover_power_helper { } {
+  if {[env_var_exists_and_non_empty RECOVER_POWER]} {
+    puts "Power recovery is enabled"
+  } else {
+    puts "Power recovery is disabled"
+    return
+  }
   if { $::env(RECOVER_POWER) == 0 } {
     return
   }

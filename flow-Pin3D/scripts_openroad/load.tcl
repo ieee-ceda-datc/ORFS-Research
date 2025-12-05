@@ -38,7 +38,7 @@ proc load_design {design_file sdc_file msg} {
       source $::env(PLATFORM_DIR)/derate.tcl
     }
 
-    source $::env(PLATFORM_DIR)/setRC.tcl
+    source $::env(SET_RC_TCL)
   } else {
     puts $msg
   }

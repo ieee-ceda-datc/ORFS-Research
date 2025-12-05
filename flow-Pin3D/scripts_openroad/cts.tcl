@@ -4,6 +4,12 @@ source $::env(OPENROAD_SCRIPTS_DIR)/util.tcl
 
 load_design 3_place.def 3_place.sdc "Starting CTS..."
 
+source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
+
+mark_insts_by_master "*upper*" FIRM
+puts "Marked upper instances as FIRM"
+
+apply_tier_policy bottom
 # Clone clock tree inverters next to register loads
 # so cts does not try to buffer the inverted clocks.
 repair_clock_inverters
@@ -17,7 +23,10 @@ proc save_progress { stage } {
 # Run CTS
 set cts_args [list \
   -sink_clustering_enable \
-  -repair_clock_nets]
+  -repair_clock_nets \
+  -root_buf $::env(CTS_BUF_CELL) \
+  -buf_list $::env(CTS_BUF_CELL)
+  ]
 
 append_env_var cts_args CTS_BUF_DISTANCE -distance_between_buffers 1
 append_env_var cts_args CTS_CLUSTER_SIZE -sink_clustering_size 1
@@ -29,9 +38,6 @@ append_env_var cts_args CTS_LIB_NAME -library 1
 if { [env_var_exists_and_non_empty CTS_ARGS] } {
   set cts_args $::env(CTS_ARGS)
 }
-
-source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
-apply_tier_policy bottom
 
 log_cmd clock_tree_synthesis {*}$cts_args
 
@@ -45,18 +51,22 @@ utl::pop_metrics_stage
 set_placement_padding -global \
   -left $::env(CELL_PAD_IN_SITES_DETAIL_PLACEMENT) \
   -right $::env(CELL_PAD_IN_SITES_DETAIL_PLACEMENT)
-detailed_placement
+
+# CTS leaves a long wire from the pad to the clock tree root.
+log_cmd repair_clock_nets
+
+# place clock buffers
+log_cmd detailed_placement 
 
 estimate_parasitics -placement
 
 # if { $::env(CTS_SNAPSHOTS) } {
 #   save_progress 4_1_pre_repair_hold_setup
 # }
-
 if { ![info exists ::env(SKIP_CTS_REPAIR_TIMING)] } {
-  set ::env(SKIP_CTS_REPAIR_TIMING) 1
+  set ::env(SKIP_CTS_REPAIR_TIMING) 0
 }
-if { !$::env(SKIP_CTS_REPAIR_TIMING) } {
+if { $::env(SKIP_CTS_REPAIR_TIMING) } {
 
   repair_timing_helper
 
@@ -71,6 +81,9 @@ if { !$::env(SKIP_CTS_REPAIR_TIMING) } {
 }
 
 source_env_var_if_exists POST_CTS_TCL
+
+mark_insts_by_master "*upper*" PLACED
+puts "Marked upper instances as PLACED"
 
 write_def $::env(RESULTS_DIR)/4_cts.def
 write_verilog $::env(RESULTS_DIR)/4_cts.v

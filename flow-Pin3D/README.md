@@ -217,8 +217,8 @@ bash run_cds.sh
 | **Legalize — Bottom**   | `ord-legalize-bottom`      | `cds-legalize-bottom`      | Legalize bottom tier and merge. *(Uses `config_upper_cover.mk`)* |
 | **CTS**                 | `ord-cts`                  | `cds-cts`                  | Clock trees per die with cross‑die alignment. *(Uses `config.mk`)* |
 | **Route (3D)**          | `ord-route`                | `cds-route`                | Detailed routing and create HBT vias. (Uses `config.mk`)*    |
-| **Final / Reports**     | `ord-finish` *(optional)*  | `cds-final`                | Report collation. *(Uses `config.mk`)*                       |
-| **Thermal / Hotspot**   | `ord-hotspot` *(optional)* | `cds-hotspot` *(optional)* | Reuses OpenROAD HotSpot harness.                             |
+| **Final / Reports**     | `ord-final`                | `cds-final`                | Report collation. *(Uses `config.mk`)*                       |
+| **Thermal / Hotspot**   | `ord-hotspot`              |                            | Reuses OpenROAD HotSpot harness.                             |
 
 ## Outputs
 
@@ -268,6 +268,7 @@ objects/    # intermediate DBs and caches
 <a id="Experimental-Tables-and-Plots"></a>
 
 ### Experimental Tables and Plots
+
 #### `gcd`
 
 <p align="center">
@@ -276,8 +277,8 @@ objects/    # intermediate DBs and caches
 
 | Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC  | FEP |
 | :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :--- | :-- |
-| ORD  | 0.46     | 462.8           | 565.8              | -0.481   | -15.083  | 2.9        | 1473 | 924 |
-| CDS  | 0.46     | 519.2           | 441.6              | 0.013    | 0.000    | 1.2        | 73   | 0   |
+| ORD  | 0.46     | 594.0           | 462.8              | -0.516   | -16.889  | 3.0        | 1379 | 949 |
+| CDS  | 0.46     | 519.2           | 441.6              | 0.013    | 0.000    | 1.19       | 108  | 0   |
 
 #### `jpeg`
 
@@ -285,10 +286,10 @@ objects/    # intermediate DBs and caches
   <img alt="Results_jpeg" height="400" src="./README.assets/Results_jpeg.png">
 </p>
 
-| Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC  | FEP |
-| :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :--- | :-- |
-| ORD  | 1.2      | 83454.3         | 82209.7            | -0.697   | -65.761  | 190.2      | 9469 | 3399|
-| CDS  | 1.2      | 72369.0         | 68415.5            | -0.038   | -0.742   | 78.2       | 6763 | 79  |
+| Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC   | FEP  |
+| :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :---- | :--- |
+| ORD  | 1.2      | 72369.0         | 81118.6            | -0.315   | -136.318 | 170.6      | 21534 | 5111 |
+| CDS  | 1.2      | 72369.0         | 68415.5            | -0.038   | -0.742   | 78.2       | 6763  | 79   |
 
 #### `aes`
 
@@ -298,5 +299,5 @@ objects/    # intermediate DBs and caches
 
 | Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC  | FEP |
 | :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :--- | :-- |
-| ORD  | 0.82     | 16763.3         | 16587.5            | -0.438   | -28.773  | 147.1      | 5890 | 2358|
+| ORD  | 0.82     | 16763.3         | 16594.4            | -0.275   | -19.642  | 145.7      | 5855 | 2231|
 | CDS  | 0.82     | 18232.7         | 16850.8            | -0.195   | -7.042   | 23.8       | 5584 | 660 |

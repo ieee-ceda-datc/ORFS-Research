@@ -12,10 +12,13 @@ load_design $DEF_IN 2_floorplan.sdc "Starting upper optimization and legalizatio
 # 引入工具函数
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
+mark_insts_by_master "*bottom*" FIRM
 # ==== 在 upper opt & lg 前 set 好 dont_use_cell ====
-tier_dont_use_strategy upper
+apply_tier_policy upper
 
 source $::env(OPENROAD_SCRIPTS_DIR)/opt_lg_design.tcl
+
+mark_insts_by_master "*bottom*" PLACED
 
 write_def    $env(RESULTS_DIR)/$DEF_OUT
 write_verilog $env(RESULTS_DIR)/$VERILOG_OUT

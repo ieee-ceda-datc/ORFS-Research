@@ -65,6 +65,11 @@ flow/platforms/*
 !flow/platforms/gf180
 flow/private
 
+# flow-Pin3D
+flow-Pin3D.bak
+flow-Pin3D/platforms/process_scripts
+flow-Pin3D/platforms/rc_extract
+
 # network
 .nfs*
 .DS_Store

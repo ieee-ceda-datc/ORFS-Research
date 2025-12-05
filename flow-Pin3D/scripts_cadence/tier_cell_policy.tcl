@@ -61,6 +61,47 @@ proc _enforce_allowlist {allow_patterns} {
   _set_dont_use $ban true
 }
 
+proc box_flat4 {box} {
+  if {[llength $box] == 1} { set box [lindex $box 0] }
+  if {[llength $box] == 2 && [llength [lindex $box 0]] == 2} {
+    set ll [lindex $box 0]; set ur [lindex $box 1]
+    return [list [lindex $ll 0] [lindex $ll 1] [lindex $ur 0] [lindex $ur 1]]
+  }
+  return $box
+}
+
+# 在 Innovus 中按指定 site 重构 rows
+#   site_name : 目标 site（例如 "asap7sc7p5t" / "FreePDK45_38x28_10R_NP_162NW_34O"）
+#   out_def   : 可选，如非空则顺便导出 floorplan DEF
+proc rebuild_rows_for_site {site_name {out_def ""}} {
+  if {$site_name eq ""} {
+    puts "ERROR(INV): rebuild_rows_for_site: empty site_name."
+    return
+  }
+
+  # 1) 打印当前 floorplan 盒子（仅供调试）
+  set dieBoxF  [box_flat4 [dbGet top.fPlan.box]]
+  set ioBoxF   [box_flat4 [dbGet top.fPlan.ioBox]]
+  set coreBoxF [box_flat4 [dbGet top.fPlan.coreBox]]
+  set bList [concat $dieBoxF $ioBoxF $coreBoxF]
+  puts "INFO(INV): dieBox  = $dieBoxF"
+  puts "INFO(INV): ioBox   = $ioBoxF"
+  puts "INFO(INV): coreBox = $coreBoxF"
+  puts "INFO(INV): Rebuilding rows with site '$site_name' ..."
+
+  # 2) 删掉现有 rows
+  deleteRow -all
+
+  # 3) 用同样的 die/io/core box，只换 site 重建 rows
+  floorPlan -b $bList -siteOnly $site_name
+
+  # 4) 可选导出 DEF
+  if {$out_def ne ""} {
+    defOut -floorplan $out_def
+    puts "INFO(INV): wrote floorplan DEF with site '$site_name': $out_def"
+  }
+}
+
 proc apply_tier_policy {tier} {
   set tier [string tolower $tier]
   if {![string match "upper" $tier] && ![string match "bottom" $tier]} {
@@ -94,7 +135,9 @@ proc apply_tier_policy {tier} {
       # Example: addWellTap -cell [lindex $TAP_UP 0] -cellInterval 40 -prefix WT_U_
       # This is just an example, not enforced (your flow might insert them elsewhere)
     }
-
+    if {[info exists ::env(UPPER_SITE)] && $::env(UPPER_SITE) ne ""} {
+      set ::env(PLACE_SITE) $::env(UPPER_SITE) 
+    }
     puts "INFO: Tier policy applied for UPPER: dont_use(bottom), filler=UPPER list."
   } else {
     # bottom
@@ -111,8 +154,48 @@ proc apply_tier_policy {tier} {
     if {[llength $TAP_BOT]} {
       # Example: addWellTap -cell [lindex $TAP_BOT 0] -cellInterval 40 -prefix WT_B_
     }
-
+    if {[info exists ::env(BOTTOM_SITE)] && $::env(BOTTOM_SITE) ne ""} {
+      set ::env(PLACE_SITE) $::env(BOTTOM_SITE) 
+    }
     puts "INFO: Tier policy applied for BOTTOM: dont_use(upper), filler=BOTTOM list."
   }
-  # Note: This can be too restrictive for hold fixing, so it's not enabled by default.
+  rebuild_rows_for_site $::env(PLACE_SITE)
+}
+
+# Sets the placement status of tier-specific cells.
+# Usage:
+#   set_tier_placement_status bottom fixed  ;# Fixes bottom-tier cells
+#   set_tier_placement_status bottom placed ;# Unfixes bottom-tier cells (sets to 'placed')
+#   set_tier_placement_status upper fixed   ;# Fixes upper-tier cells
+#   set_tier_placement_status upper placed  ;# Unfixes upper-tier cells (sets to 'placed')
+proc set_tier_placement_status {tier status} {
+  # Validate tier
+  set tier_arg [string tolower $tier]
+  if {![string match "upper" $tier_arg] && ![string match "bottom" $tier_arg]} {
+    error "Invalid tier '$tier'. Must be 'upper' or 'bottom'."
+    return
+  }
+
+  # Validate and normalize status
+  set status_arg [string tolower $status]
+  if {$status_arg eq "unfix"} {
+    set status_arg "placed"
+  }
+  if {$status_arg ne "fixed" && $status_arg ne "placed"} {
+    error "Invalid status '$status'. Must be 'fixed', 'placed', or 'unfix'."
+    return
+  }
+
+  set match_pattern "*_${tier_arg}"
+
+  # Use catch to avoid errors if dbGet is not available or no instances are found
+  set insts {}
+  catch { set insts [dbGet -p2 top.insts.cell.name $match_pattern] }
+
+  if {[llength $insts]} {
+    dbSet $insts.pStatus $status_arg
+    puts "INFO: Set [llength $insts] ${tier_arg}-tier instances to '$status_arg'."
+  } else {
+    puts "INFO: No instances found matching '$match_pattern'."
+  }
 }

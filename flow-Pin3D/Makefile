@@ -20,9 +20,14 @@ export UTILS_DIR            ?= $(FLOW_HOME)/util
 DESIGN_CONFIG ?= ./designs/nangate45_3D/gcd/config.mk
 include $(DESIGN_CONFIG)
 
+# ---------------- Platform names ----------------
+export 2D_PLATFORM ?= $(PLATFORM)
+export 3D_PLATFORM ?= $(PLATFORM)_3D
+export 2D_PLATFORM_DIR ?= $(PLATFORM_HOME)/$(2D_PLATFORM)
+export 3D_PLATFORM_DIR ?= $(PLATFORM_HOME)/$(3D_PLATFORM)
 # ---------------- Platform resolve ----------------
 # Resolve $(PLATFORM_DIR) from (1) PLATFORM_HOME, (2) local public platforms, (3) ../../ fallback.
-PUBLIC_PLATFORMS = nangate45 nangate45_3D
+PUBLIC_PLATFORMS = nangate45 nangate45_3D asap7 asap7_3D asap7_nangate45
 ifneq ($(wildcard $(PLATFORM_HOME)/$(PLATFORM)),)
   export PLATFORM_DIR = $(PLATFORM_HOME)/$(PLATFORM)
 else ifneq ($(findstring $(PLATFORM),$(PUBLIC_PLATFORMS)),)
@@ -77,6 +82,7 @@ export NUM_CORES
 export OPENROAD_EXE ?= $(shell which openroad)
 export YOSYS_EXE    ?= $(shell which yosys)
 export STA_EXE      ?= $(shell which sta)
+export PYTHON_EXE  ?= $(shell which python3)
 OPENROAD_ARGS        = -no_init -threads ${NUM_CORES} 
 OPENROAD_CMD         = $(OPENROAD_EXE) $(OPENROAD_ARGS)
 YOSYS_FLAGS         += -v 3
@@ -85,7 +91,7 @@ YOSYS_FLAGS         += -v 3
 export GENUS_EXE   ?= $(shell which genus)
 export INNOVUS_EXE ?= $(shell which innovus)
 GENUS_CMD   = $(GENUS_EXE)
-INNOVUS_CMD = $(INNOVUS_EXE)
+INNOVUS_CMD = $(INNOVUS_EXE) -64
 export OPEN_GUI ?= 0
 OPEN_GUI_CMD = $(if $(filter 1,$(OPEN_GUI)), , -no_gui)
 OR_GUI_FLAG = $(if $(filter 1,$(OPEN_GUI)),-gui,)
@@ -225,9 +231,9 @@ ord-preplace:
 ord-tier-partition:
 	@echo "[ORD] Tier partition"
 	@$(OPENROAD_CMD) $(OPENROAD_SCRIPTS_DIR)/tier_partition.tcl 2>&1 | tee -a $(LOG_DIR)/2_tritonpart.log
-	@echo "[ORD] Copy 2D artifacts to $(PLATFORM)_3D"
-	@mkdir -p $(WORK_HOME)/results/$(PLATFORM)_3D/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)
-	@cp -rf $(RESULTS_DIR)/* $(WORK_HOME)/results/$(PLATFORM)_3D/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)/ || true
+	@echo "[ORD] Copy 2D artifacts to $(3D_PLATFORM)"
+	@mkdir -p $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)
+	@cp -rf $(RESULTS_DIR)/* $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)/ || true
 
 # ----- 3D init -----
 .PHONY: ord-pre
@@ -239,7 +245,8 @@ ord-pre:
 		--v-in      "$(RESULTS_DIR)/2_2_floorplan_io.v" \
 		--def-out   "$(RESULTS_DIR)/$(DESIGN_NAME)_3D.fp.def" \
 		--v-out     "$(RESULTS_DIR)/$(DESIGN_NAME)_3D.fp.v" \
-		--partition "$(RESULTS_DIR)/partition.txt"; \
+		--partition "$(RESULTS_DIR)/partition.txt" \
+		--cell-map  "$(PLATFORM_DIR)/map.json"; \
 
 # ----- Place -----
 .PHONY: ord-place-init
@@ -306,18 +313,6 @@ ord-cts:
 	@echo "[ORD] CTS" ;
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/cts.tcl,$(LOG_DIR)/4_1_cts.log)
 
-.PHONY: ord-cts-eval
-ord-cts-eval:
-	@$(call _mkstdirs)
-	@echo "[ORD] CTS Legalization" ;
-	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/write_design.tcl,$(LOG_DIR)/4_2_write_design.log)
-	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/lg_bottom.tcl,$(LOG_DIR)/4_2_lg_bottom.log)
-	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/lg_upper.tcl,$(LOG_DIR)/4_2_lg_upper.log)
-	@python3 $(OPENROAD_SCRIPTS_DIR)/merge_def.py \
-	  --base $(RESULTS_DIR)/4_2_cts.def --upper $(RESULTS_DIR)/4_2_upper.def --bottom $(RESULTS_DIR)/4_2_bottom.def --out $(RESULTS_DIR)/4_cts.def
-	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/load_cts.tcl,$(LOG_DIR)/4_2_load_cts.log)
-	cp -f $(RESULTS_DIR)/3_place.sdc $(RESULTS_DIR)/4_cts.sdc
-
 .PHONY: ord-route
 ord-route:
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/global_route.tcl,$(LOG_DIR)/5_1_grt.log)
@@ -329,41 +324,14 @@ $(RESULTS_DIR)/5_route.v:
 	@export OR_DB=5_route ;\
 	$(OPENROAD_CMD) $(OPENROAD_SCRIPTS_DIR)/write_verilog.tcl
 
-.PHONY: ord-finish
-ord-finish:
+.PHONY: ord-final
+ord-final:
 	@$(call _mkstdirs)
-	@# 1) FILL stage: identical to legacy flow—run density_fill when USE_FILL set; else copy from 5_route
-	@if [ -n "$(USE_FILL)" ]; then \
-	  echo "[ORD] density_fill ..."; \
-	  $(call _or,$(OPENROAD_SCRIPTS_DIR)/density_fill.tcl,$(LOG_DIR)/6_1_fill.log); \
-	  # Fallback: if 6_1_fill.sdc is missing, copy from 5_route.sdc (legacy do-copy behavior) ;\
-	  [ -f "$(RESULTS_DIR)/6_1_fill.sdc" ] || cp -f "$(RESULTS_DIR)/5_route.sdc" "$(RESULTS_DIR)/6_1_fill.sdc" 2>/dev/null || true; \
-	else \
-	  echo "[ORD] no fill, copy 5_route -> 6_1_fill"; \
-	  cp -f "$(RESULTS_DIR)/5_route.odb" "$(RESULTS_DIR)/6_1_fill.odb" 2>/dev/null || true; \
-	  cp -f "$(RESULTS_DIR)/5_route.sdc" "$(RESULTS_DIR)/6_1_fill.sdc" 2>/dev/null || true; \
-	fi
-
-	@# 2) As legacy: also create 6_final.sdc by copying from 5_route.sdc
-	@cp -f "$(RESULTS_DIR)/5_route.sdc" "$(RESULTS_DIR)/6_final.sdc" 2>/dev/null || true
-
-	@# 3) Final report: equivalent to do-6_report (inputs: 6_1_fill.odb / 6_1_fill.sdc)
+	@# Final report: equivalent to do-6_report (inputs: 5_route.def / 5_route.sdc)
 	@echo "[ORD] final_report ..."
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/final_report.tcl,$(LOG_DIR)/6_report.log)
 
-	@# 4) Optional: generate figures if script exists (legacy 6_figure)
-	@if [ -f "$(OPENROAD_SCRIPTS_DIR)/generate_fig.tcl" ]; then \
-	  echo "[ORD] generate_fig ..."; \
-	  $(call _or,$(OPENROAD_SCRIPTS_DIR)/generate_fig.tcl,$(LOG_DIR)/6_figure.log); \
-	fi
-
-	@# 5) Optional: copy merged GDS to 6_final.gds if available (legacy behavior)
-	@if [ -n "$(GDS_MERGED_FILE)" ] && [ -f "$(GDS_MERGED_FILE)" ]; then \
-	  echo "[ORD] copy merged GDS -> 6_final.gds"; \
-	  cp -f "$(GDS_MERGED_FILE)" "$(RESULTS_DIR)/6_final.gds" 2>/dev/null || true; \
-	fi
-
-	@# 6) Elapsed summary (same spirit as legacy 'elapsed' target if present)
+	@# Elapsed summary
 	@[ -n "$(UTILS_DIR)" ] && [ -f "$(UTILS_DIR)/genElapsedTime.py" ] && $(MAKE) --no-print-directory elapsed || true
 
 # ----- HotSpot -----
@@ -394,9 +362,9 @@ ord-hotspot:
 		--prefix "upper"
 	
 	@echo "[2/8] Running power analysis with STA for upper die..."
-	$(STA_EXE) $(REPORT_POWER_TCL)
+	LIB_FILES="$(SC_LIB_UPPER)" $(STA_EXE) $(REPORT_POWER_TCL)
 
-	@mv "$(HOTSPOT_OUTPUT)/gcc.ptrace" "$(HOTSPOT_OUTPUT)/upper.ptrace"
+	@mv "$(HOTSPOT_OUTPUT)/$(DESIGN_NAME).ptrace" "$(HOTSPOT_OUTPUT)/upper.ptrace"
 
 	@echo "[3/8] Dividing bottom DEF into grids..."
 	python3 $(DIVIDE_GRID_PY) \
@@ -407,9 +375,9 @@ ord-hotspot:
 		--prefix "bottom"
 
 	@echo "[4/8] Running power analysis with STA for bottom die..."
-	$(STA_EXE) $(REPORT_POWER_TCL)
+	LIB_FILES="$(SC_LIB_BOTTOM)" $(STA_EXE) $(REPORT_POWER_TCL)
 
-	@mv "$(HOTSPOT_OUTPUT)/gcc.ptrace" "$(HOTSPOT_OUTPUT)/bottom.ptrace"
+	@mv "$(HOTSPOT_OUTPUT)/$(DESIGN_NAME).ptrace" "$(HOTSPOT_OUTPUT)/bottom.ptrace"
 
 	python3 $(MERGE_PTRACE_PY) \
 		-u "$(HOTSPOT_OUTPUT)/upper.ptrace" \
@@ -469,9 +437,9 @@ cds-preplace:
 cds-tier-partition:
 	@$(call _mkstdirs)
 	@echo "[CDS] Tier partition (OpenROAD in Cadence flow)"
-	@echo "[CDS] Copying 2D artifacts to $(PLATFORM)_3D directory"
+	@echo "[CDS] Copying 2D artifacts to $(3D_PLATFORM) directory"
 	@{ \
-	  NEW_RESULTS_DIR="$(WORK_HOME)/results/$(PLATFORM)_3D/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)"; \
+	  NEW_RESULTS_DIR="$(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)"; \
 	  mkdir -p "$$NEW_RESULTS_DIR"; \
 	  cp -rf "$(RESULTS_DIR)"/* "$$NEW_RESULTS_DIR"; \
 	  \
@@ -484,9 +452,9 @@ cds-tier-partition:
 cds-docker-tier-partition:
 	@$(call _mkstdirs)
 	@echo "[CDS] Tier partition (OpenROAD in Cadence flow)"
-	@echo "[CDS] Copying 2D artifacts to $(PLATFORM)_3D directory"
+	@echo "[CDS] Copying 2D artifacts to $(3D_PLATFORM) directory"
 	@{ \
-	  NEW_RESULTS_DIR="$(WORK_HOME)/results/$(PLATFORM)_3D/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)"; \
+	  NEW_RESULTS_DIR="$(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)"; \
 	  mkdir -p "$$NEW_RESULTS_DIR"; \
 	  cp -rf "$(RESULTS_DIR)"/* "$$NEW_RESULTS_DIR"; \
 	  \
@@ -514,6 +482,7 @@ cds-pre:
 		--def-out   "$(RESULTS_DIR)/$(DESIGN_NAME)_3D.fp.def" \
 		--v-out     "$(RESULTS_DIR)/$(DESIGN_NAME)_3D.fp.v" \
 		--partition "$(RESULTS_DIR)/partition.txt";
+		--cell-map  "$(3D_PLATFORM_DIR)/map.json"; \
 
 .PHONY: cds-3d-pdn
 cds-3d-pdn:
@@ -565,16 +534,6 @@ cds-cts:
 	@cp $(RESULTS_DIR)/4_1_cts.v $(RESULTS_DIR)/4_cts.v
 	@cp $(RESULTS_DIR)/4_1_cts.def $(RESULTS_DIR)/4_cts.def
 	@cp $(RESULTS_DIR)/3_place.sdc $(RESULTS_DIR)/4_cts.sdc
-	
-.PHONY: cds-cts-eval
-cds-cts-eval:
-	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_legalization_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_legalization_upper.tcl,$(LOG_DIR)/4_2_upper.log)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_legalization_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_legalization_bottom.tcl,$(LOG_DIR)/4_2_bottom.log)
-	@python3 $(CADENCE_SCRIPTS_DIR)/merge_def.py \
-	  --base $(RESULTS_DIR)/4_1_cts.def --upper $(RESULTS_DIR)/4_2_upper.def --bottom $(RESULTS_DIR)/4_2_bottom.def --out $(RESULTS_DIR)/4_cts.def
-	@cp $(RESULTS_DIR)/4_1_cts.v $(RESULTS_DIR)/4_cts.v 2>/dev/null || true
-	@cp $(RESULTS_DIR)/3_place.sdc $(RESULTS_DIR)/4_cts.sdc 2>/dev/null || true
 
 .PHONY: cds-route
 cds-route:
@@ -585,8 +544,6 @@ cds-route:
 .PHONY: cds-final
 cds-final:
 	@$(call _mkstdirs)
-	@rm -rf timingReports
-	@rm -f $(LOG_DIR)/drc.rpt $(LOG_DIR)/fep.rpt
 	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_final.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_final.tcl,$(LOG_DIR)/6_final.log)
 
 .PHONY: clean_all

@@ -21,12 +21,27 @@ setMultiCpuUsage -localCpu [_get NUM_CORES 16]
 set util [_get CORE_UTILIZATION 70]
 
 # === 3D place init: import gp DEF, create groups, initial fixing ===
-set init_lef_file $lefs
-set init_mmmc_file ""
-set init_design_settop 1
-set init_top_cell $DESIGN
-set init_verilog $VERILOG_IO
+set init_lef_file          $lefs
+set init_mmmc_file         ""
+set init_design_settop     1
+set init_top_cell          $DESIGN
+set init_verilog           $VERILOG_IO
 set init_design_netlisttype "Verilog"
+
+# 如果上下两层的 site 都存在，视为 3D F2F flow，显式指定电源网络
+if {[info exists ::env(UPPER_SITE)] && [info exists ::env(BOTTOM_SITE)]} {
+    # 3D 模式：上下层各一条 VDD，地网共用 BOT_VSS
+    set init_pwr_net  {BOT_VDD TOP_VDD}
+    set init_gnd_net  {BOT_VSS}
+} else {
+    # 非 3D 情况：如果没在别处设置过，就退回普通 VDD/VSS
+    if {![info exists init_pwr_net]} {
+        set init_pwr_net {VDD}
+    }
+    if {![info exists init_gnd_net]} {
+        set init_gnd_net {VSS}
+    }
+}
 
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
@@ -39,8 +54,10 @@ setOptMode -powerEffort low -leakageToDynamicRatio 0.5
 
 defIn $DEF_IO
 
+generateTracks
+
 source $::env(PLATFORM_DIR)/util/pdn_config.tcl
-source $::env(CADENCE_SCRIPTS_DIR)/innovus_3d_pdn_util.tcl
+
 fit
 dumpToGIF $LOG_DIR/2_pdn.png
 defOut -floorplan $RESULTS_DIR/2_floorplan.def

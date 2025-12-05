@@ -5,11 +5,10 @@ export PLATFORM    = nangate45
 export VERILOG_FILES = $(sort $(wildcard $(DESIGN_HOME)/src/$(DESIGN_NICKNAME)/*.v))
 export SDC_FILE      = $(DESIGN_HOME)/nangate45_3D/$(DESIGN_NICKNAME)/constraint.sdc
 
-export OPEN_GUI ?= 1
-export NUM_CORES   ?= 32
+export ABC_AREA      = 1
 export CORE_MARGIN = 1
 export ASPECT_RATIO = 1.0
-export CORE_UTILIZATION ?= 95
+export CORE_UTILIZATION ?= 90
 export PLACE_DENSITY_LB_ADDON = 0.10
 export TNS_END_PERCENT        = 100
 export REMOVE_CELLS_FOR_EQY   = TAPCELL*

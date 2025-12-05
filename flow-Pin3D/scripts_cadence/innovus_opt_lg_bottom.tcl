@@ -33,9 +33,15 @@ checkPlace
 setPlaceMode -place_detail_legalization_inst_gap 1
 setFillerMode -fitGap true
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+
+set_tier_placement_status upper fixed
 apply_tier_policy bottom
+
 catch { place_opt_design -out_dir $REPORTS_DIR -prefix legalize_bottom }
 checkPlace
+
+set_tier_placement_status upper placed
+
 fit
 dumpToGIF $LOG_DIR/4_2_lg_bottom.png
 # --- write out only-bottom DEF ---

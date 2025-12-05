@@ -1,10 +1,7 @@
-read_db $env(RESULTS_DIR)/2_2_floorplan_io.odb
-
-read_sdc $env(RESULTS_DIR)/1_synth.sdc
-set all_libs [concat $env(LIB_FILES)]
-foreach lib_file $all_libs {
-    read_liberty $lib_file
-}
+source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
+source $::env(OPENROAD_SCRIPTS_DIR)/util.tcl
+load_design 2_2_floorplan_io.v 1_synth.sdc "Start Triton Partitioning"
+read_def -floorplan_initialize $::env(RESULTS_DIR)/2_2_floorplan_io.def
 
 triton_part_design -solution_file $env(RESULTS_DIR)/partition.txt
 

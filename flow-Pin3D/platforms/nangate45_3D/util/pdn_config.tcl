@@ -31,3 +31,5 @@ set soffset "0       2       2       2       2       2     \
              2       2       2       2       0"
 set addch   "0       1       0       0       0       0     \
              0       0       0       1       0"
+
+source $::env(CADENCE_SCRIPTS_DIR)/innovus_3d_pdn_util.tcl

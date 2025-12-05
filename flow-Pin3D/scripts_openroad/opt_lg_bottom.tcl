@@ -13,9 +13,13 @@ load_design $DEF_IN 2_floorplan.sdc "Starting bottom optimization and legalizati
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
 # ==== 在 bottom opt & lg 前 set 好 dont_use_cell ====
-tier_dont_use_strategy bottom
+mark_insts_by_master "*upper*" FIRM
+
+apply_tier_policy bottom
 
 source $::env(OPENROAD_SCRIPTS_DIR)/opt_lg_design.tcl
+
+mark_insts_by_master "*upper*" PLACED
 
 write_def    $env(RESULTS_DIR)/$DEF_OUT
 write_verilog $env(RESULTS_DIR)/$VERILOG_OUT

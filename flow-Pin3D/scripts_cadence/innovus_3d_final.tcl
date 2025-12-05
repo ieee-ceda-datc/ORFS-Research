@@ -51,6 +51,8 @@ setAnalysisMode -analysisType onChipVariation -cppr both
 defIn $DEF_IN
 
 setMultiCpuUsage -localCpu [_get NUM_CORES 16]
+
+dumpToGIF $LOG_DIR/6_final.png
 # Newer Voltus API hint (do not error if views absent)
 catch { set_analysis_view -leakage WC_VIEW -dynamic WC_VIEW }
 
@@ -76,7 +78,7 @@ puts "INFO: Final metrics CSV -> $CSV_PATH"
 puts "INFO: Final summary     -> $SUMMARY"
 puts "INFO: timingReports/, power_Final.rpt, drc.rpt, fep.rpt are under $LOG_DIR."
 
-set [_get VISUALIZE_FINAL "0"] 
+set VISUALIZE_FINAL [_get VISUALIZE_FINAL "0"]
 if {$VISUALIZE_FINAL eq "1"} {
   error "INTENTIONAL_ABORT: For Final Deisgn Visualize" 
 }

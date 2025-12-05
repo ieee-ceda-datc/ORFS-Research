@@ -34,17 +34,6 @@ clearGlobalNets
 globalNetConnect VDD -type pgpin -pin VDD -inst *   -override
 globalNetConnect VSS -type pgpin -pin VSS -inst *   -override
 
-######################## For SKY130HD  #######################
-globalNetConnect VDD -type pgpin -pin VPWR -inst *   -override
-globalNetConnect VSS -type pgpin -pin VGND -inst *   -override
-
-# globalNetConnect VDD -type pgpin -pin VDDCE -inst *   -override
-# globalNetConnect VDD -type pgpin -pin VDDPE -inst *   -override
-# globalNetConnect VSS -type pgpin -pin VSSE -inst *   -override
-# 
-# globalNetConnect VDD -type pgpin -pin VNW -inst *   -override
-# globalNetConnect VSS -type pgpin -pin VPW -inst *   -override
-
 globalNetConnect VDD -type tiehi -all  -override
 globalNetConnect VSS -type tielo -all  -override
 ####################################################
@@ -147,8 +136,4 @@ while { $i < $lcount } {
     set i [expr $i + 1]
 }
 deleteRouteBlk -name mcro_blk
-# verify_connectivity -net $nets -geom_connect -no_antenna -error 0
 
-# placeDesign -concurrent_macro changes the default placement 
-# settings
-# setPlaceMode -place_opt_run_global_place full

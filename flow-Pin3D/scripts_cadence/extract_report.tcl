@@ -118,25 +118,19 @@ proc extract_drc {drc_rpt} {
 proc _extract_postRoute {outdir} {
   set stage "Final"
   _ensure_dir $outdir
-  _ensure_dir [file join $outdir timingReports]
 
-  # 1) Run timing (writes ./timingReports/Final.* in CURRENT dir)
-  timeDesign -postRoute -prefix ${stage}
+  # 让 timeDesign 直接把报告写到 outdir/timingReports
+  set tr_out [file join $outdir timingReports]
+  _ensure_dir $tr_out
 
-  # 2) Power directly to outdir
+  # 1) Run timing — 直接指定 -outDir 为 tr_out（不再产生本地 timingReports）
+  timeDesign -postRoute -prefix ${stage} -outDir $tr_out
+
+  # 2) Power 直接写到 outdir
   set power_rpt [file join $outdir power_${stage}.rpt]
   report_power > $power_rpt
 
-  # 3) Copy timingReports/* to outdir/timingReports (if present)
-  set tr_local "timingReports"
-  set tr_out   [file join $outdir timingReports]
-  if {[file exists $tr_local]} {
-    foreach item [glob -nocomplain -directory $tr_local *] {
-      file copy -force $item $tr_out
-    }
-  }
-
-  # 4) Parse from OUTDIR timingReports (prefer .gz)
+  # 3) 解析 outdir/timingReports（优先 .gz）
   set tpath_gz [file join $tr_out ${stage}.summary.gz]
   set tpath    [file join $tr_out ${stage}.summary]
   set timing_path [expr {[file exists $tpath_gz] ? $tpath_gz : $tpath}]
@@ -145,11 +139,11 @@ proc _extract_postRoute {outdir} {
   set rpt3  [extract_cell_area]
   set rpt4  [extract_wire_length]
 
-  # 5) DRC & FEP directly under outdir
+  # 4) DRC & FEP 直接写到 outdir
   set drc_v [extract_drc [file join $outdir drc.rpt]]
   set fep_v [extract_fep [file join $outdir fep.rpt]]
 
-  # 6) Compose CSV line
+  # 5) 组装 CSV
   set core_area [dbget top.fplan.coreBox_area]
   set std_area  [lindex $rpt3 1]
   set mac_area  [lindex $rpt3 0]

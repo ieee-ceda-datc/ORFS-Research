@@ -27,31 +27,15 @@ init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 defIn $GPDEF
 
-# Fix bottom, place upper
-set _upper_match  "*_upper"
-set _bottom_match "*_bottom"
-set upper_insts_names  [dbGet [dbGet -p2 top.insts.cell.name $_upper_match].name]
-set bottom_insts_names [dbGet [dbGet -p2 top.insts.cell.name $_bottom_match].name]
-
-if {[llength $bottom_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_bottom_match].pStatus fixed
-  puts "INFO: bottom tier fixed."
-}
-if {[llength $upper_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_upper_match].pStatus placed
-}
-
-# Tier policy: allow cells + fillers on upper, disable bottom cells
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+
+set_tier_placement_status bottom fixed
 apply_tier_policy upper
 
 pc::setup_basic
 pc::run_place
 
-# Unfix bottom
-if {[llength $bottom_insts_names]} {
-  dbSet [dbGet -p2 top.insts.cell.name $_bottom_match].pStatus placed
-}
+set_tier_placement_status bottom placed
 
 # Export
 saveDesign [file join $::env(OBJECTS_DIR) "${DESIGN}_3d_after_upper.enc"]

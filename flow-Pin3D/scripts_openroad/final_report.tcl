@@ -1,20 +1,24 @@
 utl::set_metrics_stage "finish__{}"
 source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
-load_design 6_1_fill.odb 6_1_fill.sdc "Starting final report"
+load_design 5_route.def 5_route.sdc "Starting final report"
 
 set_propagated_clock [all_clocks]
 
-# Ensure all OR created (rsz/cts) instances are connected
+puts "Starting global connection cleanup"
+
 global_connect
 
 # Delete routing obstructions for final DEF
 source $::env(OPENROAD_SCRIPTS_DIR)/deleteRoutingObstructions.tcl
 deleteRoutingObstructions
 
+puts "Writing final design files"
+
 write_db $::env(RESULTS_DIR)/6_final.odb
 write_def $::env(RESULTS_DIR)/6_final.def
 write_verilog $::env(RESULTS_DIR)/6_final.v
-
+write_sdc $::env(RESULTS_DIR)/6_final.sdc
+puts "Starting extraction"
 # Run extraction and STA
 if {[info exist ::env(RCX_RULES)]} {
 
@@ -60,11 +64,9 @@ if {[info exist ::env(RCX_RULES)]} {
 }
 
 source $::env(OPENROAD_SCRIPTS_DIR)/report_metrics.tcl
-report_metrics "finish"
-
+report_metrics "finish" "finish"
+puts "Final report metrics written to $::env(REPORTS_DIR)/final_ord.rpt"
 # Save a final image if openroad is compiled with the gui
-if {[expr [llength [info procs save_image]] > 0]} {
-    gui::show "source $::env(OPENROAD_SCRIPTS_DIR)/save_images.tcl" false
-}
+source $::env(OPENROAD_SCRIPTS_DIR)/save_images.tcl
 
 exit

@@ -34,8 +34,6 @@ init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 # Read in the floorplan DEF file
 defIn $FPDEF
-# Generate routing tracks
-generateTracks
 
 # Setup basic placement configuration
 pc::setup_basic

@@ -1,20 +1,19 @@
 # load read design and perform placement
 source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
-
+source $::env(OPENROAD_SCRIPTS_DIR)/util.tcl
 set DEF_IN 2_floorplan.def
 set VERILOG_IN 2_floorplan.v
 set DEF_OUT $env(DESIGN_NAME)_3D.gp.def
 set VERILOG_OUT $env(DESIGN_NAME)_3D.gp.v
 
 load_design $DEF_IN 2_floorplan.sdc "Starting place init"
-# read_def $env(RESULTS_DIR)/$DEF_IN
 
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 set place_density [calculate_placement_density]
 
 puts "Running global placement with density: $place_density"
 set global_placement_args ""
-global_placement -density $place_density \
+log_cmd global_placement -density $place_density \
         -pad_left $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) \
         -pad_right $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) \
         {*}$global_placement_args

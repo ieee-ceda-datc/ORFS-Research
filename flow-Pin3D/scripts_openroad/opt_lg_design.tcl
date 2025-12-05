@@ -3,11 +3,6 @@ puts "Starting opt_lg_design.tcl..."
 
 estimate_parasitics -placement
 
-if {![info exists ::env(FOOTPRINT)]} {
-  puts "Perform port buffering..."
-  buffer_ports
-}
-
 puts "Perform buffer insertion..."
 set additional_args ""
 if { [info exists ::env(CAP_MARGIN)] && $::env(CAP_MARGIN) > 0.0} {
@@ -21,11 +16,7 @@ if { [info exists ::env(SLEW_MARGIN)] && $::env(SLEW_MARGIN) > 0.0} {
 
 repair_design {*}$additional_args
 
-if { [info exists env(TIE_SEPARATION)] } {
-  set tie_separation $env(TIE_SEPARATION)
-} else {
-  set tie_separation 0
-}
+set tie_separation 5
 
 # Repair tie lo fanout
 puts "Repair tie lo fanout..."
@@ -45,16 +36,11 @@ set_placement_padding -global \
     -left $::env(CELL_PAD_IN_SITES_DETAIL_PLACEMENT) \
     -right $::env(CELL_PAD_IN_SITES_DETAIL_PLACEMENT)
 
-set max_displacement 300
+puts "detailed_placement"
+detailed_placement
 
-detailed_placement -max_displacement $max_displacement
+puts "improve_placement"
+improve_placement
 
-if {[info exists ::env(ENABLE_DPO)] && $::env(ENABLE_DPO)} {
-  if {[info exist ::env(DPO_MAX_DISPLACEMENT)]} {
-    improve_placement -max_displacement $::env(DPO_MAX_DISPLACEMENT)
-  } else {
-    improve_placement
-  }
-}
 puts "optimize_mirroring"
 optimize_mirroring

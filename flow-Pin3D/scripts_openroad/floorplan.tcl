@@ -18,19 +18,6 @@ if {[info exists ::env(FLOORPLAN_DEF)]} {
     read_def -floorplan_initialize $env(FLOORPLAN_DEF)
 # Initialize floorplan using ICeWall FOOTPRINT
 # ----------------------------------------------------------------------------
-} elseif {[info exists ::env(FOOTPRINT)]} {
-
-  ICeWall load_footprint $env(FOOTPRINT)
-
-  initialize_floorplan \
-    -die_area  [ICeWall get_die_area] \
-    -core_area [ICeWall get_core_area] \
-    -site      $::env(PLACE_SITE)
-
-  ICeWall init_footprint $env(SIG_MAP_FILE)
-
-# Initialize floorplan using CORE_UTILIZATION
-# ----------------------------------------------------------------------------
 } elseif {[info exists ::env(CORE_UTILIZATION)] && $::env(CORE_UTILIZATION) != "" } {
   set aspect_ratio 1.0
   if {[info exists ::env(CORE_ASPECT_RATIO)] && $::env(CORE_ASPECT_RATIO) != ""} {
@@ -59,11 +46,6 @@ if { [info exists ::env(MAKE_TRACKS)] } {
   source $::env(PLATFORM_DIR)/make_tracks.tcl
 } else {
   make_tracks
-}
-
-if {[info exists ::env(FOOTPRINT_TCL)]} {
-  source $::env(FOOTPRINT_TCL)
-  initialize_padring
 }
 
 # remove buffers inserted by yosys/abc
@@ -111,8 +93,8 @@ if { [info exist ::env(RESYNTH_TIMING_RECOVER)] && $::env(RESYNTH_TIMING_RECOVER
 puts "Default units for flow"
 report_units
 report_units_metric
-source $::env(OPENROAD_SCRIPTS_DIR)/report_metrics.tcl
-report_metrics "floorplan final" false false
+# source $::env(OPENROAD_SCRIPTS_DIR)/report_metrics.tcl
+# report_metrics "floorplan final" false false
 
 if { [info exist ::env(RESYNTH_AREA_RECOVER)] && $::env(RESYNTH_AREA_RECOVER) == 1 } {
 
@@ -160,12 +142,8 @@ if { [info exists ::env(POST_FLOORPLAN_TCL)] } {
   source $::env(POST_FLOORPLAN_TCL)
 }
 
-if {![info exists save_checkpoint] || $save_checkpoint} {
-  if {[info exists ::env(GALLERY_REPORT)]  && $::env(GALLERY_REPORT) != 0} {
-      write_def $::env(RESULTS_DIR)/2_1_floorplan.def
-  }
-  write_db $::env(RESULTS_DIR)/2_1_floorplan.odb
-  write_sdc $::env(RESULTS_DIR)/2_floorplan.sdc
-}
+write_def $::env(RESULTS_DIR)/2_1_floorplan.def
+write_db $::env(RESULTS_DIR)/2_1_floorplan.odb
+write_sdc $::env(RESULTS_DIR)/2_floorplan.sdc
 
 exit

@@ -2,15 +2,21 @@ source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
 load_design $env(DESIGN_NAME)_3D.fp.def 1_synth.sdc "Starting PDN generation"
 # read_def -floorplan_initialize $env(RESULTS_DIR)/2_5_floorplan_tapcell.def
 
-if {[file exists $::env(PLATFORM_DIR)/make_tracks.tcl]} {
-  source $::env(PLATFORM_DIR)/make_tracks.tcl
+source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
+
+if {[info exists ::env(MAKE_TRACKS)]} {
+  source $::env(MAKE_TRACKS)
 }
 
 source $::env(PDN_TCL)
-if {[catch {
-  pdngen
-} errorMessage]} {
-    puts "ErrorPDN: $errorMessage"
+if { [info exists ::env(UPPER_SITE)] && [info exists ::env(BOTTOM_SITE)] } {
+  puts "PDN sites: UPPER_SITE=$::env(UPPER_SITE), BOTTOM_SITE=$::env(BOTTOM_SITE)"
+} else {
+  if {[catch {
+    pdngen
+  } errorMessage]} {
+      puts "ErrorPDN: $errorMessage"
+  }
 }
 
 if { [info exists ::env(POST_PDN_TCL)] && [file exists $::env(POST_PDN_TCL)] } {

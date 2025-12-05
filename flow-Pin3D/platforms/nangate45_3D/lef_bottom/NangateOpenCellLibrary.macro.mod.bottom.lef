@@ -2,37 +2,6 @@ VERSION 5.6 ;
 BUSBITCHARS "[]" ;
 DIVIDERCHAR "/" ;
 
-MACRO TSV
-  CLASS CORE ;               
-  ORIGIN 0 0 ;                
-  FOREIGN TSV 0 0 ;           
-  SIZE 5.0 BY 5.0 ;           
-  SYMMETRY X Y ;              
-  SITE FreePDK45_38x28_10R_NP_162NW_34O ;                 
-  OBS                         
-    LAYER M1 ;            
-      RECT 0.0 0.0 5.0 5.0 ;  
-    LAYER M2 ;            
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M3 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M4 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M5 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M6 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M7 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M8 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M9 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-    LAYER M10 ;
-      RECT 0.0 0.0 5.0 5.0 ;
-  END
-END TSV
-
 MACRO AND2_X1_bottom
   CLASS CORE ;
   ORIGIN 0 0 ;

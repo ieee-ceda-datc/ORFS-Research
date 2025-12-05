@@ -1,33 +1,115 @@
+puts "--- Starting synth.tcl ---"
 source $::env(OPENROAD_SCRIPTS_DIR)/synth_preamble.tcl
+puts "--- Reading design sources... ---"
+read_design_sources
+puts "--- Finished reading design sources. ---"
 
-if { [info exist ::env(SYNTH_HIERARCHICAL)] && $::env(SYNTH_HIERARCHICAL) == 1 && [file isfile $::env(SYNTH_STOP_MODULE_SCRIPT)] } {
-  puts "Sourcing $::env(SYNTH_STOP_MODULE_SCRIPT)"
-  source $::env(SYNTH_STOP_MODULE_SCRIPT)
+dict for {key value} [env_var_or_empty VERILOG_TOP_PARAMS] {
+  # Apply toplevel parameters
+  puts "--- Applying toplevel parameter: $key = $value ---"
+  chparam -set $key $value $::env(DESIGN_NAME)
 }
 
-# Generic synthesis
-synth  -top $::env(DESIGN_NAME) {*}$::env(SYNTH_ARGS)
+puts "--- Checking hierarchy for top module: $::env(DESIGN_NAME) ---"
+hierarchy -check -top $::env(DESIGN_NAME)
 
+puts "--- Sourcing SYNTH_CANONICALIZE_TCL if it exists... ---"
+source_env_var_if_exists SYNTH_CANONICALIZE_TCL
 
-if { [info exists ::env(USE_LSORACLE)] } {
-    set lso_script [open $::env(OBJECTS_DIR)/lso.script w]
-    puts $lso_script "ps -a"
-    puts $lso_script "oracle --config $::env(LSORACLE_KAHYPAR_CONFIG)"
-    puts $lso_script "ps -m"
-    puts $lso_script "crit_path_stats"
-    puts $lso_script "ntk_stats"
-    close $lso_script
+# Get rid of unused modules
+puts "--- Running opt_clean -purge ---"
+opt_clean -purge
 
-    # LSOracle synthesis
-    lsoracle -script $::env(OBJECTS_DIR)/lso.script -lso_exe $::env(LSORACLE_CMD)
-    techmap
+if { [env_var_equals SYNTH_GUT 1] } {
+  puts "--- SYNTH_GUT is 1, deleting top level cells. ---"
+  # /deletes all cells at the top level, which will quickly optimize away
+  # everything else, including macros.
+  delete $::env(DESIGN_NAME)/c:*
 }
+
+if { [env_var_exists_and_non_empty SYNTH_KEEP_MODULES] } {
+  puts "--- Keeping hierarchy for modules: $::env(SYNTH_KEEP_MODULES) ---"
+  foreach module $::env(SYNTH_KEEP_MODULES) {
+    select -module $module
+    setattr -mod -set keep_hierarchy 1
+    select -clear
+  }
+}
+
+if { [env_var_exists_and_non_empty SYNTH_HIER_SEPARATOR] } {
+  puts "--- Setting hierarchy separator to: $::env(SYNTH_HIER_SEPARATOR) ---"
+  scratchpad -set flatten.separator $::env(SYNTH_HIER_SEPARATOR)
+}
+
+set synth_full_args [env_var_or_empty SYNTH_ARGS]
+if { [env_var_exists_and_non_empty SYNTH_OPERATIONS_ARGS] } {
+  set synth_full_args [concat $synth_full_args $::env(SYNTH_OPERATIONS_ARGS)]
+} else {
+  set synth_full_args [concat $synth_full_args \
+    "-extra-map $::env(FLOW_HOME)/platforms/common/lcu_kogge_stone.v"]
+}
+if { [env_var_exists_and_non_empty SYNTH_OPT_HIER] } {
+  set synth_full_args [concat $synth_full_args -hieropt]
+}
+puts "--- synth_full_args: $synth_full_args ---"
+
+if { ![env_var_equals SYNTH_HIERARCHICAL 1] } {
+  puts "--- Performing non-hierarchical synthesis. ---"
+  # Perform standard coarse-level synthesis script, flatten right away
+  synth -flatten -run :fine {*}$synth_full_args
+} else {
+  puts "--- Performing hierarchical synthesis. ---"
+  # Perform standard coarse-level synthesis script,
+  # defer flattening until we have decided what hierarchy to keep
+  synth -run :fine
+
+  if { [env_var_exists_and_non_empty SYNTH_MINIMUM_KEEP_SIZE] } {
+    set ungroup_threshold $::env(SYNTH_MINIMUM_KEEP_SIZE)
+    puts "Keep modules above estimated size of
+      $ungroup_threshold gate equivalents"
+
+    convert_liberty_areas
+    keep_hierarchy -min_cost $ungroup_threshold
+  } else {
+    keep_hierarchy
+  }
+
+  # Re-run coarse-level script, this time do pass -flatten
+  puts "--- Re-running synthesis with flattening. ---"
+  synth -flatten -run coarse:fine {*}$synth_full_args
+}
+
+puts "--- Generating memory JSON report. ---"
+json -o $::env(RESULTS_DIR)/mem.json
+# Run report and check here so as to fail early if this synthesis run is doomed
+exec -- $::env(PYTHON_EXE) $::env(OPENROAD_SCRIPTS_DIR)/mem_dump.py \
+  --max-bits 4096 $::env(RESULTS_DIR)/mem.json
+
+opt -fast -full
+memory_map
+opt -full
+techmap
+abc -dff -script $::env(OPENROAD_SCRIPTS_DIR)/abc_retime.script
+select -clear
+
+# Get rid of indigestibles
+puts "--- Removing formal constructs and prints. ---"
+chformal -remove
+delete t:\$print
+
+# rename registers to have the verilog register name in its name
+# of the form \regName$_DFF_P_. We should fix yosys to make it the reg name.
+# At least this is predictable.
+puts "--- Renaming wires. ---"
+renames -wire
 
 # Optimize the design
+puts "--- Optimizing design. ---"
 opt -purge
 
 # Technology mapping of adders
-if {[info exist ::env(ADDER_MAP_FILE)] && [file isfile $::env(ADDER_MAP_FILE)]} {
+if { [env_var_exists_and_non_empty ADDER_MAP_FILE] } {
+  puts "--- Mapping adders using $::env(ADDER_MAP_FILE) ---"
   # extract the full adders
   extract_fa
   # map full adders
@@ -38,73 +120,85 @@ if {[info exist ::env(ADDER_MAP_FILE)] && [file isfile $::env(ADDER_MAP_FILE)]} 
 }
 
 # Technology mapping of latches
-if {[info exist ::env(LATCH_MAP_FILE)]} {
+if { [env_var_exists_and_non_empty LATCH_MAP_FILE] } {
+  puts "--- Mapping latches using $::env(LATCH_MAP_FILE) ---"
   techmap -map $::env(LATCH_MAP_FILE)
 }
 
 # Technology mapping of flip-flops
 # dfflibmap only supports one liberty file
-if {[info exist ::env(DFF_LIB_FILE)]} {
-  dfflibmap -liberty $::env(DFF_LIB_FILE)
+puts "--- Mapping flip-flops. ---"
+if { [env_var_exists_and_non_empty DFF_LIB_FILE] } {
+  dfflibmap -liberty $::env(DFF_LIB_FILE) {*}$lib_dont_use_args
 } else {
-  dfflibmap -liberty $::env(DONT_USE_SC_LIB)
+  dfflibmap {*}$lib_args {*}$lib_dont_use_args
 }
 opt
 
-
-set constr [open $::env(OBJECTS_DIR)/abc.constr w]
-puts $constr "set_driving_cell $::env(ABC_DRIVER_CELL)"
-puts $constr "set_load $::env(ABC_LOAD_IN_FF)"
-close $constr
-
-if {$::env(ABC_AREA)} {
-  puts "Using ABC area script."
-  set abc_script $::env(OPENROAD_SCRIPTS_DIR)/abc_area.script
-} else {
-  puts "Using ABC speed script."
-  set abc_script $::env(OPENROAD_SCRIPTS_DIR)/abc_speed.script
-}
-
-# Technology mapping for cells
-# ABC supports multiple liberty files, but the hook from Yosys to ABC doesn't
-if {[info exist ::env(ABC_CLOCK_PERIOD_IN_PS)]} {
-  puts "\[FLOW\] Set ABC_CLOCK_PERIOD_IN_PS to: $::env(ABC_CLOCK_PERIOD_IN_PS)"
-  abc -D [expr $::env(ABC_CLOCK_PERIOD_IN_PS)] \
-      -script $abc_script \
-      -liberty $::env(DONT_USE_SC_LIB) \
-      -constr $::env(OBJECTS_DIR)/abc.constr
-} else {
-  puts "\[WARN\]\[FLOW\] No clock period constraints detected in design"
-  abc -liberty $::env(DONT_USE_SC_LIB) \
-      -constr $::env(OBJECTS_DIR)/abc.constr
-}
-
 # Replace undef values with defined constants
+puts "--- Replacing undef values. ---"
 setundef -zero
 
-# Splitting nets resolves unwanted compound assign statements in netlist (assign {..} = {..})
+if {
+  ![env_var_exists_and_non_empty SYNTH_WRAPPED_OPERATORS] &&
+  ![env_var_exists_and_non_empty SWAP_ARITH_OPERATORS]
+} {
+  puts "--- Running standard ABC. ---"
+  log_cmd abc {*}$abc_args
+} else {
+  puts "--- Running ABC for wrapped operators. ---"
+  scratchpad -set abc9.script $::env(OPENROAD_SCRIPTS_DIR)/abc_speed_gia_only.script
+  # crop out -script from arguments
+  set abc_args [lrange $abc_args 2 end]
+  log_cmd abc_new {*}$abc_args
+  delete {t:$specify*}
+}
+
+# Splitting nets resolves unwanted compound assign statements in
+# netlist (assign {..} = {..})
+puts "--- Splitting nets. ---"
 splitnets
 
 # Remove unused cells and wires
+puts "--- Cleaning up unused cells and wires. ---"
 opt_clean -purge
 
 # Technology mapping of constant hi- and/or lo-drivers
+puts "--- Mapping hi/lo drivers. ---"
 hilomap -singleton \
-        -hicell {*}$::env(TIEHI_CELL_AND_PORT) \
-        -locell {*}$::env(TIELO_CELL_AND_PORT)
+  -hicell {*}$::env(TIEHI_CELL_AND_PORT) \
+  -locell {*}$::env(TIELO_CELL_AND_PORT)
 
 # Insert buffer cells for pass through wires
+puts "--- Inserting buffers. ---"
 insbuf -buf {*}$::env(MIN_BUF_CELL_AND_PORTS)
 
 # Reports
+puts "--- Generating reports. ---"
 tee -o $::env(REPORTS_DIR)/synth_check.txt check
 
-# Create argument list for stat
-set stat_libs ""
-foreach lib $::env(DONT_USE_LIBS) {
-  append stat_libs "-liberty $lib "
+tee -o $::env(REPORTS_DIR)/synth_stat.txt stat {*}$lib_args
+
+# check the design is composed exclusively of target cells, and
+# check for other problems
+puts "--- Checking design. ---"
+if {
+  ![env_var_exists_and_non_empty SYNTH_WRAPPED_OPERATORS] &&
+  ![env_var_exists_and_non_empty SWAP_ARITH_OPERATORS]
+} {
+  check -assert -mapped
+} else {
+  # Wrapped operator synthesis leaves around $buf cells which `check -mapped`
+  # gets confused by, once Yosys#4931 is merged we can remove this branch and
+  # always run `check -assert -mapped`
+  check -assert
 }
-tee -o $::env(REPORTS_DIR)/synth_stat.txt stat {*}$stat_libs
 
 # Write synthesized design
-write_verilog -noattr -noexpr -nohex -nodec $::env(RESULTS_DIR)/1_1_yosys.v
+puts "--- Writing synthesized Verilog. ---"
+write_verilog -nohex -nodec $::env(RESULTS_DIR)/1_synth.v
+# One day a more sophisticated synthesis will write out a modified
+# .sdc file after synthesis. For now, just copy the input .sdc file,
+# making synthesis more consistent with other stages.
+log_cmd exec cp $::env(SDC_FILE) $::env(RESULTS_DIR)/1_synth.sdc
+puts "--- Finished synth.tcl ---"

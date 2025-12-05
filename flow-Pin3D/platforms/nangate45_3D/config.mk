@@ -8,12 +8,27 @@ export PROCESS = 45
 # -------- Tech / Libs --------
 ifeq ($(FLOW_VARIANT),openroad)
   export TECH_LEF ?= $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech21.lef
+  export RCX_RULES         ?= $(PLATFORM_DIR)/NangateOpenCellLibrary.tech21.rcx_patterns.rules
+  export SET_RC_TCL  ?= $(PLATFORM_DIR)/setRC.tech21.tcl
   export MIN_ROUTING_LAYER ?= M1
   export MAX_ROUTING_LAYER ?= M22
 endif
+export MIN_CLK_ROUTING_LAYER ?= M2
 export TECH_LEF ?= $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech.lef
-export SC_LEF  ?= $(PLATFORM_DIR)/lef_bottom/NangateOpenCellLibrary.macro.mod.bottom.lef
-export SC_LIB  ?= $(PLATFORM_DIR)/lib_bottom/NangateOpenCellLibrary_typical.bottom.lib
+export RCX_RULES         ?= $(PLATFORM_DIR)/NangateOpenCellLibrary.tech.rcx_patterns.rules
+export SET_RC_TCL  ?= $(PLATFORM_DIR)/setRC.tech.tcl
+
+export SC_LEF  ?= \
+$(PLATFORM_DIR)/lef_bottom/NangateOpenCellLibrary.macro.mod.bottom.lef \
+$(PLATFORM_DIR)/lef_upper/NangateOpenCellLibrary.macro.mod.upper.lef 
+
+export SC_LIB_UPPER  ?= \
+$(PLATFORM_DIR)/lib_upper/NangateOpenCellLibrary_typical.upper.lib
+export SC_LIB_BOTTOM  ?= \
+$(PLATFORM_DIR)/lib_bottom/NangateOpenCellLibrary_typical.bottom.lib
+
+export SC_LIB  ?= $(SC_LIB_BOTTOM) $(SC_LIB_UPPER)
+
 # Unified LEF/LIB list (following Cadence order/naming convention)
 export LEF_FILES = $(TECH_LEF) \
                    $(SC_LEF) \
@@ -52,7 +67,7 @@ export ABC_LOAD_IN_FF    = 3.898
 export PLACE_SITE   = FreePDK45_38x28_10R_NP_162NW_34O
 export IO_PLACER_H ?= M5
 export IO_PLACER_V ?= M6
-
+export MAKE_TRACKS ?= $(PLATFORM_DIR)/make_tracks.tcl
 # PDN / Endcap / Welltie (based on Cadence)
 export PDN_TCL      ?= $(PLATFORM_DIR)/grid_strategy-M1-M4-M7.tcl
 export TAPCELL_TCL  ?= $(PLATFORM_DIR)/tapcell.tcl
@@ -93,7 +108,7 @@ export GDS_ALLOW_EMPTY ?= fakeram.*
 # -------- Signoff / RCX / IR --------
 export CDL_FILE           = $(PLATFORM_DIR)/cdl/NangateOpenCellLibrary.cdl
 export TEMPLATE_PGA_CFG  ?= $(PLATFORM_DIR)/template_pga.cfg
-export RCX_RULES          = $(PLATFORM_DIR)/nangate45_3D.rules
+export RCX_RULES          = $(PLATFORM_DIR)/NangateOpenCellLibrary.tech21.rcx_patterns.rules
 
 # IR drop settings (consistent for both tiers)
 export PWR_NETS_VOLTAGES ?= "VDD 1.1"
