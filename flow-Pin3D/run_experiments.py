@@ -101,8 +101,15 @@ def run_one(cfg: RunConfig) -> str:
     host = socket.gethostname()
 
     run_log, eval_log = _log_paths(cfg.flow, cfg.tech, cfg.case)
-    run_log.unlink(missing_ok=True)
-    eval_log.unlink(missing_ok=True)
+    # 兼容 Python 3.6: unlink(missing_ok=True) 改为 try-except
+    try:
+        run_log.unlink()
+    except FileNotFoundError:
+        pass
+    try:
+        eval_log.unlink()
+    except FileNotFoundError:
+        pass
 
     run_script, eval_script = _script_paths(cfg.repo_root, cfg.flow, cfg.tech, cfg.case)
 

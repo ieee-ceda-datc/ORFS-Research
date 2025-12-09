@@ -59,9 +59,12 @@ setNanoRouteMode -routeExpAdvancedTechnology true
 
 # ---------- Route + Post-Route Optimization ----------
 routeDesign
+
 set all_insts [dbGet top.insts]
-catch { setDontSize  $all_insts true }
-catch { set_dont_size $all_insts true }
+set_dont_touch $all_insts true
+source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+set_tier_placement_status bottom fixed
+set_tier_placement_status upper fixed
 optDesign -postRoute
 
 # ---------- Export ----------

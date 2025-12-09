@@ -61,7 +61,7 @@ set util [expr {double($CORE_UTIL)/100.0}]
 set mL $CORE_MARGIN; set mR $CORE_MARGIN; set mT $CORE_MARGIN; set mB $CORE_MARGIN
 # floorPlan -r <aspect> <density> <l> <b> <r> <t>
 floorPlan -r $ASPECT_RATIO $util $mL $mB $mR $mT
-
+generateTracks
 # ===== Place pins evenly on four sides (with explicit layer settings) =====
 # error "INTENTIONAL_ABORT: PDN stage completed; failing at user request"
 source $::env(CADENCE_SCRIPTS_DIR)/place_pin.tcl 

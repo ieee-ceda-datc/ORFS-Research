@@ -1,94 +1,165 @@
-# =========================================
-# place_pin.tcl — Put all IOs on IO_PLACER_H / IO_PLACER_V
-#   IN     -> LEFT/RIGHT on IO_PLACER_H
-#   OUT/IO -> BOTTOM/TOP on IO_PLACER_V
-# =========================================
-# =========================================
-# place_io_by_flags.tcl
-# IN (isInput==1)       -> LEFT/RIGHT on layerH
-# OUT (isOutput==1) and INOUT (inOutDir==INOUT) -> TOP/BOTTOM on layerV
-# No heuristics. Uses only explicit attributes: isInput, isOutput, inOutDir.
-# =========================================
+########################################################################
+# place_pin.tcl
+#   Uniform IO pin placement on perimeter with corner avoidance.
+#   - Uses global Tcl variables: IO_PLACER_H (LEFT/RIGHT), IO_PLACER_V (BOTTOM/TOP)
+#   - Distributes ALL signal IOs (excludes obvious P/G) along 4 sides
+#   - Corner margin = 5% of short side
+#   - Places pins one–by–one with -assign/-snap TRACK to avoid IMPPTN-970
+########################################################################
 
-proc __place_side {pins side layer} {
-  if {[llength $pins] == 0} { return }
-  puts [format ">> %-6s : %4d pins on %s (sample: %s)" \
-        $side [llength $pins] $layer [lindex $pins 0]]
-  editPin -layer $layer -pin $pins -side $side -spreadType SIDE \
-          -snap TRACK -fixOverlap 1 -fixedPin
+# Flatten various dbGet box formats into {lx ly ux uy}
+proc __box_flat4 {box} {
+  # box can be "0 0 5.94 5.832", "{0 0 5.94 5.832}" or "{{0 0} {5.94 5.832}}"
+  set nums {}
+  set s "$box"
+  foreach tok [split $s " \t\r\n{}"] {
+    if {$tok eq ""} { continue }
+    if {![string is double -strict $tok]} { continue }
+    lappend nums $tok
+  }
+  if {[llength $nums] != 4} {
+    error "Unsupported top.fPlan.box format: $box"
+  }
+  return $nums
 }
 
-proc place_io_by_flags {layerH layerV} {
-  # Read and align attribute lists in parallel
-  set names    [dbGet top.terms.name]
-  set isInL    {}
-  set isOutL   {}
-  set iodirL   {}
+# Map a scalar offset s (along usable perimeter) to (x, y, side, layer)
+proc __map_perimeter {s lx ly ux uy cm usableB usableR layerH layerV} {
+  set lenB $usableB
+  set lenR $usableR
+  set lenT $usableB
+  set lenL $usableR
 
-  if {[catch {dbGet top.terms.isInput}  isInL]}  { set isInL  {} }
-  if {[catch {dbGet top.terms.isOutput} isOutL]} { set isOutL {} }
-  if {[catch {dbGet top.terms.inOutDir} iodirL]} { set iodirL {} }
+  # bottom usable segment: LEFT->RIGHT
+  if {$s < $lenB} {
+    set side  "BOTTOM"
+    set layer $layerV
+    set x     [expr {$lx + $cm + $s}]
+    set y     $ly
+  } else {
+    set s [expr {$s - $lenB}]
+    # right: BOTTOM->TOP
+    if {$s < $lenR} {
+      set side  "RIGHT"
+      set layer $layerH
+      set x     $ux
+      set y     [expr {$ly + $cm + $s}]
+    } else {
+      set s [expr {$s - $lenR}]
+      # top: RIGHT->LEFT
+      if {$s < $lenT} {
+        set side  "TOP"
+        set layer $layerV
+        set x     [expr {$ux - $cm - $s}]
+        set y     $uy
+      } else {
+        # left: TOP->BOTTOM
+        set s [expr {$s - $lenT}]
+        set side  "LEFT"
+        set layer $layerH
+        set x     $lx
+        set y     [expr {$uy - $cm - $s}]
+      }
+    }
+  }
+  return [list $x $y $side $layer]
+}
 
-  set N [llength $names]
-  if {$N == 0} { error "No top.terms found." }
+proc place_all_ios_perimeter {} {
+  # --------------------------------------------------------------------
+  # 0. IO layers from global vars
+  # --------------------------------------------------------------------
+  if {![info exists ::env(IO_PLACER_H)] || ![info exists ::env(IO_PLACER_V)]} {
+    error "Environment variables IO_PLACER_H and IO_PLACER_V must be set before calling place_all_ios_perimeter."
+  }
+  set layerH $::env(IO_PLACER_H)
+  set layerV $::env(IO_PLACER_V)
 
-  set IN   {}
-  set OUT  {}
-  set IO   {}
-
-  for {set i 0} {$i < $N} {incr i} {
-    set n    [lindex $names  $i]
-    set isIn  [expr {[llength $isInL]  == $N ? [lindex $isInL  $i] : 0}]
-    set isOut [expr {[llength $isOutL] == $N ? [lindex $isOutL $i] : 0}]
-    set iod   [expr {[llength $iodirL] == $N ? [lindex $iodirL $i] : ""}]
-
-    # First, identify INOUT (based on inOutDir)
-    if {[string equal -nocase $iod "INOUT"]} {
-      lappend IO $n
+  # --------------------------------------------------------------------
+  # 1. Collect IO pins (exclude obvious power/ground)
+  # --------------------------------------------------------------------
+  set pins {}
+  foreach t [dbGet top.terms] {
+    set name [dbGet $t.name]
+    # Skip obvious P/G style names
+    if {[regexp -nocase {^(VDD|VSS|VDDA|VSSA|VCCD|VSSD|PWR|GND)} $name]} {
       continue
     }
-    # Then, identify IN/OUT (based on isInput/isOutput)
-    if {$isIn  == 1} { lappend IN  $n; continue }
-    if {$isOut == 1} { lappend OUT $n; continue }
-
-    # Other values: ignore (zero heuristics, no guessing)
+    lappend pins $name
+  }
+  set pins [lsort -dictionary -unique $pins]
+  set N [llength $pins]
+  if {$N == 0} {
+    puts "IO-INFO: No signal IO pins found. Nothing to place."
+    return
   }
 
-  puts [format "Collected: IN=%d, OUT=%d, INOUT=%d, total=%d" \
-        [llength $IN] [llength $OUT] [llength $IO] $N]
-  if {[llength $IN]==0 && [llength $OUT]==0 && [llength $IO]==0} {
-    error "No pins matched (isInput/isOutput/inOutDir are absent or all zero)."
+  # --------------------------------------------------------------------
+  # 2. Get die box in microns (flat {lx ly ux uy})
+  # --------------------------------------------------------------------
+  set flat [__box_flat4 [dbGet top.fPlan.box]]
+  lassign $flat lx ly ux uy
+
+  set W [expr {$ux - $lx}]
+  set H [expr {$uy - $ly}]
+  set short [expr {$W < $H ? $W : $H}]
+  set perim [expr {2.0*($W + $H)}]
+
+  # --------------------------------------------------------------------
+  # 3. Corner margin (5% of short side) and usable perimeter
+  # --------------------------------------------------------------------
+  set cm [expr {0.05 * $short}]
+  set usableB [expr {$W - 2.0*$cm}]
+  set usableR [expr {$H - 2.0*$cm}]
+
+  if {$usableB <= 0.0 || $usableR <= 0.0} {
+    # Die too small for 5% margin, fall back to no corner margin
+    set cm 0.0
+    set usableB $W
+    set usableR $H
   }
-  puts [format "Layers: H=%s (LEFT/RIGHT), V=%s (TOP/BOTTOM)" $layerH $layerV]
+  set usablePerim [expr {2.0 * ($usableB + $usableR)}]
+  set pitch       [expr {$usablePerim / double($N)}]
 
-  # Evenly distribute: IN -> LEFT/RIGHT
-  set nI   [llength $IN]
-  set midI [expr {int(ceil($nI/2.0))}]
-  set IN_L [lrange $IN 0 [expr {$midI-1}]]
-  set IN_R [lrange $IN $midI end]
+  puts [format "IO-INFO: N=%d, W=%.4f, H=%.4f, short=%.4f, perim=%.4f" \
+                $N $W $H $short $perim]
+  puts [format "IO-INFO: corner_margin=%.4f, usablePerim=%.4f, pitch=%.4f" \
+                $cm $usablePerim $pitch]
+  puts [format "Layers: LEFT/RIGHT -> %s, BOTTOM/TOP -> %s" $layerH $layerV]
 
-  # OUT+INOUT -> BOTTOM/TOP
-  set OUTX  [concat $OUT $IO]
-  set nO    [llength $OUTX]
-  set midO  [expr {int(ceil($nO/2.0))}]
-  set OUT_B [lrange $OUTX 0 [expr {$midO-1}]]
-  set OUT_T [lrange $OUTX $midO end]
+  # --------------------------------------------------------------------
+  # 4. Place each pin individually along perimeter
+  # --------------------------------------------------------------------
+  # Small offset so we do not sit exactly at segment endpoints
+  set fracOffset 0.5
+  setPinAssignMode -pinEditInBatch true
+  for {set i 0} {$i < $N} {incr i} {
+    set pin [lindex $pins $i]
+    set s   [expr {$pitch * ($fracOffset + $i)}]
 
-  # Debugging samples
-  if {$nI>0}  { puts "IN sample:   [lrange $IN 0 [expr {min($nI-1,4)}]]" }
-  if {$nO>0}  { puts "OUTX sample: [lrange $OUTX 0 [expr {min($nO-1,4)}]]" }
+    set map [__map_perimeter $s $lx $ly $ux $uy $cm $usableB $usableR $layerH $layerV]
+    lassign $map x y side layer
 
-  # Placement
-  __place_side $IN_L  LEFT   $layerH
-  __place_side $IN_R  RIGHT  $layerH
-  __place_side $OUT_B BOTTOM $layerV
-  __place_side $OUT_T TOP    $layerV
+    puts [format "Placing %-16s on %-6s @ (%.4f, %.4f) layer=%s" $pin $side $x $y $layer]
 
+    # One–by–one placement; let Innovus snap to track and fix overlaps
+    catch {
+      editPin -pin $pin -layer $layer -side $side \
+              -assign "$x $y" -snap TRACK -fixOverlap 1 \
+              -skipWrappingPins -global_location
+    } rc
+    if {$rc ne ""} {
+      puts "WARN: editPin failed for pin $pin on side=$side : $rc"
+    }
+  }
+  setPinAssignMode -pinEditInBatch false
+  # --------------------------------------------------------------------
+  # 5. Let Innovus do a legalize pass (mainly to clean up any residual)
+  # --------------------------------------------------------------------
   legalizePin
+
+  puts "FINAL: IO pins placed on perimeter and legalized."
 }
 
-# ---------- Example ----------
-set IO_PLACER_H [_get IO_PLACER_H]  
-set IO_PLACER_V [_get IO_PLACER_V]  
-
-place_io_by_flags $IO_PLACER_H $IO_PLACER_V
+# Auto–execute when sourced
+place_all_ios_perimeter
