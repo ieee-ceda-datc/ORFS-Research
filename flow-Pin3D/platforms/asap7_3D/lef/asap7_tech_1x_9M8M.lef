@@ -1252,40 +1252,38 @@ END M2_m_M1_m
 
 END LIBRARY
 
-MACRO COVER_CELL
+MACRO HBT_BUF_bottom
   CLASS COVER ;
-  FOREIGN COVER_CELL 0 0 ;
   ORIGIN 0.0 0.0 ;
-  SIZE 10.0 BY 10.0 ;
-  
+  SIZE 0.8 BY 0.8 ;  
   SYMMETRY X Y R90 ;
+  SITE CORE ;         
 
-  PIN BOT_PORT
+  PIN HB
     DIRECTION INOUT ;
     USE SIGNAL ;
     PORT
       LAYER M9 ;
-        RECT -5.0 -5.0 5.0 5.0 ;
+        RECT 0.0 0.0 0.8 0.8 ;
     END
-  END BOT_PORT
-  
-  # 端口定义 - 连接Top Die
-  PIN TOP_PORT  
+  END HB
+
+END HBT_BUF_bottom
+
+MACRO HBT_BUF_T
+  CLASS COVER ;
+  ORIGIN 0.0 0.0 ;
+  SIZE 0.8 BY 0.8 ;   
+  SYMMETRY X Y R90 ;
+  SITE CORE ;         
+
+  PIN HB
     DIRECTION INOUT ;
     USE SIGNAL ;
     PORT
       LAYER M8_m ;
-        RECT -5.0 -5.0 5.0 5.0 ;
+        RECT 0.0 0.0 0.8 0.8 ;
     END
-  END TOP_PORT
+  END HB
 
-  OBS
-    LAYER hb_layer ;
-      RECT -5.0 -5.0 5.0 5.0 ;
-    LAYER M9 ;
-      RECT -5.0 -5.0 5.0 5.0 ;
-    LAYER M8_m ;
-      RECT -5.0 -5.0 5.0 5.0 ;
-  END
-  
-END COVER_CELL
+END HBT_BUF_T

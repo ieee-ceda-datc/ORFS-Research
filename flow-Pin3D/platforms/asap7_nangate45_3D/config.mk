@@ -96,15 +96,15 @@ export DONT_USE_CELLS = $(DONT_USE_CELLS_UPPER) $(DONT_USE_CELLS_BOTTOM)
 
 # Tcl 统一/派生
 export FILL_CELLS ?= $(FILL_CELLS_BOTTOM)   # 非分层/回退场景
-export DNU_FOR_UPPER  := $(DONT_USE_CELLS_BOTTOM) *_bottom
-export DNU_FOR_BOTTOM := $(DONT_USE_CELLS_UPPER)  *_upper
+export DNU_FOR_UPPER   := $(DONT_USE_CELLS_UPPER) *_bottom
+export DNU_FOR_BOTTOM  := $(DONT_USE_CELLS_BOTTOM)  *_upper
 
 # -------- CTS --------
 export CTS_BUF_CELL ?= BUF_X4_bottom
 
 # -------- Route --------
-export MIN_ROUTING_LAYER ?= M1
-export MAX_ROUTING_LAYER ?= M1_m
+export MIN_ROUTING_LAYER ?= M2
+export MAX_ROUTING_LAYER ?= M2_m
 export FASTROUTE_TCL     ?= $(PLATFORM_DIR)/fastroute.tcl
 
 # -------- Signoff / RCX / IR --------

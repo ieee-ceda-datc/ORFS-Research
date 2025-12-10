@@ -73,33 +73,13 @@ proc box_flat4 {box} {
 # 在 Innovus 中按指定 site 重构 rows
 #   site_name : 目标 site（例如 "asap7sc7p5t" / "FreePDK45_38x28_10R_NP_162NW_34O"）
 #   out_def   : 可选，如非空则顺便导出 floorplan DEF
-proc rebuild_rows_for_site {site_name {out_def ""}} {
+proc rebuild_rows_for_site {site_name} {
   if {$site_name eq ""} {
     puts "ERROR(INV): rebuild_rows_for_site: empty site_name."
     return
   }
-
-  # 1) 打印当前 floorplan 盒子（仅供调试）
-  set dieBoxF  [box_flat4 [dbGet top.fPlan.box]]
-  set ioBoxF   [box_flat4 [dbGet top.fPlan.ioBox]]
-  set coreBoxF [box_flat4 [dbGet top.fPlan.coreBox]]
-  set bList [concat $dieBoxF $ioBoxF $coreBoxF]
-  puts "INFO(INV): dieBox  = $dieBoxF"
-  puts "INFO(INV): ioBox   = $ioBoxF"
-  puts "INFO(INV): coreBox = $coreBoxF"
-  puts "INFO(INV): Rebuilding rows with site '$site_name' ..."
-
-  # 2) 删掉现有 rows
   deleteRow -all
-
-  # 3) 用同样的 die/io/core box，只换 site 重建 rows
-  floorPlan -b $bList -siteOnly $site_name
-
-  # 4) 可选导出 DEF
-  if {$out_def ne ""} {
-    defOut -floorplan $out_def
-    puts "INFO(INV): wrote floorplan DEF with site '$site_name': $out_def"
-  }
+  createRow -site $site_name
 }
 
 proc apply_tier_policy {tier} {

@@ -32,7 +32,7 @@ export LEF_DIR                  ?= $(dir $(TECH_LEF))
 
 # Optional QRC
 export QRC_FILE                 ?= $(PLATFORM_DIR)/qrc/ASAP7.tch
-
+export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC.tcl
 # =====================================================
 # GDS
 # =====================================================

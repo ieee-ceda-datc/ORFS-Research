@@ -13,6 +13,4 @@ if {[info exist ::env(CDL_FILES)]} {
   cdl out $::env(RESULTS_DIR)/6_final.cdl
 }
 
-if {![info exists standalone] || $standalone} {
-  exit
-}
+exit

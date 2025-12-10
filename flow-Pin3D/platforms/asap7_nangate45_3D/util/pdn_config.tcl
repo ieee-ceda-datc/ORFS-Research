@@ -1,60 +1,21 @@
 ########################################################################
+# pdn_3d_stacked.tcl
 # 3D PDN for Innovus (aligning with OpenROAD 3D PDN logic, no renaming)
 # - Part 0: helper procs (box flatten / row rebuild / tier inst query)
 # - Part 1: BOT PG connect + M1 rails + M4/M7 mesh
-# - Part 2: rebuild upper rows + TOP PG connect + M1_m/M2_m rails + M5_m/M6_m mesh
+# - Part 2: (optional) rebuild upper rows + TOP PG connect
+#           + M1_m/M2_m rails + M5_m/M6_m mesh
+# - PG nets:
+#     Bottom : BOT_VDD / BOT_VSS
+#     Top    : TOP_VDD / BOT_VSS  (shared ground; change if needed)
 ########################################################################
-
-puts "INFO: Start 3D PDN (BOT then TOP)..."
-
-########################################################################
-# Utility: flatten box to "lx ly ux uy"
-########################################################################
-proc box_flat4 {box} {
-  if {[llength $box] == 1} {
-    set box [lindex $box 0]
-  }
-  if {[llength $box] == 2 && [llength [lindex $box 0]] == 2} {
-    set ll [lindex $box 0]
-    set ur [lindex $box 1]
-    return [list [lindex $ll 0] [lindex $ll 1] [lindex $ur 0] [lindex $ur 1]]
-  }
-  return $box
-}
-
-########################################################################
-# Utility: rebuild rows for a given site (upper tier)
-########################################################################
-proc rebuild_rows_for_site {site_name {out_def ""}} {
-  if {$site_name eq ""} {
-    puts "ERROR: rebuild_rows_for_site: empty site_name."
-    return
-  }
-
-  set dieBoxF  [box_flat4 [dbGet top.fPlan.box]]
-  set ioBoxF   [box_flat4 [dbGet top.fPlan.ioBox]]
-  set coreBoxF [box_flat4 [dbGet top.fPlan.coreBox]]
-  set bList [concat $dieBoxF $ioBoxF $coreBoxF]
-
-  puts "INFO: dieBox  = $dieBoxF"
-  puts "INFO: ioBox   = $ioBoxF"
-  puts "INFO: coreBox = $coreBoxF"
-  puts "INFO: Rebuilding rows with site $site_name"
-
-  deleteRow -all
-  floorPlan -b $bList -siteOnly $site_name
-
-  if {$out_def ne ""} {
-    defOut -floorplan $out_def
-    puts "INFO: Wrote floorplan DEF with site $site_name : $out_def"
-  }
-}
+source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+puts "INFO: \[pdn_3d_stacked\] Start 3D PDN (BOT then TOP)..."
 
 ########################################################################
 # Utility: query bottom / upper tier instances by master name
 #   - bottom tier: cell master name matches "*_bottom"
 #   - upper  tier: cell master name matches "*_upper"
-# NOTE: 使用 ABK 风格：dbGet <path> <pattern> -p2，再取 .name
 ########################################################################
 proc get_bottom_tier_insts {} {
   # pointers to insts whose cell.name matches "*_bottom"
@@ -79,18 +40,18 @@ proc get_upper_tier_insts {} {
 # Part 0. NOTE: No rename — we keep original instance names
 ########################################################################
 
-puts "INFO: Skip renaming instances; use master name (*_upper/*_bottom) to classify tiers."
+puts "INFO: \[pdn_3d_stacked\] Skip renaming instances; use master name (*_upper/*_bottom) to classify tiers."
 
 ########################################################################
 # Part 1. BOT tier: BOT_VDD / BOT_VSS
 ########################################################################
 
-puts "INFO: === Part 1: BOT tier PDN (BOT_VDD / BOT_VSS) ==="
+puts "INFO: \[pdn_3d_stacked\] === Part 1: BOT tier PDN (BOT_VDD / BOT_VSS) ==="
 
 set minCh 2
 
-# 1) Unplace core cells and cut rows (same as ABK 2D)
-dbset [dbget top.insts.cell.subClass core -p2 ].pStatus unplaced
+# 1) Unplace core cells and cut rows
+dbset [dbget top.insts.cell.subClass core -p2].pStatus unplaced
 finishFloorplan -fillPlaceBlockage hard $minCh
 cutRow
 finishFloorplan -fillPlaceBlockage hard $minCh
@@ -110,23 +71,22 @@ clearGlobalNets
 
 set bot_insts [get_bottom_tier_insts]
 if {[llength $bot_insts] == 0} {
-  puts "WARN: No *_bottom masters found. BOT PG connections will be empty."
+  puts "WARN: \[pdn_3d_stacked\] No *_bottom masters found. BOT PG connections will be empty."
 } else {
-  puts "INFO: BOT tier instance count [llength $bot_insts]"
+  puts "INFO: \[pdn_3d_stacked\] BOT tier instance count [llength $bot_insts]"
   foreach inst $bot_insts {
-    # inst 是实例名，逐个连 PG pin
     globalNetConnect BOT_VDD -type pgpin -pin VDD -inst $inst -override
     globalNetConnect BOT_VSS -type pgpin -pin VSS -inst $inst -override
   }
 }
 
-# Tie cells behavior (只 tie 到 BOT_VDD / BOT_VSS)
+# Tie cells behavior (only to BOT_VDD / BOT_VSS)
 globalNetConnect BOT_VDD -type tiehi -all -override
 globalNetConnect BOT_VSS -type tielo -all -override
 
-puts "INFO: BOT globalNetConnect done."
+puts "INFO: \[pdn_3d_stacked\] BOT globalNetConnect done."
 
-# 3) Via generation (ABK style)
+# 3) Via generation
 setGenerateViaMode -auto true
 generateVias
 editDelete -type Special -net $nets_bot
@@ -166,62 +126,61 @@ addStripe -layer M7 \
           -start_offset 2.0 \
           -set_to_set_distance 40.0
 
-puts "INFO: BOT PDN (M1 rails + M4/M7 mesh) completed."
+puts "INFO: \[pdn_3d_stacked\] BOT PDN (M1 rails + M4/M7 mesh) completed."
 
 ########################################################################
-# Part 2. TOP tier: TOP_VDD / BOT_VSS
+# Part 2. TOP tier: TOP_VDD / BOT_VSS  (shared ground)
 ########################################################################
 
-puts "INFO: === Part 2: TOP tier PDN (TOP_VDD / BOT_VSS) ==="
+puts "INFO: \[pdn_3d_stacked\] === Part 2: TOP tier PDN (TOP_VDD / BOT_VSS) ==="
 
-# 1) Rebuild rows for upper site (mirroring OpenROAD or_rebuild_rows_for_site)
+# 1) Rebuild rows for upper site (optional)
 if {[info exists ::env(UPPER_SITE)]} {
-  puts "INFO: Rebuilding rows for upper tier site = $::env(UPPER_SITE)"
+  puts "INFO: \[pdn_3d_stacked\] Rebuilding rows for upper tier site = $::env(UPPER_SITE)"
   rebuild_rows_for_site $::env(UPPER_SITE)
 } else {
-  puts "WARN: UPPER_SITE is not set; skip upper row rebuild."
+  puts "WARN: \[pdn_3d_stacked\] UPPER_SITE is not set; skip upper row rebuild."
 }
 
 # 2) Global net connections for *_upper instances
 set nets_top [list TOP_VDD BOT_VSS]
 
-# 保留 BOT 的 global nets; 不要 clearGlobalNets
 set top_insts [get_upper_tier_insts]
 if {[llength $top_insts] == 0} {
-  puts "WARN: No *_upper masters found. TOP PG connections will be empty."
+  puts "WARN: \[pdn_3d_stacked\] No *_upper masters found. TOP PG connections will be empty."
 } else {
-  puts "INFO: TOP tier instance count [llength $top_insts]"
+  puts "INFO: \[pdn_3d_stacked\] TOP tier instance count [llength $top_insts]"
   foreach inst $top_insts {
     globalNetConnect TOP_VDD -type pgpin -pin VDD -inst $inst -override
     globalNetConnect BOT_VSS -type pgpin -pin VSS -inst $inst -override
   }
 }
 
-# 如需，也可以给 TOP_VDD 单独 tiehi（可选）
 globalNetConnect TOP_VDD -type tiehi -all -override
+# If you want explicit tielo for BOT_VSS on upper tier:
+globalNetConnect BOT_VSS -type tielo -all -override
 
-puts "INFO: TOP globalNetConnect done."
+puts "INFO: \[pdn_3d_stacked\] TOP globalNetConnect done."
 
-# 3a) Follow-pin rails for TOP on M1_m (where PG pins actually exist)
+# 3a) Follow-pin rails for TOP on M1_m
 sroute -nets {TOP_VDD BOT_VSS} \
        -connect {corePin} \
        -corePinLayer {M1_m} \
        -corePinTarget {firstAfterRowEnd}
 
-# 3b) Duplicate M1_m rails to M2_m to emulate multi-layer rails (like ORFS followpins on M2_m)
+# 3b) Duplicate M1_m rails to M2_m
 deselectAll
 editSelect -layer M1_m -net $nets_top
-# 如果 rails 是竖向，可以改为 -layer_vertical
 editDuplicate -layer_horizontal M2_m
 deselectAll
 
-# 调整 M2_m rail 宽度（和 OpenROAD 一致，比如 0.018）
+# Resize M2_m rails
 deselectAll
 editSelect -layer M2_m -net $nets_top
 editResize -to 0.018 -side high -direction y -keep_center_line 1
 deselectAll
 
-# 4) TOP mesh on M5_m / M6_m (no forced stacked-via to avoid IMPPP-537)
+# 4) TOP mesh on M5_m / M6_m
 setAddStripeMode -orthogonal_only true -ignore_DRC false
 setAddStripeMode -over_row_extension true
 setAddStripeMode -extend_to_closest_target area_boundary
@@ -244,6 +203,4 @@ addStripe -layer M6_m \
           -start_offset 0.513 \
           -set_to_set_distance 5.4
 
-puts "INFO: 3D PDN generation (BOT + TOP) finished."
-
-# error "3D_PDN_SCRIPT_FINISHED"
+puts "INFO: \[pdn_3d_stacked\] 3D PDN generation (BOT + TOP) finished."

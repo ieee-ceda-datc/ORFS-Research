@@ -65,12 +65,12 @@ proc __map_perimeter {s lx ly ux uy cm usableB usableR layerH layerV} {
   return [list $x $y $side $layer]
 }
 
-proc place_all_ios_perimeter {} {
+proc place_all_ios {} {
   # --------------------------------------------------------------------
   # 0. IO layers from global vars
   # --------------------------------------------------------------------
   if {![info exists ::env(IO_PLACER_H)] || ![info exists ::env(IO_PLACER_V)]} {
-    error "Environment variables IO_PLACER_H and IO_PLACER_V must be set before calling place_all_ios_perimeter."
+    error "Environment variables IO_PLACER_H and IO_PLACER_V must be set before calling place_all_ios."
   }
   set layerH $::env(IO_PLACER_H)
   set layerV $::env(IO_PLACER_V)
@@ -142,24 +142,16 @@ proc place_all_ios_perimeter {} {
 
     puts [format "Placing %-16s on %-6s @ (%.4f, %.4f) layer=%s" $pin $side $x $y $layer]
 
-    # One–by–one placement; let Innovus snap to track and fix overlaps
-    catch {
-      editPin -pin $pin -layer $layer -side $side \
-              -assign "$x $y" -snap TRACK -fixOverlap 1 \
-              -skipWrappingPins -global_location
-    } rc
-    if {$rc ne ""} {
-      puts "WARN: editPin failed for pin $pin on side=$side : $rc"
-    }
+    editPin -pin $pin -layer $layer -side $side \
+            -assign "$x $y" -snap TRACK -fixOverlap 1 \
+            -skipWrappingPins -global_location -fixedPin 1
   }
   setPinAssignMode -pinEditInBatch false
-  # --------------------------------------------------------------------
-  # 5. Let Innovus do a legalize pass (mainly to clean up any residual)
-  # --------------------------------------------------------------------
-  legalizePin
+
+  legalizePin -keepLayer -moveFixedPin
 
   puts "FINAL: IO pins placed on perimeter and legalized."
 }
 
 # Auto–execute when sourced
-place_all_ios_perimeter
+place_all_ios

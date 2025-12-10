@@ -28,7 +28,7 @@ proc pc::_env_or {name default} {
 proc pc::setup_basic {} {
   # --- Threading and Analysis ---
   catch { setMultiCpuUsage -localCpu [_get NUM_CORES 16] }
-  catch { set_interactive_constraint_modes {CON} }  ;# Some versions may not have this command
+  catch { set_interactive_constraint_modes {CON} }
   catch { setAnalysisMode -reset }
   catch { setAnalysisMode -analysisType onChipVariation -cppr both }
 

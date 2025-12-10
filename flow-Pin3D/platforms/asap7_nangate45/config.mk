@@ -18,7 +18,7 @@ export LEF_DIR                 ?= $(dir $(TECH_LEF))
 
 # QRC（可选）
 export QRC_FILE                ?= $(PLATFORM_DIR)/qrc/NG45.tch
-
+export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC.tcl
 # =====================================================
 # GDS
 # =====================================================

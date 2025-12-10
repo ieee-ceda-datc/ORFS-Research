@@ -10,7 +10,7 @@ ifeq ($(FLOW_VARIANT),openroad)
   export TECH_LEF ?= $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech21.lef
   export RCX_RULES         ?= $(PLATFORM_DIR)/NangateOpenCellLibrary.tech21.rcx_patterns.rules
   export SET_RC_TCL  ?= $(PLATFORM_DIR)/setRC.tech21.tcl
-  export MIN_ROUTING_LAYER ?= M1
+  export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M22
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
@@ -89,15 +89,15 @@ export DONT_USE_CELLS = $(DONT_USE_CELLS_UPPER) $(DONT_USE_CELLS_BOTTOM)
 
 # Unified/Derived for Tcl usage
 export FILL_CELLS ?= $(FILL_CELLS_BOTTOM)     # For non-tiered/fallback usage
-export DNU_FOR_UPPER   := $(DONT_USE_CELLS_BOTTOM) *_bottom
-export DNU_FOR_BOTTOM  := $(DONT_USE_CELLS_UPPER)  *_upper
+export DNU_FOR_UPPER   := $(DONT_USE_CELLS_UPPER) *_bottom
+export DNU_FOR_BOTTOM  := $(DONT_USE_CELLS_BOTTOM)  *_upper
 
 # -------- CTS --------
 export CTS_BUF_CELL ?= BUF_X4_bottom
 
 # -------- Route --------
-export MIN_ROUTING_LAYER ?= M1
-export MAX_ROUTING_LAYER ?= M20
+export MIN_ROUTING_LAYER ?= M2
+export MAX_ROUTING_LAYER ?= M19
 
 # OpenROAD specific script (kept for mixed-flow)
 export FASTROUTE_TCL ?= $(PLATFORM_DIR)/fastroute.tcl

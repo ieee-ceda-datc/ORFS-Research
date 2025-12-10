@@ -67,6 +67,4 @@ add_pdn_connect -grid {grid} -layers {M1 M4}
 add_pdn_connect -grid {grid} -layers {M4 M7}
 add_pdn_connect -grid {grid} -layers {M20 M17}
 add_pdn_connect -grid {grid} -layers {M17 M14}
-add_pdn_connect -grid {grid} -layers {M14 M10}
-add_pdn_connect -grid {grid} -layers {M10 M7}
 

@@ -273,29 +273,13 @@ proc fastroute_setup {} {
   puts "INFO(OR): FastRoute default setup done: layers=${minL}-${maxL}, adjust=0.5"
 }
 
-proc or_rebuild_rows_for_site {new_site {out_def ""}} {
-  if {![llength [info commands ord::get_die_area]]} {
-    puts "ERROR: ord::get_die_area not available. Are you in OpenROAD?"
-    return
-  }
+proc or_rebuild_rows_for_site {new_site} {
 
-  set die_area [ord::get_die_area]
   set core_area [ord::get_core_area]
-
-  puts "INFO: OR die_area  = $die_area"
   puts "INFO: OR core_area = $core_area"
-  puts "INFO: OR rebuilding rows with site = $new_site"
+  puts "INFO: OR rebuilding rows with site = $new_site (rows-only via make_rows)"
 
-  # 2) Rebuild the floorplan/rows with the same die/core area and the new site
-  initialize_floorplan \
-    -die_area  $die_area \
-    -core_area $core_area \
-    -site      $new_site
-
-  if {$out_def ne ""} {
-    write_def $out_def
-    puts "INFO: wrote floorplan DEF with new rows: $out_def"
-  }
+  make_rows -core_area $core_area -site $new_site
 }
 
 # 递归打印某个 namespace 下的所有命令和子 namespace

@@ -25,5 +25,6 @@ test*.sh
 test.tcl
 .st_launch_*
 *.csv
+*.opennet
 eval.sh
 summary_reports

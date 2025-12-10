@@ -83,7 +83,7 @@ export OPENROAD_EXE ?= $(shell which openroad)
 export YOSYS_EXE    ?= $(shell which yosys)
 export STA_EXE      ?= $(shell which sta)
 export PYTHON_EXE  ?= $(shell which python3)
-OPENROAD_ARGS        = -no_init -threads ${NUM_CORES} 
+OPENROAD_ARGS        = -no_init -threads ${NUM_CORES} -exit
 OPENROAD_CMD         = $(OPENROAD_EXE) $(OPENROAD_ARGS)
 YOSYS_FLAGS         += -v 3
 
@@ -91,7 +91,7 @@ YOSYS_FLAGS         += -v 3
 export GENUS_EXE   ?= $(shell which genus)
 export INNOVUS_EXE ?= $(shell which innovus)
 GENUS_CMD   = $(GENUS_EXE)
-INNOVUS_CMD = $(INNOVUS_EXE) -64
+INNOVUS_CMD = $(INNOVUS_EXE) -64 -abort_on_error
 export OPEN_GUI ?= 0
 OPEN_GUI_CMD = $(if $(filter 1,$(OPEN_GUI)), , -no_gui)
 OR_GUI_FLAG = $(if $(filter 1,$(OPEN_GUI)),-gui,)

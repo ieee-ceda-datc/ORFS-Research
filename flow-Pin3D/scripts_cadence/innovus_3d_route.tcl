@@ -42,7 +42,10 @@ if {[info exists ::env(MIN_ROUTING_LAYER)]} { setDesignMode -bottomRoutingLayer 
 # ---------- Router Settings (Robust) ----------
 # GR: Disable timing if too slow; enable advanced node fix
 setNanoRouteMode -grouteExpWithTimingDriven false
-setNanoRouteMode -drouteEndIteration 20
+if {![info exists ::env(DETAILED_ROUTE_END_ITERATION)]} {
+    set ::env(DETAILED_ROUTE_END_ITERATION) 20
+}
+setNanoRouteMode -drouteEndIteration $::env(DETAILED_ROUTE_END_ITERATION)
 
 # SI/Timing-driven, auto VIA, avoid vias inside SC pins
 setNanoRouteMode -routeWithSiDriven true
