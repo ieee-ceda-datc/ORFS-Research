@@ -34,13 +34,16 @@ def _run_command_with_log(cmd: Sequence[str], log_path: Path, cwd: Optional[Path
     """
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # 兼容性处理：Windows/非POSIX环境没有 os.setsid
+    preexec = getattr(os, "setsid", None)
+
     with open(log_path, "w") as log_file:
         proc = subprocess.Popen(
             list(cmd),
             stdout=log_file,
             stderr=subprocess.STDOUT,
             cwd=str(cwd) if cwd else None,
-            preexec_fn=os.setsid,  # POSIX only
+            preexec_fn=preexec,
         )
 
         try:
@@ -49,14 +52,20 @@ def _run_command_with_log(cmd: Sequence[str], log_path: Path, cwd: Optional[Path
                 raise subprocess.CalledProcessError(ret, list(cmd))
         except KeyboardInterrupt:
             try:
-                os.killpg(proc.pid, signal.SIGTERM)
-            except ProcessLookupError:
+                if preexec and hasattr(os, "killpg"):
+                    os.killpg(proc.pid, signal.SIGTERM)
+                else:
+                    proc.terminate()
+            except Exception:
                 pass
             raise
         except Exception:
             try:
-                os.killpg(proc.pid, signal.SIGTERM)
-            except ProcessLookupError:
+                if preexec and hasattr(os, "killpg"):
+                    os.killpg(proc.pid, signal.SIGTERM)
+                else:
+                    proc.terminate()
+            except Exception:
                 pass
             raise
 

@@ -29,5 +29,4 @@ set GEN_EFF [_get GEN_EFF "medium"]
 set MAP_EFF [_get MAP_EFF "high"]
 set SITE [_get PLACE_SITE]
 set HALO_WIDTH [_get HALO_WIDTH "5"]
-set TOP_ROUTING_LAYER [_get MAX_ROUTING_LAYER]
 

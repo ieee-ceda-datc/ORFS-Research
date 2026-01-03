@@ -14,5 +14,5 @@ export DOCKER=docker
 export CONTAINER=orfs_zhiyu
 export CONTAINER_USER=zhiyuzheng
 export INNER_DIR=/scripts/ORFS-Research/flow-Pin3D
-export OPENROAD_CMD_DOCKER="${OPENROAD_EXE}"
 export NUM_CORES=16
+export OPENROAD_CMD_DOCKER="${OPENROAD_EXE} -threads ${NUM_CORES}"

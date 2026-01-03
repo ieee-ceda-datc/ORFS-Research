@@ -52,19 +52,19 @@ define_pdn_grid -name {grid} -voltage_domains {CORE}
 
 # M1 使用固定的 follow-pin 策略
 add_pdn_stripe -grid {grid} -layer {M1} -width {0.17} -pitch {2.8} -offset {0} -followpins
-add_pdn_stripe -grid {grid} -layer {M20} -width {0.17} -pitch {2.8} -offset {0}
+add_pdn_stripe -grid {grid} -layer {M1_m} -width {0.17} -pitch {2.8} -offset {0}
 
-add_pdn_stripe -grid {grid} -layer {M17} -width {0.84} -pitch $m4_pitch -offset {2}
+add_pdn_stripe -grid {grid} -layer {M4_m} -width {0.84} -pitch $m4_pitch -offset {2}
 add_pdn_stripe -grid {grid} -layer {M4} -width {0.84} -pitch $m4_pitch -offset {2} 
 
 add_pdn_stripe -grid {grid} -layer {M7} -width {2.4} -pitch $m7_pitch -offset {2}
-add_pdn_stripe -grid {grid} -layer {M14} -width {2.4} -pitch $m7_pitch -offset {2}
+add_pdn_stripe -grid {grid} -layer {M7_m} -width {2.4} -pitch $m7_pitch -offset {2}
 
 add_pdn_stripe -grid {grid} -layer {M10} -width {3.2} -pitch 32.0 -offset {2} 
 
 # 连接各层
 add_pdn_connect -grid {grid} -layers {M1 M4}
 add_pdn_connect -grid {grid} -layers {M4 M7}
-add_pdn_connect -grid {grid} -layers {M20 M17}
-add_pdn_connect -grid {grid} -layers {M17 M14}
+add_pdn_connect -grid {grid} -layers {M1_m M4_m}
+add_pdn_connect -grid {grid} -layers {M4_m M7_m}
 

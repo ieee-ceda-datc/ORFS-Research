@@ -91,6 +91,38 @@ puts "INFO: BOT global_connect done."
 
 puts "INFO: Defining PDN voltage domain 'CoreBOT'..."
 
+####################################
+# Dynamic Pitch Calculation
+####################################
+
+set core_area_bbox   [[odb::get_block] getCoreArea]
+
+set core_llx [$core_area_bbox xMin]
+set core_lly [$core_area_bbox yMin]
+set core_urx [$core_area_bbox xMax]
+set core_ury [$core_area_bbox yMax]
+
+set core_width  [ord::dbu_to_microns [expr $core_urx - $core_llx]]
+set core_height [ord::dbu_to_microns [expr $core_ury - $core_lly]]
+
+puts "INFO: Core Area Width: $core_width, Height: $core_height"
+
+set mfg_grid 0.005
+
+set m4_pitch [expr {$core_width / 1.1}]
+if {$m4_pitch > 20.16} {
+    set m4_pitch 20.16
+}
+set m4_pitch [expr {round($m4_pitch / $mfg_grid) * $mfg_grid}]
+
+set m7_pitch [expr {$core_height / 1.1}]
+if {$m7_pitch > 40} {
+    set m7_pitch 40
+}
+set m7_pitch [expr {round($m7_pitch / $mfg_grid) * $mfg_grid}]
+
+puts "INFO: Dynamic PDN Pitch -> M4: $m4_pitch, M7: $m7_pitch"
+
 set_voltage_domain -name {Core} \
                    -power  {BOT_VDD} \
                    -ground {BOT_VSS}
@@ -118,7 +150,7 @@ add_pdn_stripe \
   -grid   {BOT} \
   -layer  {M4} \
   -width  {0.84} \
-  -pitch  {20.16} \
+  -pitch  $m4_pitch \
   -offset {0} \
   -nets   {BOT_VDD BOT_VSS}
 
@@ -127,7 +159,7 @@ add_pdn_stripe \
   -grid    {BOT} \
   -layer   {M7} \
   -width   {2.4} \
-  -pitch   {40} \
+  -pitch   $m7_pitch \
   -offset  {2} \
   -nets    {BOT_VDD BOT_VSS}
 

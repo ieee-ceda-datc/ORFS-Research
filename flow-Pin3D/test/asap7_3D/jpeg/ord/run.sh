@@ -2,9 +2,8 @@
 source env.sh
 
 export DESIGN_DIMENSION="3D"
-export DEF_VERSION="jpeg"
 export DESIGN_NICKNAME="jpeg" 
-export DESIGN_NAME="jpeg_encoder" 
+export USE_FLOW="openroad"
 export FLOW_VARIANT="openroad"
 # export OPEN_GUI=0
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk clean_all
@@ -14,7 +13,7 @@ make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-preplace
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-tier-partition
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-pre
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-place-init
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init
 iteration=1
 for ((i=1;i<=iteration;i++)); do
   echo "Iteration: $i"

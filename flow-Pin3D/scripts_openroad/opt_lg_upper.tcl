@@ -14,7 +14,7 @@ source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
 mark_insts_by_master "*bottom*" FIRM
 # ==== 在 upper opt & lg 前 set 好 dont_use_cell ====
-apply_tier_policy upper
+apply_tier_policy upper -cts_safe 1
 
 source $::env(OPENROAD_SCRIPTS_DIR)/opt_lg_design.tcl
 
@@ -23,6 +23,8 @@ mark_insts_by_master "*bottom*" PLACED
 write_def    $env(RESULTS_DIR)/$DEF_OUT
 write_verilog $env(RESULTS_DIR)/$VERILOG_OUT
 
+source $::env(OPENROAD_SCRIPTS_DIR)/report_metrics.tcl
+report_metrics 3 "detailed place_upper" true false
 save_image -resolution 0.1 $::env(LOG_DIR)/3_4_opt_lg_upper_legalized.webp
 
 exit

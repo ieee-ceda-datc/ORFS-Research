@@ -30,6 +30,7 @@ set init_top_cell "$DESIGN"
 set init_lef_file "$lefs"
 
 # MCMM setup
+setGenerateViaMode -auto true
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 
@@ -52,7 +53,7 @@ generateVias
 # createBasicPathGroups -expanded
 
 # Floorplan parameters
-set CORE_UTIL     [_get CORE_UTILIZATION 80] 
+set CORE_UTIL     [_get CORE_UTILIZATION 60] 
 set ASPECT_RATIO  [_get CORE_ASPECT_RATIO 1.0]      
 set CORE_MARGIN   [_get CORE_MARGIN 0]       
 

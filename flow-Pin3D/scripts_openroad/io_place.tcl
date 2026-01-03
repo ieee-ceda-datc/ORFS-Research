@@ -71,9 +71,9 @@ set PERIM_um [expr {2.0*($W_um + $H_um)}]
 # =======================================================
 # 4) Derive corner_avoidance / min_distance (in microns)
 # =======================================================
-# Start with 5% of the short side; clamp into [0, 5%*short]
+# Start with 2% of the short side; clamp into [0, 2%*short]
 set short_um     [expr {min($W_um, $H_um)}]
-set ca_um       [expr {0.05*$short_um}]
+set ca_um       [expr {0.02*$short_um}]
 
 # Effective usable perimeter after skipping four corners (two ends per side)
 proc eff_perim {perim ca} { return [expr {$perim - 8.0*$ca}] }
@@ -87,13 +87,13 @@ if {$L_eff <= 0.0} {
 
 # Uniform target pitch and a small slack (80%) for min_distance
 set pitch_um     [expr {$L_eff / double($N)}]
-set min_dist_um  [expr {max(0.0, 0.8*$pitch_um)}]
+set min_dist_um  [expr {max(0.0, 0.7*$pitch_um)}]
 
 # (Optional) enforce a technology floor for gap, e.g., 0.2um if desired
 set MIN_ABS_GAP_UM 0.0
 if {$min_dist_um < $MIN_ABS_GAP_UM} { set min_dist_um $MIN_ABS_GAP_UM }
 
-puts [format "IO-INFO(um): N=%d, W=%.3f H=%.3f Perim=%.3f L_eff=%.3f  corner_avoid=%.3f  min_distance=%.3f" \
+puts [format "IO-INFO(um): N=%d, W=%.6f H=%.6f Perim=%.6f L_eff=%.6f  corner_avoid=%.6f  min_distance=%.6f" \
               $N $W_um $H_um $PERIM_um $L_eff $ca_um $min_dist_um]
 
 # ===========================================

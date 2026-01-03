@@ -48,13 +48,13 @@ if {[file exists $ENC_FILE]} {
 # Analysis knobs
 set_interactive_constraint_modes {CON}
 setAnalysisMode -analysisType onChipVariation -cppr both
+set_analysis_view -setup {WC_VIEW} -hold {BC_VIEW} -leakage WC_VIEW -dynamic WC_VIEW
 defIn $DEF_IN
 
 setMultiCpuUsage -localCpu [_get NUM_CORES 16]
 
 dumpToGIF $LOG_DIR/6_final.png
 # Newer Voltus API hint (do not error if views absent)
-catch { set_analysis_view -leakage WC_VIEW -dynamic WC_VIEW }
 
 # Run unified extractor directly into LOG_DIR
 file mkdir [file join $LOG_DIR timingReports]
@@ -80,7 +80,9 @@ puts "INFO: timingReports/, power_Final.rpt, drc.rpt, fep.rpt are under $LOG_DIR
 
 set VISUALIZE_FINAL [_get VISUALIZE_FINAL "0"]
 if {$VISUALIZE_FINAL eq "1"} {
-  error "INTENTIONAL_ABORT: For Final Deisgn Visualize" 
+  puts "INFO: Pausing for Final Design Visualization. Type 'resume' to continue or exit manually."
+  win
+  suspend
 }
 
 exit

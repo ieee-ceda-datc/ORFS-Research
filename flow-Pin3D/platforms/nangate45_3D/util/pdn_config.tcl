@@ -1,114 +1,82 @@
 #################################################################
-# pdn_3d_mirror_1_20.tcl
-# 3D symmetric PDN script (homogeneous process)
-#   - M1..M10 are mirrored to M20..M11
-#   - We only use:
-#       * Bottom die : M1 (rails), M4 / M7 (mesh)
-#       * Top die    : M20 (rails), M17 / M14 (mesh)
-#   - Other layers in the config are ignored by this script.
+# innovus_3d_pdn_simple.tcl
+# Minimal 3D PDN (homogeneous / mirrored)
 #
-#   PG nets:
-#     Bottom : BOT_VDD / BOT_VSS
-#     Top    : TOP_VDD / TOP_VSS   (independent; change TOP_VSS->BOT_VSS
-#                                   below if you want shared ground)
+# Layer order (bottom -> top) is FIXED by user:
+#   M1 -> M2 -> ... -> M10 -> M9_m -> M8_m -> ... -> M1_m
+#
+# PDN targets:
+#   Bottom: rails M1, mesh M4 (V) + M7 (H)
+#   Top:    rails M1_m, mesh M4_m (V) + M7_m (H)
 #################################################################
 
-puts "INFO: \[pdn_3d_mirror_1_20\] Start symmetric 3D PDN (M1<->M20, M4<->M17, M7<->M14)..."
+puts "INFO: Start..."
 
-# ===== Basic floorplan channel size =====
+# --------------------------
+# Basic floorplan channels
+# --------------------------
 set minCh 5
 
-# ===== Layer / geometry configuration =====
-#           M1  M4  M5  M6  M7  M10 \
-#           M14 M15 M16 M17 M20
-set layers  "M1  M4  M5  M6  M7  M10 \
-             M14 M15 M16 M17 M20"
-set width   "0       0.84    0.84    0.84    2.4     3.20  \
-             2.4     0.84    0.84    0.84    0"
-set pitch   "0       20.16   10.08   10.08   40      32    \
-             40      10.08   10.08   20.16   0"
-set spacing "0       0.56    0.56    0.56    1.6     1.6   \
-             1.6     0.56    0.56    0.56    0"
-set ldir    "0       1       0       1       0       1     \
-             0       1       0       1       0"
-set isMacro "0       0       1       1       0       0     \
-             0       1       1       0       0"
-set isBM    "1       1       0       0       0       0     \
-             0       0       0       1       1"
-set isAM    "0       0       1       1       1       1     \
-             1       1       1       0       0"
-set isFP    "1       0       0       0       0       0     \
-             0       0       0       0       1"
-set soffset "0       2       2       2       2       2     \
-             2       2       2       2       0"
-set addch   "0       1       0       0       0       0     \
-             0       0       0       1       0"
+# --------------------------
+# Mesh geometry (edit if needed)
+# --------------------------
+# Bottom mesh
+set W_M4   0.84
+set P_M4   20.16
+set S_M4   0.56
+set O_M4   2.00
 
-#################################################################
-# Helper: query bottom / upper tier instances by master name
-#################################################################
+set W_M7   2.40
+set P_M7   40.00
+set S_M7   1.60
+set O_M7   2.00
+
+# Top mesh (mirrored)
+set W_M4m  0.84
+set P_M4m  20.16
+set S_M4m  0.56
+set O_M4m  2.00
+
+set W_M7m  2.40
+set P_M7m  40.00
+set S_M7m  1.60
+set O_M7m  2.00
+
+# --------------------------
+# Tier instance queries
+# --------------------------
 proc get_bottom_tier_insts {} {
   set inst_ptrs [dbGet top.insts.cell.name "*_bottom" -p2]
-  if {[llength $inst_ptrs] == 0} {
-    return ""
-  }
+  if {[llength $inst_ptrs] == 0} { return "" }
   return [dbGet $inst_ptrs.name]
 }
 
 proc get_upper_tier_insts {} {
   set inst_ptrs [dbGet top.insts.cell.name "*_upper" -p2]
-  if {[llength $inst_ptrs] == 0} {
-    return ""
-  }
+  if {[llength $inst_ptrs] == 0} { return "" }
   return [dbGet $inst_ptrs.name]
 }
 
-#################################################################
-# Helper: get a per-layer parameter from the config lists
-#################################################################
-proc get_layer_param {layer layers values} {
-  set idx [lsearch -exact $layers $layer]
-  if {$idx < 0} {
-    return ""
-  }
-  return [lindex $values $idx]
-}
+# --------------------------
+# Build PDN for one tier (minimal)
+# --------------------------
+proc build_tier_pdn {tier_name inst_list vdd_net vss_net rail_layer mesh_v mesh_h \
+                     wv pv sv ov wh ph sh oh} {
 
-#################################################################
-# Helper: build PDN for one die (tier)
-#   tier_name : "BOT" / "TOP"
-#   inst_list : list of inst names belonging to this tier
-#   vdd_net   : PG VDD net name (BOT_VDD / TOP_VDD)
-#   vss_net   : PG VSS net name (BOT_VSS / TOP_VSS)
-#   rail_layer: lower follow-pin rail layer (M1 / M20)
-#   mesh_l1   : first mesh layer (M4 / M17)
-#   mesh_l2   : second mesh layer (M7 / M14)
-#################################################################
-proc build_pdn_symmetric_tier {tier_name inst_list vdd_net vss_net \
-                               rail_layer mesh_l1 mesh_l2} {
-
-  global layers width pitch spacing soffset
-
-  puts "INFO: \[pdn_3d_mirror_1_20\] === \[$tier_name\] PDN: rails on $rail_layer, mesh on $mesh_l1 / $mesh_l2 ==="
+  puts "INFO: === rails=$rail_layer meshV=$mesh_v meshH=$mesh_h ==="
 
   if {[llength $inst_list] == 0} {
-    puts "WARN: \[pdn_3d_mirror_1_20\] \[$tier_name\] No tier instances found. Skip PDN."
+    puts "WARN: No instances found. Skip."
     return
   }
 
-  puts "INFO: \[pdn_3d_mirror_1_20\] \[$tier_name\] instance count = [llength $inst_list]"
-
-  # 1) Global net connect for all tier instances
+  # 1) Connect PG pins for tier instances
   foreach inst $inst_list {
     globalNetConnect $vdd_net -type pgpin -pin VDD -inst $inst -override
     globalNetConnect $vss_net -type pgpin -pin VSS -inst $inst -override
   }
-
-  # Tie cells (optional but recommended)
   globalNetConnect $vdd_net -type tiehi -all -override
   globalNetConnect $vss_net -type tielo -all -override
-
-  puts "INFO: \[pdn_3d_mirror_1_20\] \[$tier_name\] globalNetConnect done for $vdd_net / $vss_net."
 
   # 2) Follow-pin rails on rail_layer
   sroute -nets [list $vdd_net $vss_net] \
@@ -116,55 +84,76 @@ proc build_pdn_symmetric_tier {tier_name inst_list vdd_net vss_net \
          -corePinLayer [list $rail_layer] \
          -corePinTarget {firstAfterRowEnd}
 
-  puts "INFO: \[pdn_3d_mirror_1_20\] \[$tier_name\] follow-pin rails created on $rail_layer."
+  # 3) Mesh stripes
+  #    NOTE: stacked-via constraints must obey your fixed layer order.
+  #    Bottom tier:
+  #      M4 is above M1  => top=M4,  bottom=M1
+  #      M7 is above M4  => top=M7,  bottom=M4
+  #    Top tier:
+  #      M1_m is above M4_m => top=M1_m, bottom=M4_m   (IMPORTANT FIX)
+  #      M4_m is above M7_m? No. In your order, M7_m is BELOW M4_m? Actually:
+  #        ... M10 -> M9_m -> M8_m -> ... -> M1_m
+  #      so M7_m is BELOW M4_m and BELOW M1_m.
+  #      For connecting M7_m to M4_m: top=M4_m, bottom=M7_m
+  #
+  # Therefore we will set stacked-via range explicitly per tier by name.
 
-  # 3) Mesh stripes on mesh_l1 / mesh_l2
+  if {$tier_name eq "BOT"} {
+    # mesh_v (M4) down to rails (M1)
+    setAddStripeMode -stacked_via_top_layer    $mesh_v
+    setAddStripeMode -stacked_via_bottom_layer $rail_layer
 
-  # mesh_l1 parameters (e.g., M4 / M17)
-  set w1 [get_layer_param $mesh_l1 $layers $width]
-  set p1 [get_layer_param $mesh_l1 $layers $pitch]
-  set s1 [get_layer_param $mesh_l1 $layers $spacing]
-  set o1 [get_layer_param $mesh_l1 $layers $soffset]
+    addStripe -layer $mesh_v \
+              -direction vertical \
+              -nets [list $vdd_net $vss_net] \
+              -width $wv -spacing $sv \
+              -start_offset $ov \
+              -set_to_set_distance $pv
 
-  # mesh_l2 parameters (e.g., M7 / M14)
-  set w2 [get_layer_param $mesh_l2 $layers $width]
-  set p2 [get_layer_param $mesh_l2 $layers $pitch]
-  set s2 [get_layer_param $mesh_l2 $layers $spacing]
-  set o2 [get_layer_param $mesh_l2 $layers $soffset]
+    # mesh_h (M7) down to mesh_v (M4)
+    setAddStripeMode -stacked_via_top_layer    $mesh_h
+    setAddStripeMode -stacked_via_bottom_layer $mesh_v
 
-  if {$w1 eq "" || $w2 eq ""} {
-    puts "ERROR: \[pdn_3d_mirror_1_20\] \[$tier_name\] Missing PDN parameters for $mesh_l1 / $mesh_l2."
-    return
+    addStripe -layer $mesh_h \
+              -direction horizontal \
+              -nets [list $vdd_net $vss_net] \
+              -width $wh -spacing $sh \
+              -start_offset $oh \
+              -set_to_set_distance $ph
+
+  } else {
+    # TOP tier (mirrored stack):
+    # mesh_v (M4_m) connects UP to rails (M1_m), so top MUST be M1_m
+    setAddStripeMode -stacked_via_top_layer    $rail_layer
+    setAddStripeMode -stacked_via_bottom_layer $mesh_v
+
+    addStripe -layer $mesh_v \
+              -direction vertical \
+              -nets [list $vdd_net $vss_net] \
+              -width $wv -spacing $sv \
+              -start_offset $ov \
+              -set_to_set_distance $pv
+
+    # mesh_h (M7_m) connects UP to mesh_v (M4_m), so top MUST be M4_m
+    setAddStripeMode -stacked_via_top_layer    $mesh_v
+    setAddStripeMode -stacked_via_bottom_layer $mesh_h
+
+    addStripe -layer $mesh_h \
+              -direction horizontal \
+              -nets [list $vdd_net $vss_net] \
+              -width $wh -spacing $sh \
+              -start_offset $oh \
+              -set_to_set_distance $ph
   }
 
-  # Directions: M4/M17 vertical, M7/M14 horizontal
-  set dir1 "vertical"
-  set dir2 "horizontal"
-
-  addStripe -layer $mesh_l1 \
-            -direction $dir1 \
-            -nets [list $vdd_net $vss_net] \
-            -width $w1 \
-            -spacing $s1 \
-            -start_offset $o1 \
-            -set_to_set_distance $p1
-
-  addStripe -layer $mesh_l2 \
-            -direction $dir2 \
-            -nets [list $vdd_net $vss_net] \
-            -width $w2 \
-            -spacing $s2 \
-            -start_offset $o2 \
-            -set_to_set_distance $p2
-
-  puts "INFO: \[pdn_3d_mirror_1_20\] \[$tier_name\] mesh stripes added on $mesh_l1 (vertical) / $mesh_l2 (horizontal)."
+  puts "INFO: Done."
 }
 
-#################################################################
+# --------------------------
 # Top-level PDN flow
-#################################################################
+# --------------------------
 
-# 1) Create channels between rows
+# Create channels between rows (kept minimal, as you had)
 dbset [dbget top.insts.cell.subClass core -p2].pStatus unplaced
 finishFloorplan -fillPlaceBlockage hard $minCh
 cutRow
@@ -179,40 +168,31 @@ if {[llength $fp_blk] > 0} {
   deselectAll
 }
 
-# 2) Query bottom / top tier instances
+# Stripe common mode (minimal)
+setAddStripeMode -orthogonal_only true
+setAddStripeMode -ignore_DRC false
+setAddStripeMode -extend_to_closest_target area_boundary
+
+# Use this script's PG mapping
+clearGlobalNets
+
+# Tier instance lists
 set bot_insts [get_bottom_tier_insts]
 set top_insts [get_upper_tier_insts]
 
-puts "INFO: \[pdn_3d_mirror_1_20\] BOT tier inst count = [llength $bot_insts]"
-puts "INFO: \[pdn_3d_mirror_1_20\] TOP tier inst count = [llength $top_insts]"
+puts "INFO: BOT inst count = [llength $bot_insts]"
+puts "INFO: TOP inst count = [llength $top_insts]"
 
-# 3) Common stripe mode
-setAddStripeMode -orthogonal_only true
-setAddStripeMode -ignore_DRC false
-setAddStripeMode -over_row_extension true
-setAddStripeMode -extend_to_closest_target area_boundary
-setAddStripeMode -inside_cell_only false
-setAddStripeMode -route_over_rows_only false
+# Bottom PDN
+build_tier_pdn "BOT" $bot_insts BOT_VDD BOT_VSS \
+  M1  M4  M7 \
+  $W_M4 $P_M4 $S_M4 $O_M4 \
+  $W_M7 $P_M7 $S_M7 $O_M7
 
-# Own PG mapping in this script
-clearGlobalNets
+# Top PDN
+build_tier_pdn "TOP" $top_insts TOP_VDD TOP_VSS \
+  M1_m M4_m M7_m \
+  $W_M4m $P_M4m $S_M4m $O_M4m \
+  $W_M7m $P_M7m $S_M7m $O_M7m
 
-# 4) Build BOT tier PDN
-#    - rail layer : M1
-#    - mesh layers: M4 (vertical) / M7 (horizontal)
-build_pdn_symmetric_tier "BOT" $bot_insts \
-                         BOT_VDD BOT_VSS \
-                         M1 M4 M7
-
-# 5) Build TOP tier PDN
-#    - rail layer : M20 (mirror of M1)
-#    - mesh layers: M17 (mirror of M4) / M14 (mirror of M7)
-#
-#    NOTE:
-#      If you want shared ground, replace TOP_VSS with BOT_VSS here:
-#        build_pdn_symmetric_tier "TOP" ... TOP_VDD BOT_VSS ...
-build_pdn_symmetric_tier "TOP" $top_insts \
-                         TOP_VDD TOP_VSS \
-                         M20 M17 M14
-
-puts "INFO: \[pdn_3d_mirror_1_20\] Symmetric 3D PDN (Bottom + Top) finished."
+puts "INFO: Finished."

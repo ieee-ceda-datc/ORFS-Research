@@ -6,10 +6,10 @@
 export PROCESS = 45
 
 # -------- Tech / Libs --------
-ifeq ($(FLOW_VARIANT),openroad)
+ifeq ($(USE_FLOW),openroad)
   export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_9M10M.lef
   export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_9M10M.rcx_patterns.rules
-  export MIN_ROUTING_LAYER ?= M1
+  export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M3_add
   export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_9M10M.tcl
 endif

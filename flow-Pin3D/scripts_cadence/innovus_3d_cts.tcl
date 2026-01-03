@@ -22,7 +22,7 @@ set init_mmmc_file ""
 set init_design_settop 1
 set init_top_cell $DESIGN
 set init_verilog $V_IN
-
+setGenerateViaMode -auto true
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 set_interactive_constraint_modes {CON}
@@ -40,8 +40,19 @@ setOptMode -unfixClkInstForOpt false
 
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
 
-set_tier_placement_status upper fixed
-apply_tier_policy bottom
+set cts_layer "bottom"
+set fix_layer "upper"
+if {[info exists ::env(CTS_LAYER)]} {
+  set cts_layer $::env(CTS_LAYER)
+  if { $cts_layer == "bottom" } {
+    set fix_layer "upper"
+  } else {
+    set fix_layer "bottom"
+  }
+}
+
+set_tier_placement_status $fix_layer fixed
+apply_tier_policy $cts_layer 
 
 # --- run ccopt ---
 create_ccopt_clock_tree_spec
@@ -49,7 +60,7 @@ if { !([info exists ::env(UPPER_SITE)] && [info exists ::env(BOTTOM_SITE)]) } {
   ccopt_design
 }
 
-set_tier_placement_status upper placed
+set_tier_placement_status $fix_layer placed
 
 # --- 写出 DEF + Netlist（CTS 视图）---
 defOut -floorplan -routing [file join $RESULTS_DIR "4_1_cts.def"]

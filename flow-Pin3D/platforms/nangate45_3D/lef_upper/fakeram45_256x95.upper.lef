@@ -2733,7 +2733,7 @@ MACRO fakeram45_256x95_upper
     END
   END VDD
   OBS
-    LAYER M20 ;
+    LAYER M1_m ;
     RECT 0 0 115.140 119.000 ;
     LAYER M19 ;
     RECT 0 0 115.140 119.000 ;

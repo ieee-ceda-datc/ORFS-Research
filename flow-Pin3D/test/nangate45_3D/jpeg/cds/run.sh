@@ -2,9 +2,8 @@
 source env.sh
 
 export DESIGN_DIMENSION="3D"
-export DEF_VERSION="jpeg"
-export DESIGN_NAME="jpeg_encoder" 
-export DESIGN_NICKNAME="jpeg"
+export DESIGN_NICKNAME="jpeg" 
+export USE_FLOW="cadence"
 export FLOW_VARIANT="cadence"
 # export OPEN_GUI=1
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk clean_all
@@ -18,7 +17,7 @@ else
 fi
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-pre
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-3d-pdn
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-place-init
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
 iteration=1
 for ((i=1;i<=iteration;i++))
 do

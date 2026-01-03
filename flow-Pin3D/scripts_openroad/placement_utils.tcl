@@ -1,6 +1,4 @@
 # placement_utils.tcl
-
-
 # In placement phase
 # ----------------------------------------------------------------------
 # Mark instances as a given placement status by matching master name
@@ -65,6 +63,25 @@ proc ::_as_int {v default} {
 proc ::_env_or {name default} {
   if {[info exists ::env($name)]} { return $::env($name) }
   return $default
+}
+
+# 递归打印某个 namespace 下的所有命令和子 namespace
+proc or_list_ns_cmds {ns {indent ""}} {
+  # 打印当前 namespace
+  puts "${indent}Namespace: $ns"
+
+  # 当前 namespace 下的命令（用 pattern 匹配）
+  set pattern "${ns}::*"
+  set cmds [lsort [info commands $pattern]]
+  foreach c $cmds {
+    puts "${indent}  [string range $c 0 end]"
+  }
+
+  # 递归进入子 namespace
+  set children [lsort [namespace children $ns]]
+  foreach child $children {
+    or_list_ns_cmds $child "${indent}  "
+  }
 }
 
 # ---------- Robust density calculator ----------
@@ -207,52 +224,6 @@ proc _set_dont_use {cells} {
   }
 }
 
-# ============= Tier strategy (similar approach to Cadence scripts) =============
-# Environment variables (if already defined they take effect):
-#   DNU_FOR_UPPER / DNU_FOR_BOTTOM  : disable pattern list for upper/bottom
-#   DONT_USE_CELLS                  : overall dont-use list compatible with existing scripts (optional)
-#   *_upper / *_bottom libraries can be matched by "*_upper" / "*_bottom" wildcards
-proc apply_tier_policy {tier} {
-  set tier [string tolower $tier]
-  if {![string match "upper" $tier] && ![string match "bottom" $tier]} {
-  error "apply_tier_policy: tier must be 'upper' or 'bottom'"
-  }
-
-  set dnu_up  [_as_list DNU_FOR_UPPER]
-  set dnu_bot [_as_list DNU_FOR_BOTTOM]
-
-  if {$tier eq "upper"} {
-    if {[llength $dnu_up]} {
-      _set_dont_use [_expand_libcells $dnu_up]
-    } else {
-      _set_dont_use [_expand_libcells "*_bottom"]
-    }
-    set ::env(TIEHI_CELL_AND_PORT) $::env(UPPER_TIEHI_CELL_AND_PORT)
-    set ::env(TIELO_CELL_AND_PORT) $::env(UPPER_TIELO_CELL_AND_PORT)
-    if {[info exists ::env(UPPER_SITE)]} {
-      set ::env(PLACE_SITE) $::env(UPPER_SITE)
-    }
-    puts "INFO(OR): Tier policy applied for UPPER."
-  } else {
-    if {[llength $dnu_bot]} {
-      _set_dont_use [_expand_libcells $dnu_bot]
-    } else {
-      _set_dont_use [_expand_libcells "*_upper"]
-    }
-    set ::env(TIEHI_CELL_AND_PORT) $::env(BOTTOM_TIEHI_CELL_AND_PORT)
-    set ::env(TIELO_CELL_AND_PORT) $::env(BOTTOM_TIELO_CELL_AND_PORT)
-    if {[info exists ::env(BOTTOM_SITE)]} {
-      set ::env(PLACE_SITE) $::env(BOTTOM_SITE)
-    }
-    puts "INFO(OR): Tier policy applied for BOTTOM."
-  }
-  if {[info exists ::env(DONT_USE_CELLS)] && $::env(DONT_USE_CELLS) ne ""} {
-    _set_dont_use [_expand_libcells $::env(DONT_USE_CELLS)]
-    puts "INFO(OR): Applied DONT_USE_CELLS = '$::env(DONT_USE_CELLS)'."
-  }
-  or_rebuild_rows_for_site $::env(PLACE_SITE)
-}
-
 # ============= FastRoute fallback setup (can be overridden by external Tcl) =============
 proc fastroute_setup {} {
   # Prefer user-provided external script
@@ -273,32 +244,211 @@ proc fastroute_setup {} {
   puts "INFO(OR): FastRoute default setup done: layers=${minL}-${maxL}, adjust=0.5"
 }
 
+# ============================================================
+# Row rebuild for OpenROAD (site-snapped + die-clamped)
+# ============================================================
+
+proc _snap_down_dbu {x pitch} {
+  if {$pitch <= 0} { error "ERROR: pitch must be > 0, got $pitch" }
+  return [expr {($x / $pitch) * $pitch}]   ;# floor to pitch grid
+}
+
+proc _snap_up_dbu {x pitch} {
+  if {$pitch <= 0} { error "ERROR: pitch must be > 0, got $pitch" }
+  if {$x % $pitch == 0} { return $x }
+  return [expr {(($x / $pitch) + 1) * $pitch}]  ;# ceil to pitch grid
+}
+
+proc _clamp_dbu {x lo hi} {
+  if {$x < $lo} { return $lo }
+  if {$x > $hi} { return $hi }
+  return $x
+}
+
+# Get die area in DBU: {lx ly ux uy}
+proc or_get_die_area_dbu {block} {
+  lassign [ord::get_die_area] dlx_um dly_um dux_um duy_um
+  return [list \
+    [$block micronsToDbu $dlx_um] \
+    [$block micronsToDbu $dly_um] \
+    [$block micronsToDbu $dux_um] \
+    [$block micronsToDbu $duy_um] \
+  ]
+}
+
+# Find a dbSite by name from any library in the current db. (must find or error)
+proc or_find_site_by_name_in_db {site_name} {
+  set db [ord::get_db]
+  foreach lib [$db getLibs] {
+    set s [odb::dbLib_findSite $lib $site_name]
+    if {$s ne "" && $s ne "NULL"} { return $s }
+  }
+  error "ERROR: cannot resolve site '$site_name' via odb::dbLib_findSite in any dbLib."
+}
+
 proc or_rebuild_rows_for_site {new_site} {
+  # die area (microns): {lx ly ux uy}
+  lassign [ord::get_die_area] die_lx die_ly die_ux die_uy
 
-  set core_area [ord::get_core_area]
-  puts "INFO: OR core_area = $core_area"
-  puts "INFO: OR rebuilding rows with site = $new_site (rows-only via make_rows)"
-
-  make_rows -core_area $core_area -site $new_site
-}
-
-# 递归打印某个 namespace 下的所有命令和子 namespace
-proc or_list_ns_cmds {ns {indent ""}} {
-  # 打印当前 namespace
-  puts "${indent}Namespace: $ns"
-
-  # 当前 namespace 下的命令（用 pattern 匹配）
-  set pattern "${ns}::*"
-  set cmds [lsort [info commands $pattern]]
-  foreach c $cmds {
-    puts "${indent}  [string range $c 0 end]"
+  # core margin (microns)
+  set m 0.0
+  if {[info exists ::env(CORE_MARGIN)] && $::env(CORE_MARGIN) ne ""} {
+    set m [expr {double($::env(CORE_MARGIN))}]
+  }
+  if {$m < 0.0} {
+    error "ERROR: CORE_MARGIN must be >= 0, got $m"
   }
 
-  # 递归进入子 namespace
-  set children [lsort [namespace children $ns]]
-  foreach child $children {
-    or_list_ns_cmds $child "${indent}  "
+  # core area = die area inset by margin
+  set core_lx [expr {$die_lx + $m}]
+  set core_ly [expr {$die_ly + $m}]
+  set core_ux [expr {$die_ux - $m}]
+  set core_uy [expr {$die_uy - $m}]
+
+  if {$core_ux <= $core_lx || $core_uy <= $core_ly} {
+    error "ERROR: CORE_MARGIN ($m um) too large for die_area {$die_lx $die_ly $die_ux $die_uy}"
   }
+
+  # deterministic: site must exist in dbLib 
+  set site [or_find_site_by_name_in_db $new_site]
+  if {[$site getWidth] <= 0 || [$site getHeight] <= 0} {
+    error "ERROR: invalid site '$new_site' (w=[$site getWidth] h=[$site getHeight])"
+  }
+
+  # make_rows will rebuild rows (and clear existing ones internally)
+  make_rows -core_area [list $core_lx $core_ly $core_ux $core_uy] -site $new_site
 }
 
+# ------------------------------------------------------------
+# OpenROAD: set_dont_touch for instances matched by MASTER name pattern
+#   pattern: "*_bottom" / "*_upper"
+# Notes:
+#   - Instance-only. No net locking. No lock_nets option.
+#   - Do NOT call this in CTS stage if your CTS script rewires clocks.
+# Options:
+#   -quiet 1/0 (default 0)
+# Return: number of matched instances
+# ------------------------------------------------------------
+proc or_set_dont_touch_by_master {pattern args} {
+  array set opt { -quiet 0 }
+  if {([llength $args] % 2) != 0} {
+    error "or_set_dont_touch_by_master: args must be key-value pairs, got: $args"
+  }
+  foreach {k v} $args {
+    if {![info exists opt($k)]} { error "or_set_dont_touch_by_master: unknown option $k" }
+    set opt($k) $v
+  }
 
+  if {$pattern eq ""} {
+    if {!$opt(-quiet)} { puts "INFO(OR): dont_touch: empty pattern, skip." }
+    return 0
+  }
+  if {![llength [info commands set_dont_touch]]} {
+    error "OpenROAD: set_dont_touch command not found."
+  }
+
+  set block [ord::get_db_block]
+  if {$block eq ""} {
+    puts "WARN(OR): dont_touch: no db block"
+    return 0
+  }
+
+  set inst_names {}
+  foreach inst [$block getInsts] {
+    set mname [[$inst getMaster] getName]
+    if {[string match -nocase $pattern $mname]} {
+      lappend inst_names [$inst getName]
+    }
+  }
+
+  set cnt [llength $inst_names]
+  if {$cnt == 0} {
+    if {!$opt(-quiet)} { puts "INFO(OR): dont_touch: no inst matches master '$pattern'." }
+    return 0
+  }
+
+  set cells [get_cells $inst_names]
+  if {[catch { set_dont_touch $cells } err]} {
+    if {!$opt(-quiet)} { puts "WARN(OR): dont_touch: failed: $err" }
+  } else {
+    if {!$opt(-quiet)} {
+      puts "INFO(OR): dont_touch: locked $cnt insts by master '$pattern'. Examples: [join [lrange $inst_names 0 4] {, }]"
+    }
+  }
+  return $cnt
+}
+
+# ------------------------------------------------------------
+# Apply tier policy (CTS-safe switch)
+#   - default: set_dont_touch on the other tier instances
+#   - if -cts_safe 1: do NOT set_dont_touch (avoid ODB-0370 in CTS rewiring)
+# Options:
+#   -cts_safe 0/1   (default 0)
+#   -quiet    0/1   (default 0)
+# ------------------------------------------------------------
+proc apply_tier_policy {tier args} {
+  set tier [string tolower $tier]
+  if {$tier ne "upper" && $tier ne "bottom"} {
+    error "apply_tier_policy: tier must be 'upper' or 'bottom'"
+  }
+
+  array set opt {
+    -cts_safe 0
+    -quiet    0
+  }
+  if {([llength $args] % 2) != 0} {
+    error "apply_tier_policy: args must be key-value pairs, got: $args"
+  }
+  foreach {k v} $args {
+    if {![info exists opt($k)]} { error "apply_tier_policy: unknown option $k" }
+    set opt($k) $v
+  }
+
+  set dnu_up  [_as_list DNU_FOR_UPPER]
+  set dnu_bot [_as_list DNU_FOR_BOTTOM]
+
+  if {$tier eq "upper"} {
+    # dont_use for synthesis/placement choices
+    if {[llength $dnu_up]} { _set_dont_use [_expand_libcells $dnu_up] } else { _set_dont_use [_expand_libcells "*_bottom"] }
+
+    set ::env(TIEHI_CELL_AND_PORT) $::env(UPPER_TIEHI_CELL_AND_PORT)
+    set ::env(TIELO_CELL_AND_PORT) $::env(UPPER_TIELO_CELL_AND_PORT)
+    if {[info exists ::env(UPPER_SITE)]} { set ::env(PLACE_SITE) $::env(UPPER_SITE) }
+
+    # optional freeze handled elsewhere (per your note)
+
+    # default: set_dont_touch other tier; CTS-safe: skip
+    if {!$opt(-cts_safe)} {
+      or_set_dont_touch_by_master "*_bottom" -quiet $opt(-quiet)
+    } elseif {!$opt(-quiet)} {
+      puts "INFO(OR): cts_safe=1 -> skip set_dont_touch for other tier."
+    }
+
+    if {!$opt(-quiet)} {
+      puts "INFO(OR): Tier=UPPER applied. cts_safe=$opt(-cts_safe)"
+    }
+  } else {
+    if {[llength $dnu_bot]} { _set_dont_use [_expand_libcells $dnu_bot] } else { _set_dont_use [_expand_libcells "*_upper"] }
+
+    set ::env(TIEHI_CELL_AND_PORT) $::env(BOTTOM_TIEHI_CELL_AND_PORT)
+    set ::env(TIELO_CELL_AND_PORT) $::env(BOTTOM_TIELO_CELL_AND_PORT)
+    if {[info exists ::env(BOTTOM_SITE)]} { set ::env(PLACE_SITE) $::env(BOTTOM_SITE) }
+
+    if {!$opt(-cts_safe)} {
+      or_set_dont_touch_by_master "*_upper" -quiet $opt(-quiet)
+    } elseif {!$opt(-quiet)} {
+      puts "INFO(OR): cts_safe=1 -> skip set_dont_touch for other tier."
+    }
+
+    if {!$opt(-quiet)} {
+      puts "INFO(OR): Tier=BOTTOM applied. cts_safe=$opt(-cts_safe)"
+    }
+  }
+
+  if {[info exists ::env(DONT_USE_CELLS)] && $::env(DONT_USE_CELLS) ne ""} {
+    _set_dont_use [_expand_libcells $::env(DONT_USE_CELLS)]
+    if {!$opt(-quiet)} { puts "INFO(OR): Applied DONT_USE_CELLS = '$::env(DONT_USE_CELLS)'." }
+  }
+
+  or_rebuild_rows_for_site $::env(PLACE_SITE)
+}

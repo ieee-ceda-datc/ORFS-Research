@@ -4,12 +4,13 @@
 
 # -------- Process --------
 export PROCESS = 45
+export PLATFORM = asap7_nangate45_3D
 # -------- Tech / Libs --------
-ifeq ($(FLOW_VARIANT),openroad)
+ifeq ($(USE_FLOW),openroad)
   export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_nangate45_10M10M.lef
   export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_nangate45_10M10M.rcx_patterns.rules
   export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_10M10M.tcl
-  export MIN_ROUTING_LAYER ?= M1
+  export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M3_add
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
@@ -41,7 +42,6 @@ export LEF_FILES = $(TECH_LEF) \
 export LIB_FILES = $(SC_LIB) \
                    $(ADDITIONAL_LIBS)
 
-# 目录/抽取（保持与 45_3D 模板一致）
 export LIB_DIR  ?= $(dir $(SC_LIB))
 export LEF_DIR  ?= $(dir $(TECH_LEF))
 export QRC_FILE ?= $(PLATFORM_DIR)/qrc/ASAP7.tch
@@ -65,11 +65,11 @@ export UPPER_TIEHI_CELL_AND_PORT  = TIEHIx1_ASAP7_75t_R_upper  H
 export UPPER_TIELO_CELL_AND_PORT  = TIELOx1_ASAP7_75t_R_upper  L
 
 # -------- Floorplan --------
-export PLACE_SITE  = asap7sc7p5t
+export PLACE_SITE  = FreePDK45_38x28_10R_NP_162NW_34O
 export UPPER_SITE  = asap7sc7p5t
 export BOTTOM_SITE = FreePDK45_38x28_10R_NP_162NW_34O
-export IO_PLACER_H ?= M4
-export IO_PLACER_V ?= M5
+export IO_PLACER_H ?= M5
+export IO_PLACER_V ?= M6
 
 # PDN / Endcap / Welltie（3D 策略）
 export PDN_TCL      ?= $(PLATFORM_DIR)/openRoad/pdn/grid_strategy-3D.tcl
@@ -82,7 +82,6 @@ export CELL_PAD_IN_SITES_GLOBAL_PLACEMENT ?= 0
 export CELL_PAD_IN_SITES_DETAIL_PLACEMENT ?= 0
 export PLACE_DENSITY ?= 0.60
 
-# 3D 分层填充/屏蔽
 export FILL_CELLS_UPPER  ?= FILLERxp5_ASAP7_75t_R_upper FILLER_ASAP7_75t_R_upper \
                             DECAPx1_ASAP7_75t_R_upper   DECAPx2_ASAP7_75t_R_upper \
                             DECAPx4_ASAP7_75t_R_upper   DECAPx6_ASAP7_75t_R_upper \
@@ -94,14 +93,16 @@ export DONT_USE_CELLS_UPPER  ?= *x1p*_ASAP7*_upper *xp*_ASAP7*_upper SDF*_upper 
 export DONT_USE_CELLS_BOTTOM ?= TAPCELL_X1_bottom FILLCELL_X1_bottom AOI211_X1_bottom OAI211_X1_bottom
 export DONT_USE_CELLS = $(DONT_USE_CELLS_UPPER) $(DONT_USE_CELLS_BOTTOM)
 
-# Tcl 统一/派生
-export FILL_CELLS ?= $(FILL_CELLS_BOTTOM)   # 非分层/回退场景
+export FILL_CELLS ?= $(FILL_CELLS_BOTTOM) 
 export DNU_FOR_UPPER   := $(DONT_USE_CELLS_UPPER) *_bottom
-export DNU_FOR_BOTTOM  := $(DONT_USE_CELLS_BOTTOM)  *_upper
+export DNU_FOR_BOTTOM  := $(DONT_USE_CELLS_BOTTOM) *_upper
 
 # -------- CTS --------
+export CTS_LAYER ?= upper
+ifeq ($(CTS_LAYER),upper) 
+  export CTS_BUF_CELL ?= BUFx4_ASAP7_75t_R_upper
+endif
 export CTS_BUF_CELL ?= BUF_X4_bottom
-
 # -------- Route --------
 export MIN_ROUTING_LAYER ?= M2
 export MAX_ROUTING_LAYER ?= M2_m

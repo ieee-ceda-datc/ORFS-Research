@@ -18,7 +18,6 @@ set sdc        [file join $RESULTS_DIR "1_synth.sdc"]
 source $::env(CADENCE_SCRIPTS_DIR)/mmmc_setup.tcl
 
 setMultiCpuUsage -localCpu [_get NUM_CORES 16]
-set util [_get CORE_UTILIZATION 70]
 
 # === 3D place init: import gp DEF, create groups, initial fixing ===
 set init_lef_file          $lefs
@@ -33,16 +32,34 @@ set init_gnd_net  {BOT_VSS TOP_VSS}
 
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
-
 set_interactive_constraint_modes {CON}
 setAnalysisMode -reset
 setAnalysisMode -analysisType onChipVariation -cppr both
-
 setOptMode -powerEffort low -leakageToDynamicRatio 0.5
 
 defIn $DEF_IO
 
-generateTracks
+# Floorplan parameters 
+set CORE_UTIL [_get CORE_UTILIZATION 60] 
+set ASPECT_RATIO [_get CORE_ASPECT_RATIO 1.0] 
+set CORE_MARGIN [_get CORE_MARGIN 0.2] 
+set PLACE_SITE [_get PLACE_SITE ""]
+# ===== Floorplan Initialization (tier-aware) =====
+set U_target [expr {double($CORE_UTIL) / 100.0}]
+set mL $CORE_MARGIN; set mR $CORE_MARGIN; set mT $CORE_MARGIN; set mB $CORE_MARGIN
+source $::env(CADENCE_SCRIPTS_DIR)/floorplan_utils.tcl
+lassign [tier::core_wh_for_max_tier_util $U_target $ASPECT_RATIO] CORE_W CORE_H A_up A_bot A_max
+
+puts "INFO: Tier areas: upper=$A_up bottom=$A_bot (max=$A_max)"
+puts "INFO: Core W/H = $CORE_W / $CORE_H (max-tier util target=$U_target)"
+floorPlan -s [list $CORE_W $CORE_H $mL $mB $mR $mT] -siteOnly $PLACE_SITE
+
+deleteTrack
+
+generateTracks -honorPitch
+
+# ===== Place pins evenly on four sides (with explicit layer settings) =====
+source $::env(CADENCE_SCRIPTS_DIR)/place_pin.tcl 
 
 source $::env(PLATFORM_DIR)/util/pdn_config.tcl
 
@@ -50,7 +67,5 @@ fit
 dumpToGIF $LOG_DIR/2_pdn.png
 defOut -floorplan $RESULTS_DIR/2_floorplan.def
 saveNetlist $RESULTS_DIR/2_floorplan.v
-
-# error "INTENTIONAL_ABORT: PDN stage completed; failing at user request"
 
 exit

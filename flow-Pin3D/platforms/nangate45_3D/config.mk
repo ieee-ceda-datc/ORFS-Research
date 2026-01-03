@@ -6,12 +6,12 @@
 export PROCESS = 45
 
 # -------- Tech / Libs --------
-ifeq ($(FLOW_VARIANT),openroad)
+ifeq ($(USE_FLOW),openroad)
   export TECH_LEF ?= $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech21.lef
   export RCX_RULES         ?= $(PLATFORM_DIR)/NangateOpenCellLibrary.tech21.rcx_patterns.rules
   export SET_RC_TCL  ?= $(PLATFORM_DIR)/setRC.tech21.tcl
   export MIN_ROUTING_LAYER ?= M2
-  export MAX_ROUTING_LAYER ?= M22
+  export MAX_ROUTING_LAYER ?= M3_add
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
 export TECH_LEF ?= $(PLATFORM_DIR)/lef/NangateOpenCellLibrary.tech.lef
@@ -97,7 +97,7 @@ export CTS_BUF_CELL ?= BUF_X4_bottom
 
 # -------- Route --------
 export MIN_ROUTING_LAYER ?= M2
-export MAX_ROUTING_LAYER ?= M19
+export MAX_ROUTING_LAYER ?= M2_m
 
 # OpenROAD specific script (kept for mixed-flow)
 export FASTROUTE_TCL ?= $(PLATFORM_DIR)/fastroute.tcl

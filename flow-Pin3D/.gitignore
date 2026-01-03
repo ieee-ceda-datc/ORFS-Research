@@ -27,4 +27,6 @@ test.tcl
 *.csv
 *.opennet
 eval.sh
-summary_reports
+summary_reports*
+pics
+eval*.sh

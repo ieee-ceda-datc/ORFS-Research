@@ -25,7 +25,7 @@ set init_design_settop 1
 set init_top_cell $DESIGN
 set init_verilog $V_IN
 set init_design_netlisttype "Verilog"
-
+setGenerateViaMode -auto true
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 set_interactive_constraint_modes {CON}
@@ -51,20 +51,20 @@ setNanoRouteMode -drouteEndIteration $::env(DETAILED_ROUTE_END_ITERATION)
 setNanoRouteMode -routeWithSiDriven true
 setNanoRouteMode -routeWithTimingDriven true
 setNanoRouteMode -routeUseAutoVia true
-setNanoRouteMode -routeWithViaInPin "1:1"
-setNanoRouteMode -routeWithViaOnlyForStandardCellPin "1:1"
+setNanoRouteMode -routeWithViaInPin false
+setNanoRouteMode -routeWithViaOnlyForStandardCellPin true
 
-# VIA1 on-grid only, advanced node routing switches
-setNanoRouteMode -drouteOnGridOnly "via 1:1"
+# on-grid only, advanced node routing switches
+setNanoRouteMode -drouteOnGridOnly true
 setNanoRouteMode -drouteAutoStop false
+setNanoRouteMode -drouteSearchAndRepair true
+
 setNanoRouteMode -drouteExpAdvancedMarFix true
 setNanoRouteMode -routeExpAdvancedTechnology true
 
 # ---------- Route + Post-Route Optimization ----------
 routeDesign
 
-set all_insts [dbGet top.insts]
-set_dont_touch $all_insts true
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
 set_tier_placement_status bottom fixed
 set_tier_placement_status upper fixed

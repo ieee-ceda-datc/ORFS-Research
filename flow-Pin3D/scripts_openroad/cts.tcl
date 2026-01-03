@@ -6,10 +6,22 @@ load_design 3_place.def 3_place.sdc "Starting CTS..."
 
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
-mark_insts_by_master "*upper*" FIRM
-puts "Marked upper instances as FIRM"
+set cts_layer "bottom"
+set fix_layer "upper"
+if {[info exists ::env(CTS_LAYER)]} {
+  set cts_layer $::env(CTS_LAYER)
+  if { $cts_layer == "bottom" } {
+    set fix_layer "upper"
+  } else {
+    set fix_layer "bottom"
+  }
+}
 
-apply_tier_policy bottom
+mark_insts_by_master "*${fix_layer}*" FIRM
+puts "Marked ${fix_layer} instances as FIRM"
+
+apply_tier_policy $cts_layer -cts_safe 1
+
 # Clone clock tree inverters next to register loads
 # so cts does not try to buffer the inverted clocks.
 repair_clock_inverters
@@ -43,9 +55,6 @@ log_cmd clock_tree_synthesis {*}$cts_args
 
 utl::push_metrics_stage "cts__{}__pre_repair_timing"
 estimate_parasitics -placement
-# if { $::env(DETAILED_METRICS) } {
-#   report_metrics 4 "cts pre-repair-timing"
-# }
 utl::pop_metrics_stage
 
 set_placement_padding -global \
@@ -82,8 +91,8 @@ if { $::env(SKIP_CTS_REPAIR_TIMING) } {
 
 source_env_var_if_exists POST_CTS_TCL
 
-mark_insts_by_master "*upper*" PLACED
-puts "Marked upper instances as PLACED"
+mark_insts_by_master "*${fix_layer}*" PLACED
+puts "Marked ${fix_layer} instances as PLACED"
 
 write_def $::env(RESULTS_DIR)/4_cts.def
 write_verilog $::env(RESULTS_DIR)/4_cts.v

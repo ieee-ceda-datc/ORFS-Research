@@ -4,7 +4,7 @@ puts "Starting opt_lg_design.tcl..."
 estimate_parasitics -placement
 
 puts "Perform buffer insertion..."
-set additional_args ""
+set additional_args "-verbose"
 if { [info exists ::env(CAP_MARGIN)] && $::env(CAP_MARGIN) > 0.0} {
   puts "Cap margin $::env(CAP_MARGIN)"
   append additional_args " -cap_margin $::env(CAP_MARGIN)"
@@ -44,3 +44,5 @@ improve_placement
 
 puts "optimize_mirroring"
 optimize_mirroring
+
+estimate_parasitics -placement

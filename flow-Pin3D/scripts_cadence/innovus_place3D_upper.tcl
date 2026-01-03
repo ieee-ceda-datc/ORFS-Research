@@ -22,7 +22,7 @@ set init_design_settop 1
 set init_top_cell $DESIGN
 set init_verilog $GPVERILOG
 set init_design_netlisttype "Verilog"
-
+setGenerateViaMode -auto true
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 defIn $GPDEF

@@ -9,7 +9,7 @@ export SDC_FILE = $(DESIGN_HOME)/nangate45_3D/$(DESIGN_NICKNAME)/constraint.sdc
 export ABC_AREA = 1
 export CORE_MARGIN = 1
 export CORE_ASPECT_RATIO = 1.0
-export CORE_UTILIZATION ?= 90
+export CORE_UTILIZATION ?= 60
 export PLACE_DENSITY_LB_ADDON = 0.10
 export TNS_END_PERCENT        = 100
 export GEN_EFF medium

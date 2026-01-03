@@ -27,7 +27,7 @@ export 2D_PLATFORM_DIR ?= $(PLATFORM_HOME)/$(2D_PLATFORM)
 export 3D_PLATFORM_DIR ?= $(PLATFORM_HOME)/$(3D_PLATFORM)
 # ---------------- Platform resolve ----------------
 # Resolve $(PLATFORM_DIR) from (1) PLATFORM_HOME, (2) local public platforms, (3) ../../ fallback.
-PUBLIC_PLATFORMS = nangate45 nangate45_3D asap7 asap7_3D asap7_nangate45
+PUBLIC_PLATFORMS = nangate45 nangate45_3D asap7 asap7_3D asap7_nangate45 asap7_nangate45_3D
 ifneq ($(wildcard $(PLATFORM_HOME)/$(PLATFORM)),)
   export PLATFORM_DIR = $(PLATFORM_HOME)/$(PLATFORM)
 else ifneq ($(findstring $(PLATFORM),$(PUBLIC_PLATFORMS)),)
@@ -93,9 +93,7 @@ export INNOVUS_EXE ?= $(shell which innovus)
 GENUS_CMD   = $(GENUS_EXE)
 INNOVUS_CMD = $(INNOVUS_EXE) -64 -abort_on_error
 export OPEN_GUI ?= 0
-OPEN_GUI_CMD = $(if $(filter 1,$(OPEN_GUI)), , -no_gui)
-OR_GUI_FLAG = $(if $(filter 1,$(OPEN_GUI)),-gui,)
-override OPENROAD_CMD = $(OPENROAD_EXE) $(OR_GUI_FLAG) $(OPENROAD_ARGS)
+override OPENROAD_CMD = $(OPENROAD_EXE) $(OPENROAD_ARGS)
 
 # ---------------- Helpers ----------------
 define _mkstdirs
@@ -160,6 +158,10 @@ export GPL_ROUTABILITY_DRIVEN ?= 1
 export ENABLE_DPO ?= 1
 export DPO_MAX_DISPLACEMENT ?= 5 1
 
+export CTS_LAYER ?= bottom
+ifeq ($(CTS_LAYER),upper)
+  export COVER_LAYER = bottom
+endif
 # =========================================
 # ============ OpenROAD (ord-*) ===========
 # =========================================
@@ -167,6 +169,10 @@ export DPO_MAX_DISPLACEMENT ?= 5 1
 ord-versions:
 	@$(call _mkstdirs)
 	@{ $(YOSYS_EXE) -V ; echo openroad $$($(OPENROAD_CMD) -version) ; } > $(LOG_DIR)/versions.txt 2>&1 || true
+
+.PHONY: ord-2d_flow
+ord-2d_flow:
+	@$(OPENROAD_CMD) $(OPENROAD_SCRIPTS_DIR)/openroad_2d_flow.tcl 2>&1 | tee -a $(LOG_DIR)/openroad_2d_flow.log
 
 # ---- Generate preprocessed Liberty explicitly ----
 .PHONY: prep-libs
@@ -424,14 +430,18 @@ ord-hotspot:
 cds-synth:
 	@$(call _mkstdirs)
 	@echo "[CDS] Genus synthesis"
-	@$(call _cad,$(GENUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_1_genus.log -f $(CADENCE_SCRIPTS_DIR)/run_genus.tcl,$(LOG_DIR)/1_genus.log)
+	@$(call _cad,$(GENUS_CMD) -overwrite -log $(LOG_DIR)/cadence_1_genus.log -f $(CADENCE_SCRIPTS_DIR)/run_genus.tcl,$(LOG_DIR)/1_genus.log)
 	@cp $(SDC_FILE) $(RESULTS_DIR)/1_synth.sdc 2>/dev/null || true
 
 .PHONY: cds-preplace
 cds-preplace:
 	@$(call _mkstdirs)
 	@echo "[CDS] Innovus pre-place"
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_2_innovus_preplace.log -files $(CADENCE_SCRIPTS_DIR)/innovus_preplace.tcl,$(LOG_DIR)/2_innovus_preplace.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_2_innovus_preplace.log -files $(CADENCE_SCRIPTS_DIR)/innovus_preplace.tcl,$(LOG_DIR)/2_innovus_preplace.log)
+
+.PHONY: cds-2d_flow
+cds-2d_flow:
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/innovus_2d_flow.log -files $(CADENCE_SCRIPTS_DIR)/innovus_2d_flow.tcl,$(LOG_DIR)/innovus_2d_flow.log)
 
 .PHONY: cds-tier-partition
 cds-tier-partition:
@@ -488,23 +498,23 @@ cds-pre:
 cds-3d-pdn:
 	@$(call _mkstdirs)
 	@echo "[CDS] 3D PDN"
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_pdn.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_pdn.tcl,$(LOG_DIR)/2_pdn.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_pdn.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_pdn.tcl,$(LOG_DIR)/2_pdn.log)
 	@cp "$(RESULTS_DIR)/1_synth.sdc"  "$(RESULTS_DIR)/2_floorplan.sdc" 2>/dev/null || true
 
 .PHONY: cds-place-init
 cds-place-init:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_init.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_init.tcl,$(LOG_DIR)/3_place_init.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_init.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_init.tcl,$(LOG_DIR)/3_place_init.log)
 
 .PHONY: cds-place-upper
 cds-place-upper:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_upper.tcl,$(LOG_DIR)/3_place_upper.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_upper.tcl,$(LOG_DIR)/3_place_upper.log)
 
 .PHONY: cds-place-bottom
 cds-place-bottom:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_bottom.tcl,$(LOG_DIR)/3_place_bottom.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_bottom.tcl,$(LOG_DIR)/3_place_bottom.log)
 
 .PHONY: cds-place-finish
 cds-place-finish:
@@ -514,7 +524,7 @@ cds-place-finish:
 .PHONY: cds-legalize-upper
 cds-legalize-upper:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_opt_lg_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_opt_lg_upper.tcl,$(LOG_DIR)/3_5_lg_upper.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_opt_lg_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_opt_lg_upper.tcl,$(LOG_DIR)/3_5_lg_upper.log)
 	@cp -f $(RESULTS_DIR)/$(DESIGN_NAME)_3D.lg.def $(RESULTS_DIR)/3_place.def
 	@cp -f $(RESULTS_DIR)/$(DESIGN_NAME)_3D.lg.v $(RESULTS_DIR)/3_place.v
 	@cp -f $(RESULTS_DIR)/2_floorplan.sdc $(RESULTS_DIR)/3_place.sdc
@@ -522,7 +532,7 @@ cds-legalize-upper:
 .PHONY: cds-legalize-bottom
 cds-legalize-bottom:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_opt_lg_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_opt_lg_bottom.tcl,$(LOG_DIR)/3_4_lg_bottom.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_opt_lg_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_opt_lg_bottom.tcl,$(LOG_DIR)/3_4_lg_bottom.log)
 	@cp -f $(RESULTS_DIR)/$(DESIGN_NAME)_3D.lg.def $(RESULTS_DIR)/3_place.def
 	@cp -f $(RESULTS_DIR)/$(DESIGN_NAME)_3D.lg.v $(RESULTS_DIR)/3_place.v
 	@cp -f $(RESULTS_DIR)/2_floorplan.sdc $(RESULTS_DIR)/3_place.sdc
@@ -530,7 +540,7 @@ cds-legalize-bottom:
 .PHONY: cds-cts
 cds-cts:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_cts.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_cts.tcl,$(LOG_DIR)/4_1_cts.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_cts.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_cts.tcl,$(LOG_DIR)/4_1_cts.log)
 	@cp $(RESULTS_DIR)/4_1_cts.v $(RESULTS_DIR)/4_cts.v
 	@cp $(RESULTS_DIR)/4_1_cts.def $(RESULTS_DIR)/4_cts.def
 	@cp $(RESULTS_DIR)/3_place.sdc $(RESULTS_DIR)/4_cts.sdc
@@ -538,13 +548,13 @@ cds-cts:
 .PHONY: cds-route
 cds-route:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_route.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_route.tcl,$(LOG_DIR)/5_route.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_route.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_route.tcl,$(LOG_DIR)/5_route.log)
 	@cp $(RESULTS_DIR)/4_cts.sdc $(RESULTS_DIR)/5_route.sdc 2>/dev/null || true
 
 .PHONY: cds-final
 cds-final:
 	@$(call _mkstdirs)
-	@$(call _cad,$(INNOVUS_CMD) $(OPEN_GUI_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_final.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_final.tcl,$(LOG_DIR)/6_final.log)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_final.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_final.tcl,$(LOG_DIR)/6_final.log)
 
 .PHONY: clean_all
 clean_all:

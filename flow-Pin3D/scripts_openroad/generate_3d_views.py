@@ -5,18 +5,18 @@ import argparse
 import os
 import re
 import json
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 # ==========================================================
-# 统一名字归一化：DEF / Verilog / partition 共用
+# Name normalization helpers (DEF / Verilog / partition shared)
 # ==========================================================
 
 def normalize_name(inst_name: str) -> str:
     """
-    统一归一规则：
-      - 去掉两端空白
-      - 去掉开头的转义反斜杠（Verilog/DEF 对奇怪标识符的转义）
-      - 把 '\\[' '\\]' 这样的 DEF / partition 转义去掉
+    Normalize instance/net/pin identifiers across DEF / Verilog / partition:
+      - Strip leading/trailing whitespace
+      - Remove leading escape backslash (Verilog/DEF escaped identifiers)
+      - Unescape DEF-style bracket escapes: '\\[' -> '[', '\\]' -> ']'
     """
     s = inst_name.strip()
     if s.startswith('\\'):
@@ -25,26 +25,38 @@ def normalize_name(inst_name: str) -> str:
     return s
 
 def normalize_from_def(inst_name: str) -> str:
-    """保留接口名，但内部用统一归一逻辑。"""
+    """Keep a dedicated entry point for DEF-side normalization."""
     return normalize_name(inst_name)
 
 def normalize_from_verilog(inst_name: str) -> str:
-    """保留接口名，但内部用统一归一逻辑。"""
+    """Keep a dedicated entry point for Verilog-side normalization."""
     return normalize_name(inst_name)
 
+def strip_tier_suffix(master: str) -> str:
+    """Strip tier suffix '_upper' / '_bottom' to get base master name."""
+    if master.endswith('_upper'):
+        return master[:-6]
+    if master.endswith('_bottom'):
+        return master[:-7]
+    return master
+
 # ==========================================================
-#  Parse partition.txt
+# Parse partition.txt
 # ==========================================================
 
-def parse_partition_file(partition_path: str) -> Dict[str, int]:
+def parse_partition_file(partition_path: Optional[str]) -> Dict[str, int]:
     """
     Read partition.txt, format: <inst_name> <die(0 or 1)>.
-    Ignore empty lines and comments starting with #.
-    die = 0 -> upper, die = 1 -> bottom
+    Ignore empty lines and comments starting with '#'.
+
+    Convention:
+      die = 0 -> upper
+      die = 1 -> bottom
     """
     part: Dict[str, int] = {}
     if not partition_path:
         return part
+
     try:
         with open(partition_path, 'r') as f:
             for raw in f:
@@ -64,23 +76,24 @@ def parse_partition_file(partition_path: str) -> Dict[str, int]:
                 key = normalize_name(inst)
                 part[key] = die
     except FileNotFoundError:
-        print(f"[WARN] partition file '{partition_path}' not found, ignore.")
+        print(f"[WARN] partition file '{partition_path}' not found, ignored.")
+
     return part
 
 # ==========================================================
-#  Parse cell map JSON (map.json)
+# Parse cell map JSON (map.json)
 # ==========================================================
 
 def parse_cell_map_json(
-    cell_map_path: str
+    cell_map_path: Optional[str]
 ) -> Tuple[
     Dict[str, str],                 # base_to_bottom_macro
     Dict[str, str],                 # base_to_upper_macro
     Dict[str, Dict[str, str]],      # base_to_pin_map (bottom_pin -> upper_pin)
-    Dict[str, List[str]]            # base_to_upper_extra_pins (upper pins w/o mapping)
+    Dict[str, List[str]]            # base_to_upper_extra_pins (upper pins without mapping)
 ]:
     """
-    Read map.json, structure:
+    Read map.json, expected structure:
 
     {
       "bottom_file": "...",
@@ -89,13 +102,16 @@ def parse_cell_map_json(
         "AND2_X1": {
           "base": "AND2_X1",
           "bottom": { "macro": "AND2_X1_bottom", ... },
-          "upper": { "macro": "AND2x2_ASAP7_75t_R_upper",
-                     "pins": ["A","B","VDD","VSS","Y"], ... },
+          "upper":  { "macro": "AND2x2_ASAP7_75t_R_upper",
+                      "pins": ["A","B","VDD","VSS","Y"], ... },
           "pin_map": { "A1": "A", "A2": "B", "ZN": "Y", "VDD": "VDD", "VSS": "VSS" }
-        },
-        ...
+        }
       }
     }
+
+    Notes:
+      - base_to_pin_map maps: bottom_pin_name -> upper_pin_name
+      - base_to_upper_extra_pins are upper pins not covered by pin_map (e.g., CLKGATE.SE)
     """
     base_to_bottom: Dict[str, str] = {}
     base_to_upper: Dict[str, str] = {}
@@ -120,12 +136,14 @@ def parse_cell_map_json(
     for key, cell in cells.items():
         if not isinstance(cell, dict):
             continue
+
         base = cell.get("base", key)
         bottom = cell.get("bottom", {})
         upper = cell.get("upper", {})
 
-        bottom_macro = bottom.get("macro")
-        upper_macro = upper.get("macro")
+        bottom_macro = bottom.get("macro") if isinstance(bottom, dict) else None
+        upper_macro = upper.get("macro") if isinstance(upper, dict) else None
+
         if bottom_macro:
             base_to_bottom[base] = bottom_macro
         if upper_macro:
@@ -135,8 +153,7 @@ def parse_cell_map_json(
         if isinstance(pin_map, dict):
             base_to_pin_map[base] = pin_map
 
-        # 计算 upper 里“多出来”的 pin（例如 CLKGATE 的 SE）
-        upper_pins = upper.get("pins", [])
+        upper_pins = upper.get("pins", []) if isinstance(upper, dict) else []
         if isinstance(upper_pins, list):
             mapped_upper = set(pin_map.values()) if isinstance(pin_map, dict) else set()
             extra = [p for p in upper_pins if p not in mapped_upper]
@@ -146,17 +163,16 @@ def parse_cell_map_json(
     return base_to_bottom, base_to_upper, base_to_pin_map, base_to_upper_extra_pins
 
 # ==========================================================
-#  Infer inst->die mapping from DEF (fallback)
+# Infer inst->die mapping from DEF (explicit suffix fallback)
 # ==========================================================
 
 COMP_BEGIN_RE = re.compile(r'^\s*COMPONENTS\b', re.I)
 COMP_END_RE   = re.compile(r'^\s*END\s+COMPONENTS\b', re.I)
-# Capture leading whitespace | instance name | master | rest
-COMP_FIRST_RE = re.compile(r'^(\s*)-\s+(\S+)\s+(\S+)(.*)$')
+COMP_FIRST_RE = re.compile(r'^(\s*)-\s+(\S+)\s+(\S+)(.*)$')  # indent | inst | master | rest
 
 def derive_partition_from_def(def_path: str) -> Dict[str, int]:
     """
-    Scan DEF COMPONENTS; if a master already ends with _upper/_bottom,
+    Scan DEF COMPONENTS; if a master ends with _upper/_bottom,
     infer inst->die (0: upper, 1: bottom).
     """
     part: Dict[str, int] = {}
@@ -184,14 +200,14 @@ def derive_partition_from_def(def_path: str) -> Dict[str, int]:
             m = COMP_FIRST_RE.match(line)
             if m:
                 _, inst_raw, master, _ = m.groups()
-                inst_norm = normalize_name(inst_raw)
+                inst_norm = normalize_from_def(inst_raw)
 
                 if master.endswith('_upper'):
                     part[inst_norm] = 0
                 elif master.endswith('_bottom'):
                     part[inst_norm] = 1
 
-                # skip to end of this component (after ';')
+                # Skip to end of this component (after ';')
                 if ';' in line:
                     i += 1
                 else:
@@ -201,14 +217,15 @@ def derive_partition_from_def(def_path: str) -> Dict[str, int]:
                     if i < n:
                         i += 1
                 continue
+
         i += 1
 
     return part
 
 def collect_inst_base_from_def(def_path: str) -> Dict[str, str]:
     """
-    从原始 DEF 的 COMPONENTS 段里收集 inst -> base master 名，
-    用于后面在 NETS 里做 pin 映射。
+    Collect inst -> base master name from DEF COMPONENTS.
+    Base master strips '_upper' / '_bottom' suffix if present.
     """
     inst2base: Dict[str, str] = {}
     try:
@@ -234,9 +251,10 @@ def collect_inst_base_from_def(def_path: str) -> Dict[str, str]:
             m = COMP_FIRST_RE.match(line)
             if m:
                 _, inst_raw, master, _ = m.groups()
-                inst_norm = normalize_name(inst_raw)
-                inst2base[inst_norm] = master
-                # 跳到该 component 的 ';'
+                inst_norm = normalize_from_def(inst_raw)
+                inst2base[inst_norm] = strip_tier_suffix(master)
+
+                # Skip to end of this component (after ';')
                 if ';' in line:
                     i += 1
                 else:
@@ -246,18 +264,53 @@ def collect_inst_base_from_def(def_path: str) -> Dict[str, str]:
                     if i < n:
                         i += 1
                 continue
+
         i += 1
 
     return inst2base
 
+def auto_partition_by_master_count(def_path: str) -> Dict[str, int]:
+    """
+    Auto partition by base master instance count:
+      - base masters with higher instance count -> upper (0)
+      - base masters with lower  instance count -> bottom (1)
+
+    Threshold policy:
+      - Use median of base counts as threshold.
+      - count >= median => upper; else => bottom.
+      - If only one base master exists, place all instances in upper.
+    """
+    inst2base = collect_inst_base_from_def(def_path)
+    if not inst2base:
+        return {}
+
+    base_count: Dict[str, int] = {}
+    for _, base in inst2base.items():
+        base_count[base] = base_count.get(base, 0) + 1
+
+    counts = sorted(base_count.values())
+    if len(counts) == 1:
+        threshold = counts[0]
+    else:
+        threshold = counts[len(counts) // 2]  # median
+
+    base_to_die: Dict[str, int] = {}
+    for base, c in base_count.items():
+        base_to_die[base] = 0 if c >= threshold else 1
+
+    part: Dict[str, int] = {}
+    for inst, base in inst2base.items():
+        part[inst] = base_to_die[base]
+
+    return part
+
 # ==========================================================
-#  Rewrite DEF (COMPONENTS + NETS)
+# Rewrite DEF (COMPONENTS + NETS)
 # ==========================================================
 
 NETS_BEGIN_RE = re.compile(r'^\s*NETS\b', re.I)
 NETS_END_RE   = re.compile(r'^\s*END\s+NETS\b', re.I)
-# ( inst pin )  or  ( 100 200 ) 之类
-DEF_CONN_RE   = re.compile(r'\(\s*(\S+)\s+(\S+)\s*\)')
+DEF_CONN_RE   = re.compile(r'\(\s*(\S+)\s+(\S+)\s*\)')  # ( inst pin ) or ( x y )
 
 def rewrite_def_net_block(
     net_lines: List[str],
@@ -266,36 +319,36 @@ def rewrite_def_net_block(
     base_to_pin_map: Dict[str, Dict[str, str]]
 ) -> List[str]:
     """
-    对一个 NET 语句块做 pin 映射：
-      - 只处理 ( inst pin ) 形式；
-      - inst == 'PIN' 时跳过；
-      - die==0 (upper) 时，用 cell_map.pin_map: bottom_pin -> upper_pin;
-      - die==1 (bottom) 或无映射，则保持不变。
+    Rewrite a single NET block (from '-' line to the terminating ';'):
+
+      - Only rewrites connections in the form: ( inst pin )
+      - Skips IO pin: ( PIN xxx )
+      - For upper die instances (die==0), rename pins using pin_map (bottom_pin -> upper_pin)
+      - For bottom die instances or missing mapping, keep the pin name unchanged
     """
     text = ''.join(net_lines)
 
     def repl(m) -> str:
         inst = m.group(1)
         pin = m.group(2)
-        # IO pin
+
+        # IO pin connection in DEF NETS uses "PIN"
         if inst == 'PIN':
             return m.group(0)
 
         inst_norm = normalize_name(inst)
-        die = part_map.get(inst_norm, None)
-        base = inst2base.get(inst_norm, None)
+        die = part_map.get(inst_norm)
+        base = inst2base.get(inst_norm)
 
-        # geometry (100 200) 或无 partition / 无 cell map 都保持不变
+        # Geometry (x y) or unknown instance/base or no pin_map -> unchanged
         if die is None or base is None or base not in base_to_pin_map:
             return m.group(0)
 
         pin_map = base_to_pin_map[base]
 
         if die == 0:
-            # upper die: bottom_pin -> upper_pin
             new_pin = pin_map.get(pin, pin)
         else:
-            # bottom die: 保持原 pin 名
             new_pin = pin
 
         return f"( {inst} {new_pin} )"
@@ -313,9 +366,9 @@ def rewrite_def(
 ) -> None:
     """
     Rewrite DEF:
-      - COMPONENTS 段：根据 inst->die 和 cell map 改 master 名；
-      - NETS 段：根据 inst->die 和 pin_map 做 pin 重命名；
-      - 其他段原样拷贝。
+      - COMPONENTS: update master name based on inst->die and JSON macro mapping
+      - NETS:       rename pins for upper instances using JSON pin_map
+      - Others:     copy verbatim
     """
     try:
         lines = open(def_in, 'r').readlines()
@@ -323,7 +376,7 @@ def rewrite_def(
         print(f"[ERROR] DEF file '{def_in}' not found.")
         return
 
-    # 先从原始 DEF 收集 inst -> base master
+    # inst -> base master (used for NETS pin remap)
     inst2base = collect_inst_base_from_def(def_in)
 
     out: List[str] = []
@@ -334,7 +387,7 @@ def rewrite_def(
     while i < n:
         line = lines[i]
 
-        # --------- COMPONENTS 段 ----------
+        # --------- COMPONENTS ----------
         if not in_comp and COMP_BEGIN_RE.match(line):
             in_comp = True
             out.append(line)
@@ -350,24 +403,25 @@ def rewrite_def(
             m = COMP_FIRST_RE.match(line)
             if m:
                 indent, inst_raw, master, rest = m.groups()
-                key = normalize_name(inst_raw)
-                die = part_map.get(key, None)
+                inst_key = normalize_from_def(inst_raw)
+                die = part_map.get(inst_key)
 
                 new_master = master
                 if die is not None:
-                    # 优先使用 map.json 的 bottom/upper macro
-                    if die == 0 and master in base_to_upper:
-                        new_master = base_to_upper[master]
-                    elif die == 1 and master in base_to_bottom:
-                        new_master = base_to_bottom[master]
+                    base = strip_tier_suffix(master)
+
+                    # Prefer JSON macro mapping by base master name
+                    if die == 0 and base in base_to_upper:
+                        new_master = base_to_upper[base]
+                    elif die == 1 and base in base_to_bottom:
+                        new_master = base_to_bottom[base]
                     else:
-                        # 没在 cell map 里的，退回简单后缀逻辑
-                        if not (master.endswith('_upper') or master.endswith('_bottom')):
-                            new_master = master + ('_upper' if die == 0 else '_bottom')
+                        # Fallback: enforce suffix based on die (avoid double suffix)
+                        new_master = base + ('_upper' if die == 0 else '_bottom')
 
                 out.append(f"{indent}- {inst_raw} {new_master}{rest}\n")
 
-                # 拷贝该 component 剩余行
+                # Copy remaining lines of this component until ';'
                 if ';' in line:
                     i += 1
                 else:
@@ -379,12 +433,12 @@ def rewrite_def(
                             break
                         i += 1
                 continue
-            else:
-                out.append(line)
-                i += 1
-                continue
 
-        # --------- NETS 段 ----------
+            out.append(line)
+            i += 1
+            continue
+
+        # --------- NETS ----------
         if not in_nets and NETS_BEGIN_RE.match(line):
             in_nets = True
             out.append(line)
@@ -399,7 +453,7 @@ def rewrite_def(
         if in_nets:
             stripped = line.lstrip()
             if stripped.startswith('-'):
-                # 新的 net 语句块
+                # Collect a whole net block until ';'
                 buf = [line]
                 i += 1
                 while i < n:
@@ -411,12 +465,12 @@ def rewrite_def(
                 new_block = rewrite_def_net_block(buf, part_map, inst2base, base_to_pin_map)
                 out.extend(new_block)
                 continue
-            else:
-                out.append(line)
-                i += 1
-                continue
 
-        # --------- 其他 ----------
+            out.append(line)
+            i += 1
+            continue
+
+        # --------- OTHERS ----------
         out.append(line)
         i += 1
 
@@ -424,7 +478,7 @@ def rewrite_def(
         f.writelines(out)
 
 # ==========================================================
-#  Rewrite Verilog: module 名 + pin 映射 + 额外 upper pin 绑常数
+# Rewrite Verilog: module rename + pin remap + bind extra upper pins
 # ==========================================================
 
 VERILOG_INST_RE = re.compile(
@@ -438,41 +492,34 @@ VERILOG_INST_RE = re.compile(
     re.VERBOSE
 )
 
-# .PIN(  的形式
-VERILOG_PORT_RE = re.compile(r'(\.\s*)([A-Za-z_]\w*)(\s*\()')
+VERILOG_PORT_RE = re.compile(r'(\.\s*)([A-Za-z_]\w*)(\s*\()')  # .PIN(
 
 def _append_extra_ports(body: str, extra_pins: List[str]) -> str:
     """
-    在实例 body（从 "(" 之后开始，直到 "…);"）末尾插入
-    .PIN(1'b0) 的端口连接。
+    Append missing extra ports as .PIN(1'b0) before the last ');'
+    for a single instance body (from after '(' to the ending '...);').
     """
     if not extra_pins:
         return body
 
-    # 找出已有端口名，避免重复插入
-    existing_ports = set()
-    for mm in VERILOG_PORT_RE.finditer(body):
-        existing_ports.add(mm.group(2))
-
+    existing_ports = {mm.group(2) for mm in VERILOG_PORT_RE.finditer(body)}
     missing = [p for p in extra_pins if p not in existing_ports]
     if not missing:
         return body
 
-    # 找最后一个 ');'
     matches = list(re.finditer(r'\)\s*;', body, flags=re.S))
     if not matches:
-        return body  # 不太正常，直接放弃修改
+        return body
 
     last = matches[-1]
     insert_pos = last.start()
 
-    # 推断缩进：取插入点之前的最后一行的前导空白
+    # Infer indentation from the last line before insertion point
     prefix_text = body[:insert_pos]
     lines = prefix_text.splitlines()
     indent = ""
     if lines:
-        last_line = lines[-1]
-        m = re.match(r'(\s*)', last_line)
+        m = re.match(r'(\s*)', lines[-1])
         if m:
             indent = m.group(1)
 
@@ -493,12 +540,11 @@ def rewrite_verilog(
     base_to_upper_extra_pins: Dict[str, List[str]],
 ) -> None:
     """
-    对 Verilog：
-      - 根据 inst->die 和 cell map，把 module 名改成 bottom.macro / upper.macro；
-      - 对 upper die 的实例，按 pin_map 做端口重命名（.A1(...) -> .A(...)）；
-      - 对 upper die 中没有映射的 upper 端口（如 CLKGATE 的 SE），
-        如果实例中未显式连接，则自动补 .SE(1'b0)。
-      - 如果 module 不在 JSON map 中，但实例有 die，则 fallback：module + '_upper' / '_bottom'
+    Rewrite Verilog instances:
+      - Rename module based on inst->die and JSON macro mapping
+      - For upper die instances (die==0), rename ports using JSON pin_map (bottom_pin -> upper_pin)
+      - For upper die instances, bind any extra upper pins (not covered by pin_map) to 1'b0 if missing
+      - Fallback for unmapped modules: module_base + '_upper'/'_bottom'
     """
     try:
         lines = open(v_in, 'r').readlines()
@@ -517,7 +563,7 @@ def rewrite_verilog(
             i += 1
             continue
 
-        # 匹配到一个实例的第一行，收集整个实例直到 ';'
+        # Collect the full instance until ';'
         inst_lines = [line]
         i += 1
         while i < n:
@@ -530,97 +576,120 @@ def rewrite_verilog(
         inst_text = ''.join(inst_lines)
         m2 = VERILOG_INST_RE.match(inst_text)
         if not m2:
-            # 理论上不会发生，直接原样输出
             out.append(inst_text)
             continue
 
         indent, module, sp_mod_to_hash, param_blk, sp_hash_to_inst, inst_tok, paren = m2.groups()
         inst_norm = normalize_from_verilog(inst_tok)
-        die = part_map.get(inst_norm, None)
+        die = part_map.get(inst_norm)
 
-        # 没在 partition 里的实例，不动
+        # If this instance is not partitioned, keep unchanged
         if die is None:
             out.append(inst_text)
             continue
 
-        # 选择新 module 名：
-        #   1) 如果在 JSON map 中，优先用 base_to_upper/base_to_bottom
-        #   2) 否则 fallback：简单加 _upper / _bottom 后缀（和 DEF 保持一致）
-        if die == 0 and module in base_to_upper:
-            new_module = base_to_upper[module]
-        elif die == 1 and module in base_to_bottom:
-            new_module = base_to_bottom[module]
-        else:
-            # fallback：module 不在 cell map
-            if module.endswith('_upper') or module.endswith('_bottom'):
-                new_module = module
-            else:
-                new_module = module + ('_upper' if die == 0 else '_bottom')
+        module_base = strip_tier_suffix(module)
 
-        # 组装参数部分
+        # Select new module name
+        if die == 0 and module_base in base_to_upper:
+            new_module = base_to_upper[module_base]
+        elif die == 1 and module_base in base_to_bottom:
+            new_module = base_to_bottom[module_base]
+        else:
+            new_module = module_base + ('_upper' if die == 0 else '_bottom')
+
+        # Rebuild parameter part
         if param_blk is not None:
             param_part = f"{sp_mod_to_hash}{param_blk}{sp_hash_to_inst or ''}"
         else:
             param_part = sp_mod_to_hash or ''
 
-        # body: 从 "(" 之后的部分开始，包含所有端口连接等
+        # Body starts right after the '(' token captured by group 7
         body = inst_text[m2.end(7):]
 
-        # pin 映射（只有 upper die 且 module 在 pin_map 中才做）
-        def port_repl(pm: Dict[str, str]):
-            def _inner(mm):
+        # Port remap for upper die (based on base cell name)
+        if die == 0 and module_base in base_to_pin_map:
+            pm = base_to_pin_map[module_base]
+
+            def _port_repl(mm):
                 dot, pin, lp = mm.groups()
                 new_pin = pm.get(pin, pin)
                 return f"{dot}{new_pin}{lp}"
-            return _inner
 
-        if die == 0 and module in base_to_pin_map:
-            pm = base_to_pin_map[module]
-            body = VERILOG_PORT_RE.sub(port_repl(pm), body)
+            body = VERILOG_PORT_RE.sub(_port_repl, body)
 
-        # upper die 上，多出来的 upper pins（如 SE）自动绑 1'b0
-        if die == 0 and module in base_to_upper_extra_pins:
-            extra_pins = base_to_upper_extra_pins[module]
-            body = _append_extra_ports(body, extra_pins)
+        # Bind extra upper pins to 1'b0 if missing
+        if die == 0 and module_base in base_to_upper_extra_pins:
+            body = _append_extra_ports(body, base_to_upper_extra_pins[module_base])
 
-        # 重新拼装整个实例
+        # Reassemble
         new_first = f"{indent}{new_module}{param_part}{inst_tok} {paren}"
-        new_text = new_first + body
-        out.append(new_text)
+        out.append(new_first + body)
 
     with open(v_out, 'w') as f:
         f.writelines(out)
 
+def remap_partition_majority_to_upper(part_from_user: Dict[str, int]) -> Dict[str, int]:
+    """
+    Ensure the larger group in partition.txt is assigned to upper (die=0).
+
+    If count(die=1) > count(die=0), flip all assignments: die := 1 - die.
+    Tie-breaking: keep original mapping (die=0 stays upper by default).
+    """
+    if not part_from_user:
+        return part_from_user
+
+    c0 = sum(1 for d in part_from_user.values() if d == 0)
+    c1 = sum(1 for d in part_from_user.values() if d == 1)
+
+    # If die=1 has more instances, flip so that the larger group becomes die=0 (upper)
+    if c1 > c0:
+        flipped = {k: (1 - v) for k, v in part_from_user.items()}
+        print(f"[INFO] partition.txt remap: die=1({c1}) > die=0({c0}), flip to make majority -> upper(die=0).")
+        return flipped
+
+    print(f"[INFO] partition.txt remap: die=0({c0}) >= die=1({c1}), keep as-is (majority already upper).")
+    return part_from_user
+
 # ==========================================================
-#  Main
+# Main
 # ==========================================================
 
 def main():
     ap = argparse.ArgumentParser(
-        description='Map 2D DEF/Verilog to 3D views using partition + JSON cell map (masters + pin remap).'
+        description='Map 2D DEF/Verilog to 3D views using partition + JSON cell map (macro rename + pin remap).'
     )
     ap.add_argument('--def-in',    required=True)
     ap.add_argument('--def-out',   required=True)
     ap.add_argument('--v-in',      required=True)
     ap.add_argument('--v-out',     required=True)
     ap.add_argument('--partition', default=None,
-                    help='Optional: partition.txt (<inst> <die>), overrides DEF-derived partition')
+                    help='Optional: partition.txt (<inst> <die>), overrides DEF-derived / auto partition')
     ap.add_argument('--cell-map',  default=None,
-                    help='JSON map file (map.json) with base/bottom/upper and pin_map.')
+                    help='Optional: JSON map file (map.json) with base/bottom/upper and pin_map.')
     args = ap.parse_args()
 
-    # 1) 从 DEF 中推断 inst->die（通过 *_upper / *_bottom master）
+    # 1) Try to infer partition from DEF suffixes (if present)
     part_from_def = derive_partition_from_def(args.def_in)
 
-    # 2) 用户 partition.txt 覆盖
+    # 2) User partition overrides everything if provided
     part_from_user = parse_partition_file(args.partition)
-    part: Dict[str, int] = dict(part_from_def)
-    part.update(part_from_user)
+    part_from_user = remap_partition_majority_to_upper(part_from_user)
 
-    # 3) 读取 JSON cell map
+    if part_from_user:
+        part: Dict[str, int] = dict(part_from_def)
+        part.update(part_from_user)
+    elif part_from_def:
+        part = dict(part_from_def)
+    else:
+        # 3) No explicit partition info -> auto partition:
+        #    masters with more instances go to upper, fewer go to bottom.
+        part = auto_partition_by_master_count(args.def_in)
+
+    # 4) Load JSON cell mapping (optional)
     base_to_bottom, base_to_upper, base_to_pin_map, base_to_upper_extra_pins = parse_cell_map_json(args.cell_map)
 
-    # 4) Rewrite DEF + Verilog
+    # 5) Rewrite DEF + Verilog
     rewrite_def(args.def_in, args.def_out, part, base_to_bottom, base_to_upper, base_to_pin_map)
     rewrite_verilog(
         args.v_in,

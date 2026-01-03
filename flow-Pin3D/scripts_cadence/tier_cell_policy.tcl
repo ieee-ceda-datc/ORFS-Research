@@ -82,66 +82,6 @@ proc rebuild_rows_for_site {site_name} {
   createRow -site $site_name
 }
 
-proc apply_tier_policy {tier} {
-  set tier [string tolower $tier]
-  if {![string match "upper" $tier] && ![string match "bottom" $tier]} {
-    error "apply_tier_policy: tier must be 'upper' or 'bottom'"
-  }
-
-  # Read environment variables
-  set DNU_UP   [_as_list DNU_FOR_UPPER]
-  set DNU_BOT  [_as_list DNU_FOR_BOTTOM]
-  set FILL_UP  [_as_list FILL_CELLS_UPPER]
-  set FILL_BOT [_as_list FILL_CELLS_BOTTOM]
-  set TAP_UP   [_as_list TAPCELL_UPPER]
-  set TAP_BOT  [_as_list TAPCELL_BOTTOM]
-
-  if {$tier eq "upper"} {
-    # 1) Set dont_use for bottom's buffer/filler/tap cells
-    if {[llength $DNU_UP]} {
-      _set_dont_use [_expand_libcells $DNU_UP] true
-    } else {
-      # Fallback: disable *_bottom
-      _set_dont_use [_expand_libcells "*_bottom"] true
-    }
-
-    # 2) Explicitly set the filler list for the upper tier
-    if {[llength $FILL_UP]} {
-      setFillerMode -core $FILL_UP
-    }
-
-    # 3) If running well tap/decap, please explicitly specify upper tap/decap cells
-    if {[llength $TAP_UP]} {
-      # Example: addWellTap -cell [lindex $TAP_UP 0] -cellInterval 40 -prefix WT_U_
-      # This is just an example, not enforced (your flow might insert them elsewhere)
-    }
-    if {[info exists ::env(UPPER_SITE)] && $::env(UPPER_SITE) ne ""} {
-      set ::env(PLACE_SITE) $::env(UPPER_SITE) 
-    }
-    puts "INFO: Tier policy applied for UPPER: dont_use(bottom), filler=UPPER list."
-  } else {
-    # bottom
-    if {[llength $DNU_BOT]} {
-      _set_dont_use [_expand_libcells $DNU_BOT] true
-    } else {
-      _set_dont_use [_expand_libcells "*_upper"] true
-    }
-
-    if {[llength $FILL_BOT]} {
-      setFillerMode -core $FILL_BOT
-    }
-
-    if {[llength $TAP_BOT]} {
-      # Example: addWellTap -cell [lindex $TAP_BOT 0] -cellInterval 40 -prefix WT_B_
-    }
-    if {[info exists ::env(BOTTOM_SITE)] && $::env(BOTTOM_SITE) ne ""} {
-      set ::env(PLACE_SITE) $::env(BOTTOM_SITE) 
-    }
-    puts "INFO: Tier policy applied for BOTTOM: dont_use(upper), filler=BOTTOM list."
-  }
-  rebuild_rows_for_site $::env(PLACE_SITE)
-}
-
 # Sets the placement status of tier-specific cells.
 # Usage:
 #   set_tier_placement_status bottom fixed  ;# Fixes bottom-tier cells
@@ -178,4 +118,118 @@ proc set_tier_placement_status {tier status} {
   } else {
     puts "INFO: No instances found matching '$match_pattern'."
   }
+}
+
+# ------------------------------------------------------------
+# Helper: lock instances by master/ref suffix, optionally lock their nets
+#   suffix: "*_upper" or "*_bottom"
+# ------------------------------------------------------------
+proc set_dont_touch_by_ref_suffix {suffix args} {
+  array set opt {
+    -quiet      0
+  }
+  if {([llength $args] % 2) != 0} {
+    error "set_dont_touch_by_ref_suffix: args must be key-value pairs, got: $args"
+  }
+  foreach {k v} $args {
+    if {![info exists opt($k)]} { error "set_dont_touch_by_ref_suffix: unknown option $k" }
+    set opt($k) $v
+  }
+
+  # 1) Find instances whose master/ref name matches suffix (master name is top.insts.cell.name)
+  set inst_db {}
+  catch { set inst_db [dbGet -p2 top.insts.cell.name $suffix] }
+  if {$inst_db eq "" || [llength $inst_db] == 0} {
+    if {!$opt(-quiet)} { puts "INFO: dont_touch: no instances match ref suffix '$suffix'." }
+    return
+  }
+
+  # Convert to instance names -> get_cells collection
+  set inst_names [dbGet $inst_db.name]
+  if {$inst_names eq "" || [llength $inst_names] == 0} {
+    if {!$opt(-quiet)} { puts "INFO: dont_touch: matched '$suffix' but cannot resolve instance names." }
+    return
+  }
+
+  set cells [get_cells $inst_names]
+
+  # 2) Dont touch cells (handle version differences)
+  if {[catch {set_dont_touch $cells true} _e]} {
+    catch {set_dont_touch $cells}
+  }
+  if {!$opt(-quiet)} { puts "INFO: dont_touch: locked [llength $inst_names] cells (ref suffix '$suffix')." }
+}
+
+# ------------------------------------------------------------
+# Only modify apply_tier_policy: add option
+#   -lock_other_tier_nets 1 (default): also lock nets of the other tier
+#   CTS stage: call with -lock_other_tier_nets 0
+# ------------------------------------------------------------
+proc apply_tier_policy {tier args} {
+  set tier [string tolower $tier]
+  if {![string match "upper" $tier] && ![string match "bottom" $tier]} {
+    error "apply_tier_policy: tier must be 'upper' or 'bottom'"
+  }
+
+  # New options (default: lock nets)
+  array set opt {
+    -quiet               0
+  }
+  if {([llength $args] % 2) != 0} {
+    error "apply_tier_policy: args must be key-value pairs, got: $args"
+  }
+  foreach {k v} $args {
+    if {![info exists opt($k)]} { error "apply_tier_policy: unknown option $k" }
+    set opt($k) $v
+  }
+
+  # ---- your original env-driven lists (kept unchanged) ----
+  set DNU_UP   [_as_list DNU_FOR_UPPER]
+  set DNU_BOT  [_as_list DNU_FOR_BOTTOM]
+  set FILL_UP  [_as_list FILL_CELLS_UPPER]
+  set FILL_BOT [_as_list FILL_CELLS_BOTTOM]
+  set TAP_UP   [_as_list TAPCELL_UPPER]
+  set TAP_BOT  [_as_list TAPCELL_BOTTOM]
+
+  if {$tier eq "upper"} {
+    # (A) dont_use policy (unchanged)
+    if {[llength $DNU_UP]} {
+      _set_dont_use [_expand_libcells $DNU_UP] true
+    } else {
+      _set_dont_use [_expand_libcells "*_bottom"] true
+    }
+
+    if {[llength $FILL_UP]} { setFillerMode -core $FILL_UP }
+
+    if {[info exists ::env(UPPER_SITE)] && $::env(UPPER_SITE) ne ""} {
+      set ::env(PLACE_SITE) $::env(UPPER_SITE)
+    }
+
+    # (B) NEW: lock the OTHER tier by master suffix "*_bottom"
+    set_dont_touch_by_ref_suffix "*_bottom" \
+      -quiet $opt(-quiet)
+
+    puts "INFO: Tier policy applied for UPPER: dont_use(bottom libs), dont_touch(bottom insts), filler=UPPER."
+  } else {
+    # bottom
+    if {[llength $DNU_BOT]} {
+      _set_dont_use [_expand_libcells $DNU_BOT] true
+    } else {
+      _set_dont_use [_expand_libcells "*_upper"] true
+    }
+
+    if {[llength $FILL_BOT]} { setFillerMode -core $FILL_BOT }
+
+    if {[info exists ::env(BOTTOM_SITE)] && $::env(BOTTOM_SITE) ne ""} {
+      set ::env(PLACE_SITE) $::env(BOTTOM_SITE)
+    }
+
+    # NEW: lock the OTHER tier by master suffix "*_upper"
+    set_dont_touch_by_ref_suffix "*_upper" \
+      -quiet $opt(-quiet)
+
+    puts "INFO: Tier policy applied for BOTTOM: dont_use(upper libs), dont_touch(upper insts), filler=BOTTOM."
+  }
+
+  rebuild_rows_for_site $::env(PLACE_SITE)
 }
