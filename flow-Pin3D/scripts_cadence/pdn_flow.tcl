@@ -1,3 +1,7 @@
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
 #################################################################
 # pdn_flow.tcl — Build lower half → Mirror to upper half → Segmented connection → Bridge only M10↔M11
 # Usage:

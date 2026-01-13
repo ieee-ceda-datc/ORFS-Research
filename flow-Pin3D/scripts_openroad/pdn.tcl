@@ -1,6 +1,6 @@
 source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
 
-load_design $env(DESIGN_NAME)_3D.fp.def 1_synth.sdc "Starting PDN generation"
+load_design $env(DESIGN_NAME)_3D.fp.v 1_synth.sdc "Starting PDN generation"
 
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 source $::env(OPENROAD_SCRIPTS_DIR)/floorplan_utils.tcl

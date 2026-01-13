@@ -26,7 +26,8 @@ test.tcl
 .st_launch_*
 *.csv
 *.opennet
-eval.sh
 summary_reports*
 pics
-eval*.sh
+eval_*.sh
+partition_log
+genus_reports

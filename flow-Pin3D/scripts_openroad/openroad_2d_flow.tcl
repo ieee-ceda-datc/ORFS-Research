@@ -246,7 +246,7 @@ set VERILOG_OUT 5_route.v
 
 write_db $::env(RESULTS_DIR)/5_2_route.odb
 write_def $::env(RESULTS_DIR)/$DEF_OUT
-write_verilog $::env(RESULTS_DIR)/$VERILOG
+write_verilog $::env(RESULTS_DIR)/$VERILOG_OUT
 write_sdc $::env(RESULTS_DIR)/5_route.sdc
 
 exit

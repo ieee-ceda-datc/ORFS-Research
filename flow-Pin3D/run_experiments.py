@@ -279,7 +279,7 @@ def main() -> int:
 
     # Default suites (match your originals)
     default_techs = ["asap7_3D", "nangate45_3D", "asap7_nangate45_3D"]
-    default_cases = ["gcd", "aes", "jpeg"]
+    default_cases = ["gcd", "aes", "jpeg", "ibex"]
 
     techs = _dedup_keep_order(args.tech) if args.tech else default_techs
     cases = _dedup_keep_order(args.case) if args.case else default_cases

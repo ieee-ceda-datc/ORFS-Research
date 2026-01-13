@@ -1,4 +1,8 @@
 ########################################################################
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
 # pdn_3d_stacked.tcl
 # 3D PDN for Innovus (aligning with OpenROAD 3D PDN logic, no renaming)
 # - Part 0: helper procs (box flatten / row rebuild / tier inst query)
@@ -12,11 +16,6 @@
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
 puts "INFO: \[pdn_3d_stacked\] Start 3D PDN (BOT then TOP)..."
 
-########################################################################
-# Utility: query bottom / upper tier instances by master name
-#   - bottom tier: cell master name matches "*_bottom"
-#   - upper  tier: cell master name matches "*_upper"
-########################################################################
 proc get_bottom_tier_insts {} {
   # pointers to insts whose cell.name matches "*_bottom"
   set inst_ptrs [dbGet top.insts.cell.name "*_bottom" -p2]

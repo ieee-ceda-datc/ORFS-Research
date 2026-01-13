@@ -101,12 +101,12 @@ export CELL_PAD_IN_SITES_DETAIL_PLACEMENT ?= 0
 # CTS
 # =====================================================
 export CTS_BUF_CELL             ?= BUFx8_ASAP7_75t_R
-
+export MIN_CLK_ROUTING_LAYER = M2
 # =====================================================
 # Route
 # =====================================================
 export MIN_ROUTING_LAYER         = M2
-export MAX_ROUTING_LAYER         = M7
+export MAX_ROUTING_LAYER         = M9
 export FASTROUTE_TCL            ?= $(PLATFORM_DIR)/fastroute.tcl
 
 # =====================================================

@@ -1,4 +1,8 @@
 ########################################################################
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
 # pdn_3d_sym_m12_m56.tcl
 # 3D PDN (homogeneous PDK) for Innovus
 # - Symmetric BOT / TOP power delivery network

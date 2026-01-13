@@ -1,3 +1,7 @@
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
 # ==========================================
 # place_common.tcl — Stable pre-GR/pre-legal setup for Innovus placement
 # Dependencies: utils.tcl / lib_setup.tcl / design_setup.tcl / mmmc_setup.tcl must be sourced.

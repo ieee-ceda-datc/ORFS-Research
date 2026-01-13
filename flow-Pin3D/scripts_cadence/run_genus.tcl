@@ -1,5 +1,9 @@
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
 # ==========================================
-# run_genus.tcl — Genus synthesis (match Makefile)
+# run_genus.tcl — Genus synthesis
 # Outputs: $::env(RESULTS_DIR)/1_synth.v and 1_synth.sdc
 # ==========================================
 

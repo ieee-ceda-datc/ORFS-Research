@@ -241,6 +241,14 @@ ord-tier-partition:
 	@mkdir -p $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)
 	@cp -rf $(RESULTS_DIR)/* $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)/ || true
 
+.PHONY: ord-test-partition
+ord-test-partition:
+	@echo "[ORD] Tier partition"
+	@$(OPENROAD_CMD) $(OPENROAD_SCRIPTS_DIR)/tier_partition_experiment.tcl 2>&1
+	@echo "[ORD] Copy 2D artifacts to $(3D_PLATFORM)"
+	@mkdir -p $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)
+	@cp -rf $(RESULTS_DIR)/* $(WORK_HOME)/results/$(3D_PLATFORM)/$(DESIGN_NICKNAME)/$(FLOW_VARIANT)/ || true
+
 # ----- 3D init -----
 .PHONY: ord-pre
 ord-pre:
@@ -275,7 +283,15 @@ ord-3d-pdn:
 	@cp -f $(RESULTS_DIR)/1_synth.sdc $(RESULTS_DIR)/2_floorplan.sdc
 	@cp -f $(RESULTS_DIR)/2_6_floorplan_pdn.def $(RESULTS_DIR)/2_floorplan.def
 	@cp -f $(RESULTS_DIR)/2_6_floorplan_pdn.v   $(RESULTS_DIR)/2_floorplan.v
-	
+
+.PHONY: ord-re-3d-pdn
+ord-re-3d-pdn:
+	@$(call _mkstdirs)
+	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/re_pdn.tcl,$(LOG_DIR)/2_6_floorplan_pdn.log)
+	@cp -f $(RESULTS_DIR)/1_synth.sdc $(RESULTS_DIR)/2_floorplan.sdc
+	@cp -f $(RESULTS_DIR)/2_6_floorplan_pdn.def $(RESULTS_DIR)/2_floorplan.def
+	@cp -f $(RESULTS_DIR)/2_6_floorplan_pdn.v   $(RESULTS_DIR)/2_floorplan.v
+
 .PHONY: ord-pre_cts
 ord-pre_cts:
 	@$(call _mkstdirs)

@@ -1,5 +1,9 @@
 # ============================================================
-# extract_report.tcl — Unified reporting (postRoute, NO cd)
+# This script was written and developed by Zhiyu Zheng at Fudan University; however, the underlying
+# commands and reports are copyrighted by Cadence. We thank Cadence for
+# granting permission to share our research to help promote and foster the next
+# generation of innovators.
+# extract_report.tcl — Unified reporting
 #   extract_report -postRoute -outdir <DIR> \
 #                   [-write_csv <csvpath>] [-write_summary <txtpath>]
 # All artifacts end up under -outdir:
@@ -53,15 +57,15 @@ proc extract_from_power_rpt {power_rpt} {
 }
 
 proc extract_cell_area {} {
-    set macro_area [expr  [join [dbget [dbget top.insts.cell.subClass block -p2 ].area ] +]]
-    set std_cell_area [expr  [join [dbget [dbget top.insts.cell.subClass block -v -p2 ].area ] +]]
+  set macro_area [expr  [join [dbget [dbget top.insts.cell.subClass block -p2 ].area ] +]]
+  set std_cell_area [expr  [join [dbget [dbget top.insts.cell.subClass block -v -p2 ].area ] +]]
   return [list $macro_area $std_cell_area]
 }
 
 proc extract_wire_length {} {
   return [expr [join [dbget top.nets.wires.length] +]]
 }
-
+# [expr [join [dbget top.nets.wires.length] +]]
 proc extract_fep {report_file_path} {
   timeDesign -postRoute
   set FEPs [report_timing -check_type setup -begin_end_pair -collection]
@@ -114,6 +118,25 @@ proc extract_drc {drc_rpt} {
   return $v
 }
 
+# ---- HB via count (ONLY what you asked: VIA instance count whose cutLayer.name == hb_layer) ----
+proc count_hb_viaInst {cutlayer} {
+  # signal nets viaInsts
+  set sig [dbGet -e -u -p3 top.nets.vias.via.cutLayer.name $cutlayer]
+  if {$sig eq "" || $sig eq "0x0"} { set sig {} }
+
+  # PG nets viaInsts (may or may not exist in some DBs; guard with catch)
+  set pg {}
+  if {![catch {dbGet -e -u -p3 top.pgNets.vias.via.cutLayer.name $cutlayer} pg_res]} {
+    set pg $pg_res
+    if {$pg eq "" || $pg eq "0x0"} { set pg {} }
+  }
+
+  # unique merge
+  set all [concat $sig $pg]
+  if {$all eq ""} { return 0 }
+  return [llength [lsort -unique $all]]
+}
+
 # ---- Internal worker (no cd): run timeDesign here, then COPY timingReports → outdir ----
 proc _extract_postRoute {outdir} {
   set stage "Final"
@@ -143,7 +166,11 @@ proc _extract_postRoute {outdir} {
   set drc_v [extract_drc [file join $outdir drc.rpt]]
   set fep_v [extract_fep [file join $outdir fep.rpt]]
 
-  # 5) 组装 CSV
+  # 5) HB via count
+  set HB "hb_layer"
+  set hb_via_cnt [count_hb_viaInst $HB]
+
+  # 6) 组装 CSV
   set core_area [dbget top.fplan.coreBox_area]
   set std_area  [lindex $rpt3 1]
   set mac_area  [lindex $rpt3 0]
@@ -152,7 +179,7 @@ proc _extract_postRoute {outdir} {
   set hc        [lindex $rpt1 2]
   set vc        [lindex $rpt1 3]
 
-  return "$stage,$core_area,$std_area,$mac_area,$rpt2,$rpt4,$wns,$tns,$hc,$vc,$drc_v,$fep_v"
+  return "$stage,$core_area,$std_area,$mac_area,$rpt2,$rpt4,$wns,$tns,$hc,$vc,$drc_v,$fep_v,$hb_via_cnt"
 }
 
 # ---- Public entrypoint ----
@@ -180,7 +207,7 @@ proc extract_report {args} {
   # Optional outputs
   if {$write_csv ne ""} {
     set fid [open $write_csv w]
-    puts $fid "stage,core_area,std_cell_area,macro_area,total_power,wire_length,wns,tns,h_cong,v_cong,drc_violations,fep_violations"
+    puts $fid "stage,core_area,std_cell_area,macro_area,total_power,wire_length,wns,tns,h_cong,v_cong,drc_violations,fep_violations,hb_via_count"
     puts $fid $csv_line
     close $fid
   }
@@ -202,6 +229,7 @@ proc extract_report {args} {
     puts $fh [format "%-18s %s" "V Congestion"   [lindex $f 9]]
     puts $fh [format "%-18s %s" "DRC Violations" [lindex $f 10]]
     puts $fh [format "%-18s %s" "FEP Violations" [lindex $f 11]]
+    puts $fh [format "%-18s %s" "HB VIA Count"   [lindex $f 12]]
     close $fh
   }
   return $csv_line
