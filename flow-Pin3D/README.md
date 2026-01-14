@@ -265,42 +265,113 @@ objects/    # intermediate DBs and caches
 
 ## Appendix
 
-<a id="Experimental-Tables-and-Plots"></a>
+### PDK Preparation
+
+PDK preparation is a key step for 3D IC design flow. The 3D PDK must be simple enough to support robust flows and, at the same time, expressive enough to expose meaningful differences when evaluating new tools and algorithms.
+
+<p align="center">
+  <img alt="ASAP7_3D_PDK" width="600" src="./README.assets/ASAP7_3D_PDK.png">
+  <br>
+  <em>Figure: Metal stack, PDN strategy, tier strategy in the 3D ASAP7 PDK.</em>
+</p>
+
+The figure above shows the metal stack, power delivery network (PDN) strategy and tier strategy for our 3D ASAP7 PDK, which is derived from the 3D ASAP7 PDK. Starting from this 2D base, we construct a homogeneous 3D PDK by replicating the 2D metal stack and design rules for each tier, and by adding an additional normal cut layer for vertical connections that represent HBTs between tiers. Our 3D PDN strategy applies the 2D PDN structure symmetrically to both the top and bottom tiers. This approach is motivated by the nature of F2F integration, where each die is fabricated independently before bonding. This necessitates a separate power supply for each tier. This requirement is particularly important for heterogeneous designs, where the standard-cell libraries on each tier may have distinct power voltage requirements.
+
+<p align="center">
+  <img alt="SITE1" height="200" src="./README.assets/SITE1.pdf" style="margin-right: 10px;">
+  <img alt="SITE2" height="200" src="./README.assets/SITE2.pdf">
+  <br>
+  <em>Figure: Rebuild rows for heterogeneous legalization.</em>
+</p>
+
+For standard-cell and library creation, we adopt the strategy shown above. We construct the 3D standard-cell libraries by duplicating a 2D cell library onto each tier, thereby creating a homogeneous 3D cell set. For each logical cell, we generate separate LEF views for the bottom and top tiers. In addition, we create LEF variants with the **COVER** attribute for both tiers. These **COVER** views provide a **transparent** physical abstraction that preserves footprint and blockage information while decoupling detailed device behavior. This strategy allows us to reuse existing 2D tools for floorplanning, PDN planning, and routing, while still modeling the 3D structure and interactions needed for Pin-3D experiments.
+
+For **homogeneous designs**, both tiers use the same standard-cell library, which simplifies the setup. We create tier-specific libraries by duplicating the 2D LEF and LIB files and adding distinct suffixes **_bottom** and **_upper** to distinguish cells on each tier. Because the cell footprints and timing characteristics are identical across tiers, the design can be synthesized once using a single library. The resulting netlist is then partitioned, and cells are mapped to their respective tiers. This approach allows for shared row structures and a unified timing analysis during placement and optimization.
+
+For **heterogeneous designs**, where each tier uses a different standard-cell library, two key challenges arise: (1) how to synthesize a single design that targets multiple distinct PDKs, and (2) how to ensure legal placement and optimization on each tier. Our solution for (1) is to synthesize the design against a common **logical library** that contains only the cells shared between the two tier-specific libraries. During the floorplanning stage, these logical cells are then mapped to their corresponding physical cell masters on the appropriate tier. Any tier-specific pins that are not part of the common logical cell abstraction are defined as internal pins in the logical library, effectively hiding them from the synthesis tool to ensure a valid, unified netlist. And for (2), we implement a **tier strategy** during placement and optimization. When optimizing one tier, we load the **COVER** view of the other tier to fix its instances, and we configure the environment to only allow cells from the active tier. This ensures that each tier is optimized using its own physical library, while still maintaining the overall 3D design integrity.
+
+Using this PDK preparation strategy, we can effectively set up both homogeneous and heterogeneous Pin-3D flows that leverage existing 2D tools while accurately modeling the unique aspects of 3D integration.
+
+### Physical Design Flow Details
+
+This subsection describes the implementation of each stage in the flow. We detail the key procedures, file dependencies, and design decisions that enable robust 3D physical design within a standard 2D toolchain.
+
+**Stage 1: Synthesis and 2D abstraction**
+
+In our flow, the logic synthesis stage employs Yosys or commercial tool based on a 2D standard-cell library. This stage reads RTL sources and generates a flat gate-level netlist along with timing constraints. We adopt a flat netlist structure rather than hierarchical modules because, in the subsequent floorplanning and partitioning stages, we use TritonPart for timing-driven bipartitioning, and cells within a logical module might be assigned to different tiers.
+
+For homogeneous designs, since the upper and lower tiers utilize the same process node, there are no logical cell equivalence issues. We directly use the standard 2D Process Design Kit (PDK) for logic synthesis. In the subsequent partitioning stage, cells can be assigned to the upper or lower tier without conflict.
+
+For heterogeneous designs, we adopt a unified synthesis strategy to handle different process nodes. We synthesize based on a simplified but logically complete 2D logical library. This library contains the intersection of available cells in the target technologies, provides multiple sizing options, and establishes a one-to-one mapping of master cells and pins between different processes. For cells that are logically equivalent but have different ports, we convert the extra pins in the physical library into internal pins within the logical library. Consequently, the synthesis tool ignores these pins during mapping, ensuring the generated netlist is logically equivalent. This approach guarantees that the design achieves equivalent logical functions while allowing cells to be flexibly moved between tiers. The resulting netlist remains technology-neutral regarding the final 3D stacking, and the specific mapping to tier-dependent physical libraries occurs only after the partitioning stage. This ensures a valid and unified netlist that can be partitioned by TritonPart without requiring early commitment to specific tier technologies.
+
+Key artifacts from this stage include the synthesized Verilog netlist, SDC constraints, and a cell mapping specification. This specification defines how the logical cells in the 2D PDK map to tier-specific physical masters and pin names.
+
+**Stage 2: 2D Floorplan, Tier Partitioning, and 3D Floorplan Construction**
+
+This stage transforms the logical netlist into a physically partitioned 3D design, encompassing both spatial planning and critical power distribution. The process begins with the creation of an initial 2D floorplan, where die dimensions are derived from core utilization and aspect ratio, and primary I/O pins are placed along the boundary. Subsequently, the 2D floorplan and netlist are passed to TritonPart for timing-driven bipartitioning.
+
+To optimize partition quality, we employ a parameter sweeping strategy controlled by the environment variables `PAR_BAL_LO`, `PAR_BAL_HI`, and `PAR_BAL_ITERATION`. Specifically, we uniformly sample target balance constraints from the interval in the range `[PAR_BAL_LO, PAR_BAL_HI]` over `PAR_BAL_ITERATION` iterations. For heterogeneous designs, we typically assign larger balance factors to accommodate the disparity in average cell sizes between tiers. This adjustment ensures that the final utilization on each tier converges toward the target utilization.
+
+<p align="center">
+  <img alt="UBfactorvsCrossTierNetSize" height="300" src="./README.assets/UBfactorvsCrossTierNetSize.png">
+  <br>
+  <em>Figure: Impact of balance constraint on cross-tier net count.</em>
+</p>
+
+For each sampled constraint, TritonPart generates a candidate solution; the solution yielding the minimum cutsize is then selected (see Figure above). This final partition assigns every standard cell instance to either the top or bottom tier, thereby establishing the foundation for 3D implementation. The resulting cutsize serves as an early indicator of cross-tier connectivity, which directly impacts timing metrics and routing complexity. However, the final count of Hybrid Bonding Terminals (HBTs) is not determined at this stage, as subsequent optimization and clock tree synthesis steps may introduce additional cross-tier connections.
+
+Using the resulting partition file, a conversion script translates the unified 2D design into tier-aware 3D views. This translation involves updating instance master names to their tier-specific physical counterparts (e.g., renaming a logical `AND2_X1` to `AND2_X1_bottom` or `AND2x2_ASAP7_75t_R_upper`) and remapping logical pin names to logical pin for heterogeneous designs. Furthermore, physical pins absent in the logical abstraction, such as scan-enable pins, are automatically tied off to constant values.
+
+With tier-specific views ready, the 3D floorplan is finalized by constructing independent PDNs for each tier. Symmetrical power grids are built separately using lower metal layers (e.g., `M1--M9`) for the bottom tier and upper metal layers (e.g., `M9_m--M1_m`) for the top tier, ensuring no unintended vertical shorts occur. Finally, a controlled vertical connection is established at designated Hybrid Bonding Terminal locations to bridge the isolated grids, completing the 3D PDN.
+
+<p align="center">
+  <img alt="Bot_PDN" width="45%" src="./README.assets/Bot_PDN.png">
+  <img alt="Top_PDN" width="45%" src="./README.assets/Top_PDN.png">
+  <br>
+  <img alt="BottomCell" width="45%" src="./README.assets/BottomCell.png">
+  <img alt="TopCell" width="45%" src="./README.assets/TopCell.png">
+  <br>
+  <em>Figure: Heterogeneous PDN grid and cell placement.</em>
+</p>
+
+**Stage 3: Iterative 3D placement**
+
+Placement begins with an initial global placement step. Although the upper and bottom tiers use different LEF and LIB files, all cells are defined with the **CORE** attribute. Consequently, the 2D placer treats all cells as movable and accounts for them in the density calculation. This generates a starting layout without specific timing or congestion optimization, providing a neutral baseline that does not favor either tier.
+
+We then refine the placement through an iterative, die-by-die process using a specific tier strategy. In each iteration, we fix the placement of one tier while optimizing the other. Specifically, we load the **COVER** views for the inactive tier, lock all instances on that tier, and configure the environment for the active tier. This configuration involves setting constraints to prevent the use of cells from the inactive tier, updating placement rows to match the active tier's specifications, and assigning the correct tie and filler cells.
+
+Once the environment is set, we run global placement in timing-driven and routability-driven modes. We configure the tool to refine the existing layout rather than starting from scratch. After each pass, we swap the active and inactive tiers and repeat the process. In our flow, a single round of die-by-die iterative optimization is typically sufficient.
+
+Following this iterative refinement, we perform detailed placement and optimization for each tier individually. We again apply the tier strategy to fix the inactive tier while enabling standard 2D optimization settings for the active tier. This allows the tool to insert buffers for timing optimization, manage tie-cell fanout, and finally run detailed placement to legalize cell positions and further improve layout quality.
+
+**Stage 4: 3D clock tree synthesis**
+
+We perform clock tree synthesis (CTS) on the bottom tier while keeping the top tier fixed. We apply the tier strategy to optimize the bottom tier, using sink clustering and designated buffer cells to build the clock tree. Cells on the upper tier that require a clock signal obtain it from buffers located on the bottom tier. After synthesis, for the OpenROAD flow, we run an additional detailed placement step to legalize any newly inserted buffers.
+
+<p align="center">
+  <img alt="CLK_Net" width="45%" src="./README.assets/CLK_Net.png">
+  <img alt="Route" width="45%" src="./README.assets/Route.png">
+  <br>
+  <img alt="HBT" width="45%" src="./README.assets/HBT.png">
+  <img alt="Final" width="45%" src="./README.assets/Final.png">
+  <br>
+  <em>Figure: Clock Tree, Routing Signal Nets, HBT assignment, and Final Layout.</em>
+</p>
+
+Clock signals for the top tier are handled as standard signal nets that connect to the bottom-tier clock tree through inter-tier vias. This method leverages our unified 2D representation, where vertical connections are modeled as standard vias on a dedicated cut layer. This allows the tool to route clock signals across tiers without requiring special 3D-specific handling.
+
+**Stage 5: 3D routing and post-route optimization**
+
+Global and detailed routing are performed using standard 2D routing engines. Our unified technology representation models hybrid bonding terminals as special via layers within the technology file. For instance, a specific cut layer is defined to bridge the top metal of the bottom tier and the bottom metal of the upper tier. When the router connects a net across tiers, it automatically inserts this inter-tier via without requiring specialized 3D commands.
+
+Following routing, we perform parasitic extraction to capture the resistance and capacitance of the routed interconnects. Since our unified technology LEF inherently contains 3D information, it characterizes all metal layers and via types, including inter-tier connections. This allows the extraction tool to generate SPEF files that accurately reflect the 3D structure, which are then used for final timing analysis and verification.
+
+**Stage 6: Metrics collection and reporting**
+
+We collect Quality of Results (QoR) metrics at multiple checkpoints throughout the flow. For OpenROAD, we use the reporting commands integrated into ORFS-Research. These commands log runtime, memory usage, wirelength, congestion maps, timing slack, and Design Rule Violations (DRVs) counts in a structured JSON format that follows the METRICS2.1 convention.
+
+For the commercial reference flow, we define a custom procedure to extract similar data. This procedure invokes standard timing, power, and verification commands, then parses the output reports to extract key metrics and write them to CSV files.
+
+All metrics are version-controlled alongside the flow scripts and benchmark inputs. This enables reproducible evaluation and allows for long-term tracking of improvements in tools and algorithms.
 
 ### Experimental Tables and Plots
-
-#### `gcd`
-
-<p align="center">
-  <img alt="Results_gcd" height="400" src="./README.assets/Results_gcd.png">
-</p>
-
-| Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC  | FEP |
-| :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :--- | :-- |
-| ORD  | 0.46     | 594.0           | 462.8              | -0.516   | -16.889  | 3.0        | 1379 | 949 |
-| CDS  | 0.46     | 519.2           | 441.6              | 0.013    | 0.000    | 1.19       | 108  | 0   |
-
-#### `jpeg`
-
-<p align="center">
-  <img alt="Results_jpeg" height="400" src="./README.assets/Results_jpeg.png">
-</p>
-
-| Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC   | FEP  |
-| :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :---- | :--- |
-| ORD  | 1.2      | 72369.0         | 81118.6            | -0.315   | -136.318 | 170.6      | 21534 | 5111 |
-| CDS  | 1.2      | 72369.0         | 68415.5            | -0.038   | -0.742   | 78.2       | 6763  | 79   |
-
-#### `aes`
-
-<p align="center">
-  <img alt="Results_aes" height="400" src="./README.assets/Results_aes.png">
-</p>
-
-| Flow | CLK (ns) | Core Area (μm²) | StdCell Area (μm²) | WNS (ns) | TNS (ns) | Power (mW) | DRC  | FEP |
-| :--- | :------- | :-------------- | :----------------- | :------- | :------- | :--------- | :--- | :-- |
-| ORD  | 0.82     | 16763.3         | 16594.4            | -0.275   | -19.642  | 145.7      | 5855 | 2231|
-| CDS  | 0.82     | 18232.7         | 16850.8            | -0.195   | -7.042   | 23.8       | 5584 | 660 |
-
-HBT pitch and RC set
-2D comparison
