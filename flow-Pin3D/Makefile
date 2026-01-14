@@ -335,6 +335,12 @@ ord-cts:
 	@echo "[ORD] CTS" ;
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/cts.tcl,$(LOG_DIR)/4_1_cts.log)
 
+.PHONY: ord-re-cts
+ord-re-cts:
+	@$(call _mkstdirs)
+	@echo "[ORD] CTS" ;
+	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/re-cts.tcl,$(LOG_DIR)/4_1_cts.log)
+
 .PHONY: ord-route
 ord-route:
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/global_route.tcl,$(LOG_DIR)/5_1_grt.log)

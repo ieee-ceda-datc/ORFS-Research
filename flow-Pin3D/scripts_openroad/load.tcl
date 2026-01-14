@@ -26,6 +26,10 @@ proc load_design {design_file sdc_file msg} {
       read_verilog $::env(RESULTS_DIR)/$design_file
       puts "Linking design $::env(DESIGN_NAME)..."
       link_design $::env(DESIGN_NAME)
+      set def_file [file rootname $::env(RESULTS_DIR)/$design_file].def
+      if {[file exists $def_file]} {
+        read_def -floorplan_initialize $def_file
+      }
     } else {
       error "Unrecognized input file $design_file"
     }
