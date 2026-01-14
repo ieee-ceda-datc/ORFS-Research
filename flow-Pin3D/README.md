@@ -183,15 +183,22 @@ High‑level stages and the **actual make targets** used in this repo are:
 ### One-line End-to-End Runs
 
 ```bash
-# OpenROAD end‑to‑end
-# bash test/aes/ord/run.sh
-# bash test/aes/ord/eval.sh
-bash run_ord.sh
-# bash test/aes/cds/run.sh
-# bash test/aes/cds/eval.sh
-# Cadence end‑to‑end
-bash run_cds.sh
+# 1) Configure env.sh (Docker / Innovus eval host)
+#    - CDS_PARTITION_MODE=docker|local
+#    - ORD_EVAL_MODE=local|remote
+#    - ORD_EVAL_REMOTE_HOST / ORD_EVAL_REMOTE_PROJECT_DIR if remote
+
+# OpenROAD end‑to‑end (ord run + eval)
+python3 run_experiments.py --flow ord --tech asap7_3D --case aes
+
+# Cadence end‑to‑end (cds run + eval; partition uses CDS_PARTITION_MODE)
+python3 run_experiments.py --flow cds --tech asap7_3D --case aes
+
+# Full preset suite (all techs/cases)
+python3 run_experiments.py --flow all
 ```
+
+> `run_experiments.py` will auto-load `env.sh`. The `test/**/run.sh` and `test/**/eval.sh` scripts also source `env.sh` from the repo root, so you can run them directly without extra setup.
 
 > **Note on Hybrid Flows**
 >

@@ -5,6 +5,7 @@ import signal
 import socket
 import subprocess
 import sys
+import shlex
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +28,12 @@ def _install_signal_handlers():
             pass
 
 
-def _run_command_with_log(cmd: Sequence[str], log_path: Path, cwd: Optional[Path] = None):
+def _run_command_with_log(
+    cmd: Sequence[str],
+    log_path: Path,
+    cwd: Optional[Path] = None,
+    env: Optional[dict] = None,
+):
     """
     Run a command, redirect stdout/stderr to log_path.
     Start a new process group so we can kill the whole tree via killpg on interrupt.
@@ -44,6 +50,7 @@ def _run_command_with_log(cmd: Sequence[str], log_path: Path, cwd: Optional[Path
             stderr=subprocess.STDOUT,
             cwd=str(cwd) if cwd else None,
             preexec_fn=preexec,
+            env=env,
         )
 
         try:
@@ -83,6 +90,8 @@ class RunConfig:
     remote_host: str
     remote_project_dir: str   # only for ord eval (ssh)
     repo_root: Path           # local repo root (where test/ exists)
+    ord_eval_mode: str        # "local" or "remote"
+    ord_eval_ssh_opts: str
 
 
 def _log_paths(flow: str, tech: str, case: str) -> Tuple[Path, Path]:
@@ -98,6 +107,22 @@ def _script_paths(repo_root: Path, flow: str, tech: str, case: str) -> Tuple[Pat
     return run_script, eval_script
 
 
+def _load_env_from_script(env_script: Path) -> None:
+    if not env_script.exists():
+        return
+    cmd = [
+        "bash",
+        "-lc",
+        f'export FLOW_ENV_QUIET=1; source "{env_script}"; env -0',
+    ]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    for entry in proc.stdout.split(b"\0"):
+        if not entry:
+            continue
+        key, _, value = entry.partition(b"=")
+        os.environ[key.decode(errors="ignore")] = value.decode(errors="ignore")
+
+
 def run_one(cfg: RunConfig) -> str:
     """
     Execute one (flow, tech, case) task.
@@ -105,6 +130,7 @@ def run_one(cfg: RunConfig) -> str:
     - ord: run.sh locally; eval.sh via ssh (logs local)
     """
     _install_signal_handlers()
+    _load_env_from_script(cfg.repo_root / "env.sh")
 
     pid = os.getpid()
     host = socket.gethostname()
@@ -131,7 +157,12 @@ def run_one(cfg: RunConfig) -> str:
         return msg
 
     try:
-        _run_command_with_log(["bash", str(run_script)], run_log, cwd=cfg.repo_root)
+        _run_command_with_log(
+            ["bash", str(run_script)],
+            run_log,
+            cwd=cfg.repo_root,
+            env=os.environ.copy(),
+        )
     except subprocess.CalledProcessError:
         msg = f"[{pid}] ERROR: run.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {run_log}"
         print(msg)
@@ -144,7 +175,12 @@ def run_one(cfg: RunConfig) -> str:
             print(msg)
             return msg
         try:
-            _run_command_with_log(["bash", str(eval_script)], eval_log, cwd=cfg.repo_root)
+            _run_command_with_log(
+                ["bash", str(eval_script)],
+                eval_log,
+                cwd=cfg.repo_root,
+                env=os.environ.copy(),
+            )
         except subprocess.CalledProcessError:
             msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
             print(msg)
@@ -157,25 +193,43 @@ def run_one(cfg: RunConfig) -> str:
             print(msg)
             return msg
 
-        remote_eval_script = f"test/{cfg.tech}/{cfg.case}/ord/eval.sh"
-        remote_cmd = (
-            "set -euo pipefail; "
-            f"cd {cfg.remote_project_dir}; "
-            'echo "[remote] CWD=$PWD"; '
-            f"bash {remote_eval_script}"
-        )
-
-        ssh_target = f"{cfg.remote_user}@{cfg.remote_host}"
-        try:
-            _run_command_with_log(
-                ["ssh", "-t", ssh_target, "bash", "-lc", "--", remote_cmd],
-                eval_log,
-                cwd=cfg.repo_root,
+        if cfg.ord_eval_mode == "remote":
+            remote_eval_script = f"test/{cfg.tech}/{cfg.case}/ord/eval.sh"
+            remote_cmd = (
+                "set -euo pipefail; "
+                f"cd {cfg.remote_project_dir}; "
+                'echo "[remote] CWD=$PWD"; '
+                f"bash {remote_eval_script}"
             )
-        except subprocess.CalledProcessError:
-            msg = f"[{pid}] ERROR: remote eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
-            print(msg)
-            return msg
+
+            ssh_target = f"{cfg.remote_user}@{cfg.remote_host}"
+            ssh_cmd = ["ssh"]
+            if cfg.ord_eval_ssh_opts:
+                ssh_cmd.extend(shlex.split(cfg.ord_eval_ssh_opts))
+            ssh_cmd.extend(["-t", ssh_target, "bash", "-lc", "--", remote_cmd])
+            try:
+                _run_command_with_log(
+                    ssh_cmd,
+                    eval_log,
+                    cwd=cfg.repo_root,
+                    env=os.environ.copy(),
+                )
+            except subprocess.CalledProcessError:
+                msg = f"[{pid}] ERROR: remote eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
+                print(msg)
+                return msg
+        else:
+            try:
+                _run_command_with_log(
+                    ["bash", str(eval_script)],
+                    eval_log,
+                    cwd=cfg.repo_root,
+                    env=os.environ.copy(),
+                )
+            except subprocess.CalledProcessError:
+                msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
+                print(msg)
+                return msg
     else:
         return f"[{pid}] ERROR: unknown flow={cfg.flow}"
 
@@ -206,6 +260,8 @@ def build_tasks(
     remote_host: str,
     remote_project_dir: str,
     repo_root: Path,
+    ord_eval_mode: str,
+    ord_eval_ssh_opts: str,
 ) -> List[RunConfig]:
     tasks: List[RunConfig] = []
     for flow in flows:
@@ -220,12 +276,21 @@ def build_tasks(
                         remote_host=remote_host,
                         remote_project_dir=remote_project_dir,
                         repo_root=repo_root,
+                        ord_eval_mode=ord_eval_mode,
+                        ord_eval_ssh_opts=ord_eval_ssh_opts,
                     )
                 )
     return tasks
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(
+    default_remote_user: str,
+    default_remote_host: str,
+    default_remote_project_dir: str,
+    default_repo_root: Optional[str],
+    default_ord_eval_mode: str,
+    default_ord_eval_ssh_opts: str,
+) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Run ORFS experiments (ORD/CDS) in parallel with per-task logs."
     )
@@ -255,25 +320,57 @@ def parse_args() -> argparse.Namespace:
     )
 
     # ORD remote eval controls (kept explicit)
-    p.add_argument("--remote-user", default="zhiyuzheng", help="SSH user for ORD eval (default: zhiyuzheng).")
-    p.add_argument("--remote-host", default=socket.gethostname(), help="SSH host for ORD eval (default: local hostname).")
+    p.add_argument("--remote-user", default=default_remote_user, help="SSH user for ORD eval.")
+    p.add_argument("--remote-host", default=default_remote_host, help="SSH host for ORD eval.")
     p.add_argument(
         "--remote-project-dir",
-        default="/export/home/zhiyuzheng/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D",
-        help="Remote repo root for ORD eval (default: your hardcoded path).",
+        default=default_remote_project_dir,
+        help="Remote repo root for ORD eval.",
+    )
+    p.add_argument(
+        "--ord-eval-mode",
+        choices=["local", "remote"],
+        default=default_ord_eval_mode,
+        help="Where to run ORD eval.sh (default from env: ORD_EVAL_MODE).",
+    )
+    p.add_argument(
+        "--ord-eval-ssh-opts",
+        default=default_ord_eval_ssh_opts,
+        help="Extra ssh options for remote ORD eval (default from env: ORD_EVAL_SSH_OPTS).",
     )
 
     p.add_argument(
         "--repo-root",
-        default=None,
-        help="Local repo root path (default: auto-detect as this script's parent).",
+        default=default_repo_root,
+        help="Local repo root path (default: env FLOW_HOME or script parent).",
     )
     return p.parse_args()
 
 
 def main() -> int:
     _install_signal_handlers()
-    args = parse_args()
+    script_root = Path(__file__).resolve().parent
+    _load_env_from_script(script_root / "env.sh")
+
+    default_repo_root = os.environ.get("FLOW_HOME", str(script_root))
+    default_remote_user = os.environ.get("ORD_EVAL_REMOTE_USER", "zhiyuzheng")
+    default_remote_host = os.environ.get("ORD_EVAL_REMOTE_HOST", socket.gethostname())
+    default_remote_project_dir = os.environ.get(
+        "ORD_EVAL_REMOTE_PROJECT_DIR", default_repo_root
+    )
+    default_ord_eval_mode = os.environ.get("ORD_EVAL_MODE", "local").lower()
+    if default_ord_eval_mode not in {"local", "remote"}:
+        default_ord_eval_mode = "local"
+    default_ord_eval_ssh_opts = os.environ.get("ORD_EVAL_SSH_OPTS", "")
+
+    args = parse_args(
+        default_remote_user=default_remote_user,
+        default_remote_host=default_remote_host,
+        default_remote_project_dir=default_remote_project_dir,
+        default_repo_root=default_repo_root,
+        default_ord_eval_mode=default_ord_eval_mode,
+        default_ord_eval_ssh_opts=default_ord_eval_ssh_opts,
+    )
 
     repo_root = Path(args.repo_root).resolve() if args.repo_root else Path(__file__).resolve().parent
 
@@ -297,11 +394,20 @@ def main() -> int:
         remote_host=args.remote_host,
         remote_project_dir=args.remote_project_dir,
         repo_root=repo_root,
+        ord_eval_mode=args.ord_eval_mode,
+        ord_eval_ssh_opts=args.ord_eval_ssh_opts,
     )
 
     print(f"[MAIN] repo_root={repo_root}")
     print(f"[MAIN] flows={flows} techs={techs} cases={cases} jobs={args.jobs}")
     print(f"[MAIN] total_tasks={len(tasks)} logs under run_logs/<tech>/<flow>/...")
+    print(
+        "[MAIN] env CDS_PARTITION_MODE={}"
+        " ORD_EVAL_MODE={}".format(
+            os.environ.get("CDS_PARTITION_MODE", "docker"),
+            os.environ.get("ORD_EVAL_MODE", "local"),
+        )
+    )
 
     # Run
     executor: Optional[ProcessPoolExecutor] = None
