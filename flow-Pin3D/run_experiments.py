@@ -92,6 +92,8 @@ class RunConfig:
     repo_root: Path           # local repo root (where test/ exists)
     ord_eval_mode: str        # "local" or "remote"
     ord_eval_ssh_opts: str
+    do_run: bool
+    do_eval: bool
 
 
 def _log_paths(flow: str, tech: str, case: str) -> Tuple[Path, Path]:
@@ -137,38 +139,50 @@ def run_one(cfg: RunConfig) -> str:
 
     run_log, eval_log = _log_paths(cfg.flow, cfg.tech, cfg.case)
     # 兼容 Python 3.6: unlink(missing_ok=True) 改为 try-except
-    try:
-        run_log.unlink()
-    except FileNotFoundError:
-        pass
-    try:
-        eval_log.unlink()
-    except FileNotFoundError:
-        pass
+    if cfg.do_run:
+        try:
+            run_log.unlink()
+        except FileNotFoundError:
+            pass
+    if cfg.do_eval:
+        try:
+            eval_log.unlink()
+        except FileNotFoundError:
+            pass
 
     run_script, eval_script = _script_paths(cfg.repo_root, cfg.flow, cfg.tech, cfg.case)
 
-    print(f"[{pid}] Start {cfg.flow.upper()} tech={cfg.tech} case={cfg.case} on host={host}")
+    mode = "run+eval"
+    if cfg.do_run and not cfg.do_eval:
+        mode = "run-only"
+    elif cfg.do_eval and not cfg.do_run:
+        mode = "eval-only"
+    print(f"[{pid}] Start {cfg.flow.upper()} tech={cfg.tech} case={cfg.case} mode={mode} on host={host}")
 
     # --- run.sh (local) ---
-    if not run_script.exists():
-        msg = f"[{pid}] ERROR: run.sh not found: {run_script}"
-        print(msg)
-        return msg
+    if cfg.do_run:
+        if not run_script.exists():
+            msg = f"[{pid}] ERROR: run.sh not found: {run_script}"
+            print(msg)
+            return msg
 
-    try:
-        _run_command_with_log(
-            ["bash", str(run_script)],
-            run_log,
-            cwd=cfg.repo_root,
-            env=os.environ.copy(),
-        )
-    except subprocess.CalledProcessError:
-        msg = f"[{pid}] ERROR: run.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {run_log}"
-        print(msg)
-        return msg
+        try:
+            _run_command_with_log(
+                ["bash", str(run_script)],
+                run_log,
+                cwd=cfg.repo_root,
+                env=os.environ.copy(),
+            )
+        except subprocess.CalledProcessError:
+            msg = f"[{pid}] ERROR: run.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {run_log}"
+            print(msg)
+            return msg
 
     # --- eval.sh ---
+    if not cfg.do_eval:
+        ok = f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}"
+        print(ok)
+        return ok
     if cfg.flow == "cds":
         if not eval_script.exists():
             msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
@@ -262,6 +276,8 @@ def build_tasks(
     repo_root: Path,
     ord_eval_mode: str,
     ord_eval_ssh_opts: str,
+    do_run: bool,
+    do_eval: bool,
 ) -> List[RunConfig]:
     tasks: List[RunConfig] = []
     for flow in flows:
@@ -278,6 +294,8 @@ def build_tasks(
                         repo_root=repo_root,
                         ord_eval_mode=ord_eval_mode,
                         ord_eval_ssh_opts=ord_eval_ssh_opts,
+                        do_run=do_run,
+                        do_eval=do_eval,
                     )
                 )
     return tasks
@@ -317,6 +335,17 @@ def parse_args(
         type=int,
         default=9,
         help="Parallel workers.",
+    )
+    stage_group = p.add_mutually_exclusive_group()
+    stage_group.add_argument(
+        "--eval-only",
+        action="store_true",
+        help="Only run eval.sh for each task.",
+    )
+    stage_group.add_argument(
+        "--run-only",
+        action="store_true",
+        help="Only run run.sh for each task.",
     )
 
     # ORD remote eval controls (kept explicit)
@@ -386,6 +415,9 @@ def main() -> int:
     else:
         flows = [args.flow]
 
+    do_run = not args.eval_only
+    do_eval = not args.run_only
+
     tasks = build_tasks(
         flows=flows,
         techs=techs,
@@ -396,10 +428,13 @@ def main() -> int:
         repo_root=repo_root,
         ord_eval_mode=args.ord_eval_mode,
         ord_eval_ssh_opts=args.ord_eval_ssh_opts,
+        do_run=do_run,
+        do_eval=do_eval,
     )
 
     print(f"[MAIN] repo_root={repo_root}")
     print(f"[MAIN] flows={flows} techs={techs} cases={cases} jobs={args.jobs}")
+    print(f"[MAIN] stages: run={do_run} eval={do_eval}")
     print(f"[MAIN] total_tasks={len(tasks)} logs under run_logs/<tech>/<flow>/...")
     print(
         "[MAIN] env CDS_PARTITION_MODE={}"

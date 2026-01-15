@@ -196,6 +196,12 @@ python3 run_experiments.py --flow cds --tech asap7_3D --case aes
 
 # Full preset suite (all techs/cases)
 python3 run_experiments.py --flow all
+
+# Eval only (skip run.sh)
+python3 run_experiments.py --flow ord --tech nangate45_3D --case gcd --eval-only
+
+# Run only (skip eval.sh)
+python3 run_experiments.py --flow cds --tech asap7_3D --case aes --run-only
 ```
 
 > `run_experiments.py` will auto-load `env.sh`. The `test/**/run.sh` and `test/**/eval.sh` scripts also source `env.sh` from the repo root, so you can run them directly without extra setup.
