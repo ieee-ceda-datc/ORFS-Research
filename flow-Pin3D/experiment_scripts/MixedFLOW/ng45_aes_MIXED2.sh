@@ -29,7 +29,7 @@ done
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-pre-opt
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-legalize-bottom
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-legalize-upper
-ssh -Y zhiyuzheng@hnode35 "
+ssh -Y zhiyuzheng@hnode33 "
     cd ~/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D || exit
     source env.sh
     export NUM_CORES=16
