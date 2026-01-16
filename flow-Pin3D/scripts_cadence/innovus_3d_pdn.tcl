@@ -60,11 +60,11 @@ floorPlan -s [list $CORE_W $CORE_H $mL $mB $mR $mT] -siteOnly $PLACE_SITE
 
 deleteTrack
 
-if {[file exists $::env(MAKE_TRACKS)]} {
-    source $::env(MAKE_TRACKS)
-} else {
+# if {[file exists $::env(MAKE_TRACKS)]} {
+#     source $::env(MAKE_TRACKS)
+# } else {
 generateTracks 
-}
+# }
 
 # ===== Place pins evenly on four sides (with explicit layer settings) =====
 source $::env(CADENCE_SCRIPTS_DIR)/place_pin.tcl 
