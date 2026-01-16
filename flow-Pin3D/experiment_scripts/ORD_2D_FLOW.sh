@@ -11,49 +11,49 @@ fi
 source "${FLOW_ROOT}/env.sh"
 export NUM_CORES=20
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="jpeg" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="jpeg" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="aes" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="aes" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="ibex" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="ibex" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="jpeg" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="jpeg" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="aes" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="aes" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-export DESIGN_DIMENSION="2D"
-export DESIGN_NICKNAME="ibex" 
-export FLOW_VARIANT="openroad"
-export USE_FLOW="openroad"
+# export DESIGN_DIMENSION="2D"
+# export DESIGN_NICKNAME="ibex" 
+# export FLOW_VARIANT="openroad"
+# export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-2d_flow
 
-ssh zhiyuzheng@hnode35 /bin/bash << 'EOF'
+ssh -Y zhiyuzheng@hnode35 /bin/bash << 'EOF'
 cd ~/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLOW_ROOT="${SCRIPT_DIR}"
