@@ -17,6 +17,7 @@ export MIN_CLK_ROUTING_LAYER ?= M2
 export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_6M7M.lef
 export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_6M7M.rcx_patterns.rules
 export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_6M7M.tcl
+# export MAKE_TRACKS       ?= $(PLATFORM_DIR)/make_tracks_cds.tcl
 # 标准单元 LEF（分层）
 export SC_LEF    ?= \
   $(PLATFORM_DIR)/lef_bottom/asap7sc7p5t_28_R_1x_220121a.bottom.lef \

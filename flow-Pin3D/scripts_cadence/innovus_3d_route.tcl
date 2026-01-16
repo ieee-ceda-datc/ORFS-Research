@@ -8,7 +8,7 @@
 source $::env(CADENCE_SCRIPTS_DIR)/utils.tcl
 source $::env(CADENCE_SCRIPTS_DIR)/lib_setup.tcl
 source $::env(CADENCE_SCRIPTS_DIR)/design_setup.tcl
-
+# source $::env(CADENCE_SCRIPTS_DIR)/floorplan_utils.tcl
 set LOG_DIR       [_get LOG_DIR]
 set RESULTS_DIR   [_get RESULTS_DIR]
 set REPORTS_DIR   [_get REPORTS_DIR]
@@ -42,7 +42,8 @@ defIn $DEF_IN
 # Layer constraints (align with place)
 if {[info exists ::env(MAX_ROUTING_LAYER)]} { setDesignMode -topRoutingLayer    $::env(MAX_ROUTING_LAYER) }
 if {[info exists ::env(MIN_ROUTING_LAYER)]} { setDesignMode -bottomRoutingLayer $::env(MIN_ROUTING_LAYER) }
-
+# deleteTrack
+# source $::env(MAKE_TRACKS)
 # ---------- Router Settings (Robust) ----------
 # GR: Disable timing if too slow; enable advanced node fix
 setNanoRouteMode -grouteExpWithTimingDriven false
@@ -51,20 +52,39 @@ if {![info exists ::env(DETAILED_ROUTE_END_ITERATION)]} {
 }
 setNanoRouteMode -drouteEndIteration $::env(DETAILED_ROUTE_END_ITERATION)
 
-# SI/Timing-driven, auto VIA, avoid vias inside SC pins
+# # SI/Timing-driven, auto VIA, avoid vias inside SC pins
+# setNanoRouteMode -routeWithSiDriven true
+# setNanoRouteMode -routeWithTimingDriven true
+# setNanoRouteMode -routeUseAutoVia true
+# setNanoRouteMode -routeWithViaInPin false
+# setNanoRouteMode -routeWithViaOnlyForStandardCellPin true
+
+# # on-grid only, advanced node routing switches
+# setNanoRouteMode -drouteOnGridOnly true
+# setNanoRouteMode -drouteAutoStop false
+# setNanoRouteMode -drouteSearchAndRepair true
+
+# setNanoRouteMode -drouteExpAdvancedMarFix true
+# setNanoRouteMode -routeExpAdvancedTechnology true
+
+setNanoRouteMode -drouteVerboseViolationSummary 1
 setNanoRouteMode -routeWithSiDriven true
 setNanoRouteMode -routeWithTimingDriven true
 setNanoRouteMode -routeUseAutoVia true
-setNanoRouteMode -routeWithViaInPin false
-setNanoRouteMode -routeWithViaOnlyForStandardCellPin true
 
-# on-grid only, advanced node routing switches
-setNanoRouteMode -drouteOnGridOnly true
+##Recommended by lib owners
+# Prevent router modifying M1 pins shapes
+setNanoRouteMode -routeWithViaInPin "1:1"
+setNanoRouteMode -routeWithViaOnlyForStandardCellPin "1:1"
+
+## limit VIAs to ongrid only for VIA1 (S1)
+setNanoRouteMode -drouteOnGridOnly "via 1:1"
 setNanoRouteMode -drouteAutoStop false
-setNanoRouteMode -drouteSearchAndRepair true
-
 setNanoRouteMode -drouteExpAdvancedMarFix true
 setNanoRouteMode -routeExpAdvancedTechnology true
+
+#SM suggestion for solving long extraction runtime during GR
+setNanoRouteMode -grouteExpWithTimingDriven false
 
 # ---------- Route + Post-Route Optimization ----------
 routeDesign
