@@ -2,32 +2,31 @@
 # Copyright (c) 2019-2025, The OpenROAD Authors
 #
 # ============================================================
-# SIMPLE TritonPart balance sweep (single-process, N points)
+# SIMPLE TritonPart sweep (single-process, N points)
 #
-# Semantics:
-#   - Always timing-aware = true
-#   - Sweep UNIFORMLY on [lo, hi] with N points INCLUDING endpoints:
-#       N = PAR_BAL_ITERATION (must be >= 2)
+# Two mutually-exclusive modes (both run N=PAR_BAL_ITERATION times):
 #
-# Optional (to "consider lo/hi within a reference target"):
-#   - PAR_BAL_REF (reference balance)
-#   - PAR_BAL_HALFSPAN (half width around ref)
-#     Effective range:
-#       eff_lo = max(hard_lo, ref - halfspan)
-#       eff_hi = min(hard_hi, ref + halfspan)
-#     Sweep is performed on [eff_lo, eff_hi].
+# Mode A) PAR_SCALE_FACTOR is set (e.g. "0.05 0.95"):
+#   - Treat PAR_SCALE_FACTOR as the CENTER of base_balance (NOT passed as -scale_factor)
+#   - Scan base_balance around the center:
+#       delta in [0.01 .. 0.06], N points (includes endpoints)
+#       base_balance = {b0_center + delta, b1_center - delta}
+#   - UB (balance_constraint) is FIXED to 1.0
 #
-# Inputs (env):
+# Mode B) PAR_SCALE_FACTOR is not set:
+#   - Scan UB (balance_constraint) uniformly on [PAR_BAL_LO .. PAR_BAL_HI], N points
+#   - base_balance is FIXED to {0.5 0.5}
+#
+# Inputs (env) [ONLY these partition knobs are read]:
 #   - PAR_BAL_LO, PAR_BAL_HI
-#   - PAR_BAL_ITERATION
-#   - PAR_FIXED_SEED (optional)
-#   - PAR_FLOORPLAN_DEF (optional)
+#   - PAR_BAL_ITERATION (N)
+#   - PAR_SCALE_FACTOR  (two floats that sum to 1.0; enables Mode A)
 #
 # Outputs:
 #   - $RESULTS_DIR/partition.txt
 #   - $RESULTS_DIR/partition.result.tcl
 #   - $RESULTS_DIR/partition.simple_plan.txt
-#   - $RESULTS_DIR/partition_sweep/part.ub*.seed*.txt (+ optional cut_nets dumps)
+#   - $RESULTS_DIR/partition_sweep/part.*.seed*.txt (+ optional cut_nets dumps)
 # ============================================================
 
 source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
@@ -40,34 +39,66 @@ proc _get {name def} {
   return $def
 }
 
-proc _clamp {x lo hi} {
-  if {$x < $lo} { return $lo }
-  if {$x > $hi} { return $hi }
-  return $x
-}
-
 proc write_kv_file {outfile kv_dict} {
   set fh [open $outfile w]
   puts $fh $kv_dict
   close $fh
 }
 
+proc _sum_floats {lst} {
+  set s 0.0
+  foreach x $lst { set s [expr {$s + double($x)}] }
+  return $s
+}
+
+proc _validate_float_list_sum1 {name lst expected_len} {
+  if {[llength $lst] != $expected_len} {
+    utl::error PAR 970 [format "%s must have %d floats (got %d): %s" \
+      $name $expected_len [llength $lst] $lst]
+  }
+  foreach x $lst {
+    if {![string is double -strict $x]} {
+      utl::error PAR 971 [format "%s contains non-float: %s (list=%s)" $name $x $lst]
+    }
+    if {[expr {double($x) <= 0.0}]} {
+      utl::error PAR 972 [format "%s must be > 0 (got %s)" $name $x]
+    }
+  }
+  set s [_sum_floats $lst]
+  if {[expr {abs($s - 1.0) > 1e-6}]} {
+    utl::error PAR 973 [format "%s must sum to 1.0 (got %.9f, list=%s)" $name $s $lst]
+  }
+}
+
+proc _clamp01 {x} {
+  if {$x < 0.0} { return 0.0 }
+  if {$x > 1.0} { return 1.0 }
+  return $x
+}
+
 # ----------------------------
 # Knobs (override via env)
 # ----------------------------
 set ::PAR_BAL_LO_DEFAULT   1.0
-set ::PAR_BAL_HI_DEFAULT   5.0
-set ::PAR_BAL_ITER_DEFAULT 5
+set ::PAR_BAL_HI_DEFAULT   6.0
+set ::PAR_BAL_ITER_DEFAULT 11
 
-set ::PAR_FIXED_SEED 1
-if {[info exists ::env(PAR_FIXED_SEED)] && $::env(PAR_FIXED_SEED) ne ""} {
-  set ::PAR_FIXED_SEED [expr {int($::env(PAR_FIXED_SEED))}]
+set ::PAR_BAL_ITER [expr {int([_get PAR_BAL_ITERATION $::PAR_BAL_ITER_DEFAULT])}]
+if {$::PAR_BAL_ITER < 2} {
+  utl::error PAR 965 "PAR_BAL_ITERATION must be >= 2."
 }
 
-# hb_layer density-based cut budget knobs
+set ::PAR_BAL_LO [expr {double([_get PAR_BAL_LO $::PAR_BAL_LO_DEFAULT])}]
+set ::PAR_BAL_HI [expr {double([_get PAR_BAL_HI $::PAR_BAL_HI_DEFAULT])}]
+if {$::PAR_BAL_HI < $::PAR_BAL_LO} { set tmp $::PAR_BAL_LO; set ::PAR_BAL_LO $::PAR_BAL_HI; set ::PAR_BAL_HI $tmp }
+
+# Deterministic seed (NOT configurable via env; per your “only 4 vars” requirement)
+set ::PAR_FIXED_SEED 1
+
+# hb_layer density-based cut budget knobs (HBT pitch fix: width=0.5, spacing=0.5 => pitch=1.0um)
 set ::HB_CUT_LAYER         "hb_layer"
-set ::HB_LAYER_WIDTH_UM    0.8
-set ::HB_LAYER_SPACING_UM  0.8
+set ::HB_LAYER_WIDTH_UM    0.5
+set ::HB_LAYER_SPACING_UM  0.5
 set ::HB_LAYER_RES_OHM     0.02
 set ::HB_VIA_DENSITY       0.5
 set ::CUTS_PER_NET         1
@@ -80,12 +111,9 @@ set ::CUT_NETS_DUMP_FILE "cut_nets.list"
 # ============================================================
 # Load design + floorplan
 # ============================================================
-load_design 2_2_floorplan_io.v 1_synth.sdc "Start Triton Partitioning (Uniform Sweep)"
+load_design 2_2_floorplan_io.v 1_synth.sdc "Start Triton Partitioning (N-point sweep)"
 
 set fp_def [file join $::env(RESULTS_DIR) 2_2_floorplan_io.def]
-if {[info exists ::env(PAR_FLOORPLAN_DEF)] && $::env(PAR_FLOORPLAN_DEF) ne ""} {
-  set fp_def $::env(PAR_FLOORPLAN_DEF)
-}
 if {![file exists $fp_def]} {
   utl::error PAR 961 "Floorplan DEF not found: $fp_def"
 }
@@ -266,16 +294,17 @@ proc calc_cut_nets_from_solution {solution_file ignore_net_names dump_file} {
 }
 
 # ============================================================
-# TritonPart (timing-aware)
+# TritonPart runner (timing-aware)
 # ============================================================
-proc run_triton_part {solution_file balance seed} {
-  puts [format {INFO %s: triton_part_design balance=%.4f seed=%d timing_aware=true -> %s} \
-    [_ts] $balance $seed $solution_file]
+proc run_triton_part {solution_file ub seed base_balance} {
+  puts [format {INFO %s: triton_part_design ub=%.6f seed=%d timing_aware=true base_balance=%s -> %s} \
+    [_ts] $ub $seed $base_balance $solution_file]
   flush stdout
 
   triton_part_design \
     -num_parts 2 \
-    -balance_constraint $balance \
+    -balance_constraint $ub \
+    -base_balance $base_balance \
     -seed $seed \
     -solution_file $solution_file \
     -timing_aware_flag true
@@ -284,17 +313,17 @@ proc run_triton_part {solution_file balance seed} {
 # ============================================================
 # Target cut budget from hb_layer density
 # ============================================================
-puts [format {INFO %s: HB layer=%s width=%.3fum spacing=%.3fum density=%.3f cuts_per_net=%d tol=%d} \
-  [_ts] $::HB_CUT_LAYER $::HB_LAYER_WIDTH_UM $::HB_LAYER_SPACING_UM $::HB_VIA_DENSITY $::CUTS_PER_NET $::CUT_TOL]
+puts [format {INFO %s: HB layer=%s width=%.3fum spacing=%.3fum (pitch=%.3fum) density=%.3f cuts_per_net=%d tol=%d} \
+  [_ts] $::HB_CUT_LAYER $::HB_LAYER_WIDTH_UM $::HB_LAYER_SPACING_UM \
+  [expr {$::HB_LAYER_WIDTH_UM + $::HB_LAYER_SPACING_UM}] \
+  $::HB_VIA_DENSITY $::CUTS_PER_NET $::CUT_TOL]
 flush stdout
 
 set pitch_x [expr {$::HB_LAYER_WIDTH_UM + $::HB_LAYER_SPACING_UM}]
 set pitch_y [expr {$::HB_LAYER_WIDTH_UM + $::HB_LAYER_SPACING_UM}]
-
 lassign [get_die_wh_area_um2] die_w die_h die_area
 puts [format {INFO %s: DIE w=%.3fum h=%.3fum area=%.3fum^2} [_ts] $die_w $die_h $die_area]
 flush stdout
-
 lassign [estimate_max_hb_cuts_from_pitch $die_area $pitch_x $pitch_y $::HB_VIA_DENSITY] grid nmax
 set target_cut [expr {int(floor(double($nmax) / double($::CUTS_PER_NET)))}]
 puts [format {STAT %s: grid=%d max_hb_cuts=%d => CUT_NET_BUDGET(target)=%d} \
@@ -302,68 +331,103 @@ puts [format {STAT %s: grid=%d max_hb_cuts=%d => CUT_NET_BUDGET(target)=%d} \
 flush stdout
 
 # ============================================================
-# Build sweep range + N points (include endpoints)
-#   - N = PAR_BAL_ITERATION
-#   - Uniform samples on [lo, hi], including endpoints
+# Decide mode + build N points
 # ============================================================
-set ::PAR_BAL_ITER [expr {int([_get PAR_BAL_ITERATION $::PAR_BAL_ITER_DEFAULT])}]
-if {$::PAR_BAL_ITER < 2} {
-  utl::error PAR 965 "PAR_BAL_ITERATION must be >= 2 (got $::PAR_BAL_ITER)."
+set mode "UB_SWEEP"
+set center_bb {}
+if {[info exists ::env(PAR_SCALE_FACTOR)] && $::env(PAR_SCALE_FACTOR) ne ""} {
+  set center_bb $::env(PAR_SCALE_FACTOR)
+  _validate_float_list_sum1 "PAR_SCALE_FACTOR(as base_balance center)" $center_bb 2
+  set mode "BB_SWEEP"
 }
 
-set hard_lo [expr {double([_get PAR_BAL_LO $::PAR_BAL_LO_DEFAULT])}]
-set hard_hi [expr {double([_get PAR_BAL_HI $::PAR_BAL_HI_DEFAULT])}]
-if {$hard_hi < $hard_lo} { set tmp $hard_lo; set hard_lo $hard_hi; set hard_hi $tmp }
-
-# Optional: constrain range around reference target point
-set lo $hard_lo
-set hi $hard_hi
-if {[info exists ::env(PAR_BAL_REF)] && $::env(PAR_BAL_REF) ne "" &&
-    [info exists ::env(PAR_BAL_HALFSPAN)] && $::env(PAR_BAL_HALFSPAN) ne ""} {
-  set ref      [expr {double($::env(PAR_BAL_REF))}]
-  set halfspan [expr {double($::env(PAR_BAL_HALFSPAN))}]
-  if {$halfspan < 0} { set halfspan [expr {-$halfspan}] }
-  set lo [_clamp [expr {$ref - $halfspan}] $hard_lo $hard_hi]
-  set hi [_clamp [expr {$ref + $halfspan}] $hard_lo $hard_hi]
-  if {$hi < $lo} { set tmp $lo; set lo $hi; set hi $tmp }
-}
-
-set span [expr {$hi - $lo}]
-if {$span <= 0.0} {
-  utl::error PAR 963 [format "Invalid sweep range: lo=%.6f hi=%.6f" $lo $hi]
-}
-
-set step [expr {$span / double($::PAR_BAL_ITER - 1)}]
-if {$step <= 0.0} {
-  utl::error PAR 964 [format "Invalid step: %.6f" $step]
-}
-
-set balances {}
-for {set i 0} {$i < $::PAR_BAL_ITER} {incr i} {
-  set x [expr {$lo + double($i)*$step}]
-  if {$i == ($::PAR_BAL_ITER - 1)} { set x $hi } ;# force exact endpoint
-  lappend balances [format "%.6f" $x]
-}
-
-# Plan file
 set plan_file [file join $::env(RESULTS_DIR) partition.simple_plan.txt]
-set plan "SIMPLE PARTITION SWEEP @ [_ts]\n"
+set plan "PARTITION SWEEP @ [_ts]\n"
 append plan "floorplan_def=$fp_def\n"
-append plan [format "hard_lo=%.6f hard_hi=%.6f eff_lo=%.6f eff_hi=%.6f\n" $hard_lo $hard_hi $lo $hi]
-if {[info exists ::env(PAR_BAL_REF)] && [info exists ::env(PAR_BAL_HALFSPAN)] &&
-    $::env(PAR_BAL_REF) ne "" && $::env(PAR_BAL_HALFSPAN) ne ""} {
-  append plan [format "ref=%.6f halfspan=%.6f\n" [expr {double($::env(PAR_BAL_REF))}] [expr {double($::env(PAR_BAL_HALFSPAN))}]]
+append plan [format "mode=%s N=%d seed=%d timing_aware=true\n" $mode $::PAR_BAL_ITER $::PAR_FIXED_SEED]
+append plan [format "target_cut=%d tol=%d\n" $target_cut $::CUT_TOL]
+
+# Points list as dicts: {ub <float> base_balance {a b} tag <string>}
+set points {}
+
+if {$mode eq "BB_SWEEP"} {
+  # base_balance scan only; UB fixed to 1.0
+  set ub_fixed 1.0
+
+  set b0c [expr {double([lindex $center_bb 0])}]
+  set b1c [expr {double([lindex $center_bb 1])}]
+
+  set d_lo 0.01
+  set d_hi 0.06
+  if {$::PAR_BAL_ITER == 1} {
+    utl::error PAR 966 "PAR_BAL_ITERATION must be >= 2 for BB sweep."
+  }
+  set d_step [expr {($d_hi - $d_lo) / double($::PAR_BAL_ITER - 1)}]
+
+  set bb_points {}
+  for {set i 0} {$i < $::PAR_BAL_ITER} {incr i} {
+    set d [expr {$d_lo + double($i)*$d_step}]
+    if {$i == ($::PAR_BAL_ITER - 1)} { set d $d_hi } ;# exact endpoint
+
+    set b0 [expr {$b0c + $d}]
+    set b1 [expr {$b1c - $d}]
+    set b0 [_clamp01 $b0]
+    set b1 [_clamp01 $b1]
+    set s  [expr {$b0 + $b1}]
+    if {$s <= 0.0} { utl::error PAR 981 [format "Invalid base_balance at delta %.6f: {%g %g}" $d $b0 $b1] }
+    set b0 [expr {$b0 / $s}]
+    set b1 [expr {$b1 / $s}]
+
+    set b0s [format "%.6f" $b0]
+    set b1s [format "%.6f" $b1]
+    set ds  [format "%.6f" $d]
+    set base_balance [list $b0s $b1s]
+
+    # tag for filenames
+    set bb_tag [string map {. p} $b0s]  ;# 0.060000 -> 0p060000
+    lappend points [dict create ub $ub_fixed base_balance $base_balance tag "bb${bb_tag}" delta $ds]
+    lappend bb_points [format "{%s %s}(d=%s)" $b0s $b1s $ds]
+  }
+
+  append plan [format "PAR_SCALE_FACTOR(center)=%s\n" $center_bb]
+  append plan "UB fixed = 1.000000\n"
+  append plan [format "delta_scan=\[0.01..0.06\] points=%s\n" [join $bb_points ", "]]
+
+} else {
+  # UB scan only; base_balance fixed to 0.5/0.5
+  set base_balance [list "0.500000" "0.500000"]
+
+  set span [expr {$::PAR_BAL_HI - $::PAR_BAL_LO}]
+  if {$span <= 0.0} {
+    utl::error PAR 963 [format "Invalid UB sweep range: lo=%.6f hi=%.6f" $::PAR_BAL_LO $::PAR_BAL_HI]
+  }
+  set step [expr {$span / double($::PAR_BAL_ITER - 1)}]
+  if {$step <= 0.0} { utl::error PAR 964 [format "Invalid UB step: %.6f" $step] }
+
+  set ub_points {}
+  for {set i 0} {$i < $::PAR_BAL_ITER} {incr i} {
+    set ub [expr {$::PAR_BAL_LO + double($i)*$step}]
+    if {$i == ($::PAR_BAL_ITER - 1)} { set ub $::PAR_BAL_HI } ;# exact endpoint
+    set ubs [format "%.6f" $ub]
+    lappend points [dict create ub $ub base_balance $base_balance tag "ub${ubs}" delta ""]
+    lappend ub_points $ubs
+  }
+
+  append plan [format "UB scan lo=%.6f hi=%.6f points=%s\n" $::PAR_BAL_LO $::PAR_BAL_HI [join $ub_points ","]]
+  append plan "base_balance fixed = {0.5 0.5}\n"
 }
-append plan [format "N=%d step=%.6f points=%s\n" $::PAR_BAL_ITER $step [join $balances ","]]
-append plan [format "target_cut=%d tol=%d timing_aware=true seed=%d\n" $target_cut $::CUT_TOL $::PAR_FIXED_SEED]
+
 set fh [open $plan_file w]; puts $fh $plan; close $fh
 
-puts [format {INFO %s: Sweep %d points (include endpoints): %s} \
-  [_ts] $::PAR_BAL_ITER [join $balances ","]]
+puts [format {INFO %s: mode=%s N=%d plan=%s} [_ts] $mode $::PAR_BAL_ITER $plan_file]
 flush stdout
 
 # ============================================================
 # Evaluate points, pick best
+# Selection policy:
+#   - Prefer feasible (cut <= target_cut + tol)
+#   - Among feasible: minimize cut, tie-break smaller ub
+#   - If none feasible: minimize abs_diff, tie-break smaller cut, then smaller ub
 # ============================================================
 set out_dir [file join $::env(RESULTS_DIR) partition_sweep]
 file mkdir $out_dir
@@ -371,26 +435,31 @@ file mkdir $out_dir
 set best ""
 set best_feasible 0
 
-foreach b $balances {
-  set bal [expr {double($b)}]
-  set sol [file join $out_dir [format {part.ub%.6f.seed%d.txt} $bal $::PAR_FIXED_SEED]]
+foreach p $points {
+  set ub [dict get $p ub]
+  set base_balance [dict get $p base_balance]
+  set tag [dict get $p tag]
 
-  run_triton_part $sol $bal $::PAR_FIXED_SEED
+  # filename: part.<tag>.seed<seed>.txt
+  # tag is either "ub<...>" or "bb<...>"
+  set sol [file join $out_dir [format {part.%s.seed%d.txt} $tag $::PAR_FIXED_SEED]]
+
+  run_triton_part $sol $ub $::PAR_FIXED_SEED $base_balance
 
   set dump_file ""
   if {$::DUMP_CUT_NETS} {
-    set dump_file [file join $out_dir [format {cut_nets.ub%.6f.seed%d.list} $bal $::PAR_FIXED_SEED]]
+    set dump_file [file join $out_dir [format {cut_nets.%s.seed%d.list} $tag $::PAR_FIXED_SEED]]
   }
 
   set cut [calc_cut_nets_from_solution $sol $::IGNORE_NET_NAMES $dump_file]
   set feasible [expr {$cut <= ($target_cut + $::CUT_TOL)}]
   set abs_diff [expr {abs($cut - $target_cut)}]
 
-  puts [format {INFO %s: STAT balance=%.6f cut=%d target=%d tol=%d feasible=%s abs_diff=%d} \
-    [_ts] $bal $cut $target_cut $::CUT_TOL $feasible $abs_diff]
+  puts [format {INFO %s: STAT tag=%s ub=%.6f base_balance=%s cut=%d target=%d tol=%d feasible=%s abs_diff=%d} \
+    [_ts] $tag $ub $base_balance $cut $target_cut $::CUT_TOL $feasible $abs_diff]
   flush stdout
 
-  set cur [dict create balance $bal cut $cut feasible $feasible abs_diff $abs_diff solution_file $sol]
+  set cur [dict create tag $tag ub $ub base_balance $base_balance cut $cut feasible $feasible abs_diff $abs_diff solution_file $sol mode $mode]
 
   if {$best eq ""} {
     set best $cur
@@ -398,23 +467,26 @@ foreach b $balances {
     continue
   }
 
-  if {$best_feasible} {
+  set b_feas [dict get $best feasible]
+  if {$b_feas} {
     if {$feasible} {
-      set bc [dict get $best cut]
-      set bb [dict get $best balance]
-      if {$cut < $bc || ($cut == $bc && $bal < $bb)} { set best $cur }
+      set bc  [dict get $best cut]
+      set bub [dict get $best ub]
+      if {$cut < $bc || ($cut == $bc && $ub < $bub)} {
+        set best $cur
+      }
     }
   } else {
     if {$feasible} {
       set best $cur
       set best_feasible 1
     } else {
-      set bd [dict get $best abs_diff]
-      set bc [dict get $best cut]
-      set bb [dict get $best balance]
-      if {$abs_diff < $bd ||
-          ($abs_diff == $bd && $cut < $bc) ||
-          ($abs_diff == $bd && $cut == $bc && $bal < $bb)} {
+      set bdif [dict get $best abs_diff]
+      set bc   [dict get $best cut]
+      set bub  [dict get $best ub]
+      if {$abs_diff < $bdif ||
+          ($abs_diff == $bdif && $cut < $bc) ||
+          ($abs_diff == $bdif && $cut == $bc && $ub < $bub)} {
         set best $cur
       }
     }
@@ -423,32 +495,37 @@ foreach b $balances {
 
 if {$best eq ""} { utl::error PAR 962 "No valid sweep result." }
 
+# ============================================================
+# Finalize
+# ============================================================
 set final_sol [file join $::env(RESULTS_DIR) partition.txt]
 file copy -force [dict get $best solution_file] $final_sol
 
 set final_sum [file join $::env(RESULTS_DIR) partition.result.tcl]
 set sum_dict [dict create \
+  mode [dict get $best mode] \
   seed $::PAR_FIXED_SEED \
   timing_aware true \
+  N $::PAR_BAL_ITER \
+  PAR_BAL_LO $::PAR_BAL_LO \
+  PAR_BAL_HI $::PAR_BAL_HI \
+  PAR_SCALE_FACTOR $center_bb \
   target $target_cut \
   tol $::CUT_TOL \
-  hard_lo $hard_lo \
-  hard_hi $hard_hi \
-  eff_lo $lo \
-  eff_hi $hi \
-  step $step \
-  points $balances \
-  balance [dict get $best balance] \
-  cut [dict get $best cut] \
-  feasible [dict get $best feasible] \
-  abs_diff [dict get $best abs_diff] \
+  best_tag [dict get $best tag] \
+  best_ub [dict get $best ub] \
+  best_base_balance [dict get $best base_balance] \
+  best_cut [dict get $best cut] \
+  best_feasible [dict get $best feasible] \
+  best_abs_diff [dict get $best abs_diff] \
   solution_file [dict get $best solution_file] \
   sweep_dir $out_dir \
   plan_file $plan_file]
 write_kv_file $final_sum $sum_dict
 
-puts [format {INFO %s: FINAL best balance=%.6f cut=%d feasible=%s -> %s} \
-  [_ts] [dict get $best balance] [dict get $best cut] [dict get $best feasible] $final_sol]
+puts [format {INFO %s: FINAL mode=%s best_tag=%s ub=%.6f base_balance=%s cut=%d feasible=%s -> %s} \
+  [_ts] [dict get $best mode] [dict get $best tag] [dict get $best ub] [dict get $best base_balance] \
+  [dict get $best cut] [dict get $best feasible] $final_sol]
 puts [format {INFO %s: summary=%s} [_ts] $final_sum]
 flush stdout
 

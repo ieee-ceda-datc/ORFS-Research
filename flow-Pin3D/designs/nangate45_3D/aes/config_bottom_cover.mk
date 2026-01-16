@@ -11,7 +11,7 @@ export ADDITIONAL_LIBS = $(PLATFORM_DIR)/lib_upper/NangateOpenCellLibrary_typica
 export PLACE_DENSITY_LB_ADDON = 0.10
 export TNS_END_PERCENT        = 100
 export SKIP_GATE_CLONING   = 1
-
+export CORE_MARGIN = 1
 
 export CORE_UTILIZATION ?= 60
 export OPEN_GUI ?= 1

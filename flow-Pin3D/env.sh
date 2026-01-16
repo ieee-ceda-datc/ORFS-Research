@@ -42,9 +42,9 @@ export INNER_DIR="${INNER_DIR:-/scripts/ORFS-Research/flow-Pin3D}"
 # ------------------------------------------------------------------------------
 # If Innovus is only available on another server, set ORD_EVAL_MODE=remote.
 # When remote, run_experiments.py will SSH to run eval.sh (which calls cds-final).
-# export ORD_EVAL_MODE=remote
-# export ORD_EVAL_REMOTE_HOST=hnode35
-# export ORD_EVAL_REMOTE_PROJECT_DIR=/export/home/zhiyuzheng/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D
+export ORD_EVAL_MODE=remote
+export ORD_EVAL_REMOTE_HOST=hnode35
+export ORD_EVAL_REMOTE_PROJECT_DIR=/export/home/zhiyuzheng/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D
 
 export ORD_EVAL_MODE="${ORD_EVAL_MODE:-local}" # local | remote
 export ORD_EVAL_REMOTE_USER="${ORD_EVAL_REMOTE_USER:-${USER:-zhiyuzheng}}"

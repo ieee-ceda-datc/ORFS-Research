@@ -7,16 +7,16 @@ export PROCESS = 45
 
 # -------- Tech / Libs --------
 ifeq ($(USE_FLOW),openroad)
-  export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_9M10M.lef
-  export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_9M10M.rcx_patterns.rules
+  export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_2A6M7M.lef
+  export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_2A6M7M.rcx_patterns.rules
   export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M3_add
-  export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_9M10M.tcl
+  export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_2A6M7M.tcl
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
-export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_9M8M.lef
-export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_9M8M.rcx_patterns.rules
-export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_9M8M.tcl
+export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_6M7M.lef
+export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_tech_1x_6M7M.rcx_patterns.rules
+export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_6M7M.tcl
 # 标准单元 LEF（分层）
 export SC_LEF    ?= \
   $(PLATFORM_DIR)/lef_bottom/asap7sc7p5t_28_R_1x_220121a.bottom.lef \

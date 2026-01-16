@@ -5,7 +5,7 @@ export VERILOG_FILES = $(DESIGN_HOME)/src/$(DESIGN_NAME)/gcd.v
 export SDC_FILE      = $(DESIGN_HOME)/asap7_nangate45_3D/$(DESIGN_NAME)/constraint.sdc
 
 export ABC_AREA      = 1
-export CORE_MARGIN = 1
+export CORE_MARGIN = 2
 export ASPECT_RATIO = 1.0
 export CORE_UTILIZATION ?= 60
 export PLACE_DENSITY_LB_ADDON = 0.10

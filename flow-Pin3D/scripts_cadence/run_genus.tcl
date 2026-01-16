@@ -56,9 +56,48 @@ set_db hdl_record_naming_style  %s_%s
 
 set_db library $list_lib
 
-foreach rtl_file $rtl_all {
-    read_hdl -sv $rtl_file
+# Dedup RTL list first (rtl_all comes from design_setup.tcl)
+set rtl_all_uniq [_uniq $rtl_all]
+
+# Partition: package files first (common pattern: *_pkg.sv or *pkg.sv)
+set rtl_pkg   {}
+set rtl_other {}
+foreach f $rtl_all_uniq {
+  if {[regexp -nocase {(^|/).*(^|_)(pkg|_pkg)\.sv$} $f] || [regexp -nocase {(^|/).*_pkg\.sv$} $f]} {
+    lappend rtl_pkg $f
+  } else {
+    lappend rtl_other $f
+  }
 }
+
+if {[llength $rtl_pkg] == 0 && [info exists vi_all] && [llength $vi_all]} {
+  set found_pkgs {}
+  foreach d $vi_all {
+    foreach pat [list "*_pkg.sv" "*pkg.sv"] {
+      set hits [glob -nocomplain -- [file join $d $pat]]
+      if {[llength $hits]} { foreach x $hits { lappend found_pkgs $x } }
+    }
+  }
+  set found_pkgs [_uniq $found_pkgs]
+  if {[llength $found_pkgs]} {
+    puts "INFO: Auto-discovered package files in include dirs: $found_pkgs"
+    set rtl_pkg $found_pkgs
+  }
+}
+
+# Final ordered list: packages first, then the rest
+set rtl_ordered [_uniq [concat $rtl_pkg $rtl_other]]
+
+puts "INFO: read_hdl (SV) file count = [llength $rtl_ordered]"
+if {[llength $rtl_pkg]} {
+  puts "INFO: package files first = [llength $rtl_pkg]"
+  puts "INFO: first package file  = [lindex $rtl_pkg 0]"
+} else {
+  puts "WARN: no package (*.sv) detected; if you still see ibex_pkg::* errors, ensure ibex_pkg.sv is in rtl_all or include dirs."
+}
+
+# Read all RTL in one shot to preserve compilation-unit ordering
+read_hdl -sv $rtl_ordered
 
 # Elaborate & Constraints & Initialization
 elaborate $DESIGN

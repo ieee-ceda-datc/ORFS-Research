@@ -148,7 +148,7 @@ proc place_all_ios {} {
 
     editPin -pin $pin -layer $layer -side $side \
             -assign "$x $y" -snap TRACK -fixOverlap 1 \
-            -skipWrappingPins -global_location -fixedPin 1
+            -skipWrappingPins -global_location
   }
   setPinAssignMode -pinEditInBatch false
 

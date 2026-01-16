@@ -9,18 +9,20 @@ if [[ ! -f "${FLOW_ROOT}/env.sh" ]]; then
   exit 1
 fi
 source "${FLOW_ROOT}/env.sh"
-export NUM_CORES=40
+export NUM_CORES=16
 export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="aes" 
 export FLOW_VARIANT="mixed3"
 export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
+rm -rf results/nangate45_3D/aes/mixed3
+cp -r results/nangate45_3D/aes/openroad results/nangate45_3D/aes/mixed3
 
-ssh zhiyuzheng@hnode35 "
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
+ssh -Y zhiyuzheng@hnode33 "
     cd ~/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D || exit
     source env.sh
-    export NUM_CORES=40
+    export NUM_CORES=16
     export DESIGN_DIMENSION="3D"
     export DESIGN_NICKNAME="aes" 
     export FLOW_VARIANT="mixed3"

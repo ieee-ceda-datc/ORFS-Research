@@ -7,16 +7,16 @@ export PROCESS = 45
 export PLATFORM = asap7_nangate45_3D
 # -------- Tech / Libs --------
 ifeq ($(USE_FLOW),openroad)
-  export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_nangate45_10M10M.lef
-  export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_nangate45_10M10M.rcx_patterns.rules
-  export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_10M10M.tcl
+  export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_nangate45_2A6M10M.lef
+  export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_nangate45_2A6M10M.rcx_patterns.rules
+  export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_2A6M10M.tcl
   export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M3_add
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
-export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_nangate45_8M10M.lef
-export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_nangate45_8M10M.rcx_patterns.rules
-export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_8M10M.tcl
+export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_nangate45_6M10M.lef
+export RCX_RULES         ?= $(PLATFORM_DIR)/asap7_nangate45_6M10M.rcx_patterns.rules
+export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_6M10M.tcl
 
 # 标准单元 LEF（分层）
 export SC_LEF    ?= \

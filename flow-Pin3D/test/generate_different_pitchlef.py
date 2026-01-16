@@ -266,9 +266,9 @@ def main():
     ap = argparse.ArgumentParser(description="Generate multiple tech LEF files with different hb_layer pitch.")
     ap.add_argument("-i", "--input", required=True, help="Input tech LEF file.")
     ap.add_argument("-o", "--outdir", required=True, help="Output directory.")
-    ap.add_argument("--pmax", default="1.6", help="Max pitch (default: 1.6).")
+    ap.add_argument("--pmax", default="1.0", help="Max pitch (default: 1.0).")
     ap.add_argument("--pmin", default="0.2", help="Min pitch (default: 0.2).")
-    ap.add_argument("--pstep", default="0.2", help="Pitch step (default: 0.2).")
+    ap.add_argument("--pstep", default="0.1", help="Pitch step (default: 0.1).")
     args = ap.parse_args()
 
     in_path = Path(args.input).resolve()

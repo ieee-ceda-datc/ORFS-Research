@@ -57,8 +57,8 @@ export PLACE_SITE               = FreePDK45_38x28_10R_NP_162NW_34O
 export IO_PLACER_H              = M5
 export IO_PLACER_V              = M6
 export PAR_BAL_LO ?= 1.0
-export PAR_BAL_HI ?= 10.0
-export PAR_BAL_ITERATION ?= 21
+export PAR_BAL_HI ?= 6.0
+export PAR_BAL_ITERATION ?= 11
 # PDN
 export PDN_TCL                 ?= $(PLATFORM_DIR)/grid_strategy-M1-M4-M7.tcl
 export TAPCELL_TCL              = $(PLATFORM_DIR)/tapcell.tcl

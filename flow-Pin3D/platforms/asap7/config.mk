@@ -82,8 +82,8 @@ export PLACE_SITE                = asap7sc7p5t
 export IO_PLACER_H               = M4
 export IO_PLACER_V               = M5
 export PAR_BAL_LO ?= 1.0
-export PAR_BAL_HI ?= 10.0
-export PAR_BAL_ITERATION ?= 21
+export PAR_BAL_HI ?= 6.0
+export PAR_BAL_ITERATION ?= 11
 # PDN (fixed default strategy)
 export PDN_TCL                  ?= $(PLATFORM_DIR)/openRoad/pdn/grid_strategy-M1-M2-M5-M6.tcl
 export TAPCELL_TCL              ?= $(PLATFORM_DIR)/openRoad/tapcell.tcl
@@ -106,7 +106,7 @@ export MIN_CLK_ROUTING_LAYER = M2
 # Route
 # =====================================================
 export MIN_ROUTING_LAYER         = M2
-export MAX_ROUTING_LAYER         = M9
+export MAX_ROUTING_LAYER         = M7
 export FASTROUTE_TCL            ?= $(PLATFORM_DIR)/fastroute.tcl
 
 # =====================================================

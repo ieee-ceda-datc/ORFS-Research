@@ -158,7 +158,7 @@ add_pdn_stripe \
 add_pdn_stripe \
   -grid    {BOT} \
   -layer   {M7} \
-  -width   {2.4} \
+  -width   {1.4} \
   -pitch   $m7_pitch \
   -offset  {2} \
   -nets    {BOT_VDD BOT_VSS}

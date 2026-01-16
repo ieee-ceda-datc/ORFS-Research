@@ -1,14 +1,14 @@
 #!/bin/bash
 export DISPLAY=:1
-ssh zhiyuzheng@hnode34 "
+ssh -Y zhiyuzheng@hnode33 "
     cd ~/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D || exit
     source env.sh
-    export NUM_CORES=60
+    export NUM_CORES=16
     export DESIGN_DIMENSION="3D"
     export DESIGN_NICKNAME="aes" 
-    export FLOW_VARIANT="cadence_2"
+    export FLOW_VARIANT="COMM"
     export USE_FLOW="cadence"
-    export VISUALIZE_FINAL=1
+    cp -r results/nangate45_3D/aes/cadence results/nangate45_3D/aes/COMM
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-3d-pdn
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper

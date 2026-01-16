@@ -26,6 +26,9 @@ if {![file exists $sdc]} { puts "ERROR: Missing SDC:     $sdc";  exit 1 }
 if {![info exists lefs] || $lefs eq ""} {
   puts "WARN: 'lefs' was not exported by lib_setup.tcl; continue with netlist/SDC only."
 }
+
+source $::env(CADENCE_SCRIPTS_DIR)/mmmc_setup.tcl
+
 set init_lef_file $lefs
 set init_mmmc_file ""
 set init_design_settop 1
@@ -33,27 +36,25 @@ set init_top_cell $DESIGN
 set init_verilog   $V_IN
 set init_design_netlisttype "Verilog"
 
-if {[info exists lefs] && $lefs ne ""} { set init_lef_file $lefs }
-
 # ---- Restore routed DB (no DEF fallback) ----
 # set ENC_PRIMARY   [file join $OBJECTS_DIR "_postRoute.enc"]
-set ENC_FILE [file join $OBJECTS_DIR "${DESIGN}_postRoute.enc.dat"]
-if {[file exists $ENC_FILE]} {
-  puts "INFO: restoreDesign $ENC_FILE $DESIGN"
-  restoreDesign $ENC_FILE $DESIGN
-} else {
-  source $::env(CADENCE_SCRIPTS_DIR)/mmmc_setup.tcl
-  puts "Missing routed ENC file: $ENC_FILE"
-  init_design -setup {WC_VIEW} -hold {BC_VIEW}
-  set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
-  setAnalysisMode -reset
-}
+# set ENC_FILE [file join $OBJECTS_DIR "${DESIGN}_postRoute.enc.dat"]
+# if {[file exists $ENC_FILE]} {
+#   puts "INFO: restoreDesign $ENC_FILE $DESIGN"
+#   restoreDesign $ENC_FILE $DESIGN
+# } else {
+#   puts "Missing routed ENC file: $ENC_FILE"
+puts "INFO: restoreDesign $DESIGN from def, verilog"
+init_design -setup {WC_VIEW} -hold {BC_VIEW}
+defIn $DEF_IN
+# }
 
 # Analysis knobs
+setAnalysisMode -reset
+set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 set_interactive_constraint_modes {CON}
 setAnalysisMode -analysisType onChipVariation -cppr both
 set_analysis_view -setup {WC_VIEW} -hold {BC_VIEW} -leakage WC_VIEW -dynamic WC_VIEW
-defIn $DEF_IN
 
 setMultiCpuUsage -localCpu [_get NUM_CORES 16]
 
