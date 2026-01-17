@@ -2,13 +2,13 @@
 # Platform / Process
 # =====================================================
 export PLATFORM                  = asap7
-export PROCESS                   = 45
+export PROCESS                   ?= 45
 
 # =====================================================
 # Tech / LEF / LIB (aggregation-friendly)
 # =====================================================
 # Tech LEF
-export TECH_LEF                  = $(PLATFORM_DIR)/lef/asap7_tech_1x_201209.lef
+export TECH_LEF                  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_201209.lef
 # Standard-cell LEF (fixed RVT -> tag "R")
 export SC_LEF                    = $(PLATFORM_DIR)/lef/asap7sc7p5t_28_R_1x_220121a.lef
 

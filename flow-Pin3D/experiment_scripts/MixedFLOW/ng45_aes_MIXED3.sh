@@ -13,7 +13,7 @@ export NUM_CORES=16
 export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="aes" 
 export FLOW_VARIANT="mixed3"
-export USE_FLOW="openroad"
+export USE_FLOW="cadence"
 
 rm -rf results/nangate45_3D/aes/mixed3
 cp -r results/nangate45_3D/aes/openroad results/nangate45_3D/aes/mixed3
@@ -26,7 +26,7 @@ ssh -Y zhiyuzheng@hnode33 "
     export DESIGN_DIMENSION="3D"
     export DESIGN_NICKNAME="aes" 
     export FLOW_VARIANT="mixed3"
-    export USE_FLOW="openroad"
+    export USE_FLOW="cadence"
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-bottom

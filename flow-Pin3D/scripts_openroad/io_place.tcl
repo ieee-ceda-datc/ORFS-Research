@@ -58,67 +58,87 @@ puts [format "IO-INFO: total ports=%d, kept=%d" [llength $all_raw] $N]
 
 # ===============================
 # 3) Geometry & perimeter in um
+#    NOTE: ord::get_die_area is already in MICRONS.
 # ===============================
-lassign [get_die_bbox] LX LY UX UY
-set W_dbu [expr {$UX - $LX}]
-set H_dbu [expr {$UY - $LY}]
-if {$W_dbu <= 0 || $H_dbu <= 0} { error "Invalid die size: W=$W_dbu H=$H_dbu (DBU)" }
-
-set W_um     [expr {double($W_dbu)/$DBU_PER_UM}]
-set H_um     [expr {double($H_dbu)/$DBU_PER_UM}]
+lassign [get_die_bbox] LX_um LY_um UX_um UY_um
+set W_um     [expr {$UX_um - $LX_um}]
+set H_um     [expr {$UY_um - $LY_um}]
+if {$W_um <= 0 || $H_um <= 0} { error "Invalid die size: W=$W_um H=$H_um (um)" }
 set PERIM_um [expr {2.0*($W_um + $H_um)}]
 
-# =======================================================
-# 4) Derive corner_avoidance / min_distance (in microns)
-# =======================================================
-# Start with 2% of the short side; clamp into [0, 2%*short]
-set short_um     [expr {min($W_um, $H_um)}]
-set ca_um       [expr {0.02*$short_um}]
+puts [format "IO-DIE(um): W=%.6f H=%.6f Perim=%.6f" $W_um $H_um $PERIM_um]
 
-# Effective usable perimeter after skipping four corners (two ends per side)
-proc eff_perim {perim ca} { return [expr {$perim - 8.0*$ca}] }
-set L_eff [eff_perim $PERIM_um $ca_um]
+# =======================================================
+# 4) place_pins feasibility-first strategy
+#    If it fails even with (min_dist=0, ca=0), parameters cannot fix it.
+# =======================================================
 
-# Guarantee feasibility by relaxing corner_avoidance if needed
-if {$L_eff <= 0.0} {
-  set ca_um 0.0
-  set L_eff [eff_perim $PERIM_um $ca_um]
+proc run_place_pins {LAYER_H LAYER_V min_dist_um ca_um} {
+  clear_io_pin_constraints
+  return [catch {
+    log_cmd place_pins \
+      -hor_layers $LAYER_H \
+      -ver_layers $LAYER_V \
+      -min_distance $min_dist_um \
+      -corner_avoidance $ca_um \
+      -annealing
+  } err]
 }
 
-# Uniform target pitch and a small slack (80%) for min_distance
-set pitch_um     [expr {$L_eff / double($N)}]
-set min_dist_um  [expr {max(0.0, 0.7*$pitch_um)}]
+# --- 4.1 Try maximum packing first ---
+set min_dist_um 0.0
+set ca_um       0.0
 
-# (Optional) enforce a technology floor for gap, e.g., 0.2um if desired
-set MIN_ABS_GAP_UM 0.0
-if {$min_dist_um < $MIN_ABS_GAP_UM} { set min_dist_um $MIN_ABS_GAP_UM }
+puts [format "IO-TRY pack: N=%d min_distance=%.6f um corner_avoidance=%.6f um H=%s V=%s" \
+      $N $min_dist_um $ca_um $LAYER_H $LAYER_V]
 
-puts [format "IO-INFO(um): N=%d, W=%.6f H=%.6f Perim=%.6f L_eff=%.6f  corner_avoid=%.6f  min_distance=%.6f" \
-              $N $W_um $H_um $PERIM_um $L_eff $ca_um $min_dist_um]
+set rc [run_place_pins $LAYER_H $LAYER_V $min_dist_um $ca_um]
+if {$rc != 0} {
+  # Re-run without log_cmd just to capture the error string reliably
+  set rc2 [catch {
+    place_pins -hor_layers $LAYER_H -ver_layers $LAYER_V -min_distance $min_dist_um -corner_avoidance $ca_um -annealing
+  } last_err]
 
-# ===========================================
-# 5) Convert arguments to DBU for place_pins
-# ===========================================
-set ca_dbu       [um_to_dbu_round $ca_um       $DBU_PER_UM]
-set min_dist_dbu [um_to_dbu_round $min_dist_um $DBU_PER_UM]
+  if {[regexp {PPL-0024} $last_err] && [regexp {available positions \(([0-9]+)\)} $last_err -> avail]} {
+    set need_perim [expr {$PERIM_um * (double($N) / double($avail))}]
+    puts [format "IO-FAIL: pins=%d > available=%d on layers H=%s V=%s" $N $avail $LAYER_H $LAYER_V]
+    puts [format "IO-FAIL: With these layers, even min_distance=0 and corner_avoidance=0 cannot fit." ]
+    puts [format "IO-FAIL: You must (a) increase die perimeter to >= %.2f um (current %.2f um), or (b) use tighter-pitch layers / multiple layers." \
+                  $need_perim $PERIM_um]
+    error $last_err
+  } else {
+    error $last_err
+  }
+}
 
-if {$ca_dbu < 0} { set ca_dbu 0 }
+# =======================================================
+# 5) Optional: spread pins after feasibility is confirmed
+#    Now that it fits, compute a reasonable spacing.
+# =======================================================
 
-puts [format "IO-INFO(DBU): DBU_PER_UM=%f  corner_avoid=%f  min_distance=%f" \
-              $DBU_PER_UM $ca_dbu $min_dist_dbu]
+# Keep ca modest; avoid eating too much perimeter.
+set short_um [expr {min($W_um, $H_um)}]
+set ca_um    [expr {0.02 * $short_um}]          ;# 2% of short side
+if {$ca_um < 0} { set ca_um 0.0 }
 
-# ===================================
-# 6) Invoke place_pins (DBU arguments)
-# ===================================
-clear_io_pin_constraints
-# Tip: If you need to lock/fix specific pins, add set_io_pin_constraint before place_pins.
-# Example:
+proc eff_perim {perim ca} { return [expr {$perim - 8.0*$ca}] }
+set L_eff [eff_perim $PERIM_um $ca_um]
+if {$L_eff <= 0.0} { set ca_um 0.0; set L_eff [eff_perim $PERIM_um $ca_um] }
 
-log_cmd place_pins \
-  -hor_layers $LAYER_H \
-  -ver_layers $LAYER_V \
-  -min_distance $min_dist_dbu \
-  -corner_avoidance $ca_dbu \
-  -annealing
+set pitch_um    [expr {$L_eff / double($N)}]
+set min_dist_um [expr {0.70 * $pitch_um}]
+if {$min_dist_um < 0.0} { set min_dist_um 0.0 }
 
-puts "FINAL: IO pins placed with perimeter-based DBU parameters. "
+puts [format "IO-SPREAD(um): N=%d Perim=%.6f L_eff=%.6f ca=%.6f pitch=%.6f min_dist=%.6f" \
+      $N $PERIM_um $L_eff $ca_um $pitch_um $min_dist_um]
+
+# Re-run place_pins with spreading; if it fails, fall back to pack.
+set rc [run_place_pins $LAYER_H $LAYER_V $min_dist_um $ca_um]
+if {$rc != 0} {
+  puts "[WARN] Spread parameters not feasible; falling back to pack (min_dist=0, ca=0)."
+  set rc [run_place_pins $LAYER_H $LAYER_V 0.0 0.0]
+  if {$rc != 0} { error "place_pins failed even in pack mode unexpectedly." }
+}
+
+puts [format "FINAL(um): min_distance=%.6f corner_avoidance=%.6f" $min_dist_um $ca_um]
+puts "FINAL: IO pins placed."

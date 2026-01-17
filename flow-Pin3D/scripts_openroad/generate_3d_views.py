@@ -553,9 +553,45 @@ def rewrite_verilog(
     with open(v_out, "w", encoding="utf-8") as f:
         f.write("".join(out_chunks))
 
-# ==========================================================
-# Main
-# ==========================================================
+def ensure_upper_has_more_cells(part_map: Dict[str, int], ratio_threshold: float = 2.0) -> Dict[str, int]:
+    """
+    Only when the instance-count imbalance is large (>= ratio_threshold),
+    force the larger side to be die=0 (upper) by swapping 0/1 globally if needed.
+
+    Example: ratio_threshold=2.0 means swap only if one side has >=2x instances of the other.
+    """
+    if not part_map:
+        return part_map
+
+    c0 = sum(1 for v in part_map.values() if v == 0)
+    c1 = sum(1 for v in part_map.values() if v == 1)
+
+    # Handle degenerate cases
+    if c0 == 0 and c1 == 0:
+        print("[INFO] Partition map has no 0/1 labels; keep as-is.")
+        return part_map
+
+    if min(c0, c1) == 0:
+        # One side is empty -> treat as extreme imbalance; put the non-empty side on upper
+        if c0 < c1:
+            print(f"[INFO] Swapping (extreme imbalance): upper(0)={c0}, bottom(1)={c1}.")
+            return {k: (1 - v) if v in (0, 1) else v for k, v in part_map.items()}
+        print(f"[INFO] Keep (extreme imbalance already ok): upper(0)={c0}, bottom(1)={c1}.")
+        return part_map
+
+    ratio = max(c0, c1) / min(c0, c1)
+
+    if ratio >= ratio_threshold:
+        # Large imbalance: ensure upper(0) is the larger side
+        if c0 < c1:
+            print(f"[INFO] Swapping (ratio={ratio:.2f} >= {ratio_threshold}): upper(0)={c0} < bottom(1)={c1}.")
+            return {k: (1 - v) if v in (0, 1) else v for k, v in part_map.items()}
+        print(f"[INFO] Keep (ratio={ratio:.2f} >= {ratio_threshold}, already ok): upper(0)={c0}, bottom(1)={c1}.")
+        return part_map
+
+    # Not a large imbalance: keep original labels
+    print(f"[INFO] Keep (ratio={ratio:.2f} < {ratio_threshold}): upper(0)={c0}, bottom(1)={c1}.")
+    return part_map
 
 def main():
     ap = argparse.ArgumentParser(
@@ -571,6 +607,8 @@ def main():
 
     # Partition map (must exist if you want deterministic conversion)
     part = parse_partition_file(args.partition)
+    part = ensure_upper_has_more_cells(part)
+    
     if not part:
         print("[WARN] No partition map provided/parsed. Conversion will only apply JSON macro mapping where possible.")
 

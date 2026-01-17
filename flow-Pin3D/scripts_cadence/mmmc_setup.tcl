@@ -6,10 +6,17 @@ puts "Setting up MMC timing libraries and corners"
 create_library_set -name WC_LIB -timing $libworst
 create_library_set -name BC_LIB -timing $libbest
  
-# create_rc_corner -name Cmax -qx_tech_file $qrc_max
-# create_rc_corner -name Cmin -qx_tech_file $qrc_min
-create_rc_corner -name Cmax
-create_rc_corner -name Cmin
+# If QRC tech files exist, use them; otherwise fall back to default rc corners
+if {[info exists qrc_max] && $qrc_max ne "" && [file exists $qrc_max]} {
+    create_rc_corner -name Cmax -qx_tech_file $qrc_max
+} else {
+    create_rc_corner -name Cmax
+}
+if {[info exists qrc_min] && $qrc_min ne "" && [file exists $qrc_min]} {
+    create_rc_corner -name Cmin -qx_tech_file $qrc_min
+} else {
+    create_rc_corner -name Cmin
+}
 
 create_delay_corner -name WC -library_set WC_LIB -rc_corner Cmax
 create_delay_corner -name BC -library_set BC_LIB -rc_corner Cmin

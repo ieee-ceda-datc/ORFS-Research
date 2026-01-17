@@ -37,6 +37,7 @@ ssh -Y zhiyuzheng@hnode33 "
     export DESIGN_NICKNAME="aes" 
     export FLOW_VARIANT="mixed2"
     export USE_FLOW="openroad"
+    export MAX_ROUTING_LAYER=M2_m
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-cts 
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-route 
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-final 
