@@ -31,3 +31,5 @@ pics
 eval_*.sh
 partition_log
 genus_reports
+env.bak
+*.bin
