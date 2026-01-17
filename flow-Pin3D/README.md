@@ -61,6 +61,117 @@ We provide a minimal, research‑ready enablement to run a **2D‑tools–driven
 
 > Notes: (i) 3D F2F vertical interconnect (HBTs) is modeled via library pins/macros and/or pseudo‑layers; (ii) Our 2D and 3D PDK are takern and generated from [[nangate45]https://github.com/ieee-ceda-datc/ORFS-Research/tree/main/flow/platforms/nangate45].
 
+### One-line End-to-End Runs
+
+> **Environment setup (used by `run_experiments.py`)**
+>
+> `run_experiments.py` **automatically loads** environment variables from `env.sh` at startup (it runs `bash -lc 'source env.sh; env'`), so you typically **do not need to manually** `source env.sh` before running experiments.
+>
+> #### 1) Configure `env.sh`
+>
+> Open `env.sh` and set/override the variables below as needed. The defaults in the provided `env.sh` are **machine-specific examples**—you should update paths/hosts for your environment.
+>
+> **Tool paths**
+>
+> * `OPENROAD_EXE` — Path to your `openroad` executable (local build or installed binary).
+> * `YOSYS_EXE` / `STA_EXE` — Optional overrides if your setup uses non-default locations.
+> * `NUM_CORES` — Controls OpenROAD threading; also used by `OPENROAD_CMD_DOCKER`.
+>
+> **Cadence partitioning via TritonPart (OpenROAD)**
+>
+> * `CDS_PARTITION_MODE` — Controls how the Cadence flow runs partitioning:
+>   * `docker` (default): partitioning runs inside a container.
+>   * `local`: partitioning runs using your local OpenROAD install.
+>
+> If `CDS_PARTITION_MODE=docker`, configure:
+>
+> * `DOCKER` — Docker CLI (usually `docker`).
+> * `CONTAINER` — Container name (must already exist and include OpenROAD).
+> * `CONTAINER_USER` — Username inside the container (if needed by your scripts).
+> * `INNER_DIR` — Repo path **inside** the container (where `make`/scripts run).
+>
+> **OpenROAD flow evaluation (`ord` eval stage)**
+>
+> * `ORD_EVAL_MODE` — Where to run `test/<tech>/<case>/ord/eval.sh`:
+>   * `local`: eval runs on the same machine as `run_experiments.py`.
+>   * `remote`: eval runs over SSH on another host (useful when Innovus is only available remotely).
+>
+> If `ORD_EVAL_MODE=remote`, configure:
+>
+> * `ORD_EVAL_REMOTE_USER` — SSH username (defaults to `$USER`).
+> * `ORD_EVAL_REMOTE_HOST` — SSH hostname (e.g., `hnode35`).
+> * `ORD_EVAL_REMOTE_PROJECT_DIR` — Repo root path on the remote machine (must contain `test/`).
+> * `ORD_EVAL_SSH_OPTS` — Optional extra SSH args (e.g., `-p 2222`, `-i <key>`, `-o ...`).
+>
+> **Notes**
+>
+> * Make sure the remote host has the required licenses/tools for evaluation (e.g., Innovus if `eval.sh` calls Cadence).
+> * `run_experiments.py` writes logs under: `run_logs/<tech>/<flow>/{run,eval}/*.log`.
+>
+> ---
+>
+> #### 2) Example commands
+>
+> **Supported experiment suite (defaults used by `run_experiments.py`)**
+>
+> The current preset suite includes **3 technologies** and **4 designs**:
+>
+> **Technologies (`--tech`)**
+>
+> * `asap7_3D` — ASAP7-based 3D platform
+> * `nangate45_3D` — NanGate45-based 3D platform
+> * `asap7_nangate45_3D` — heterogeneous 3D platform combining ASAP7 and NanGate45
+>
+> **Design cases (`--case`)**
+>
+> * `gcd`
+> * `ibex`
+> * `jpeg`
+> * `aes`
+>
+> If you do not specify `--tech` or `--case`, `run_experiments.py` will run the **full preset suite** by default (currently: `asap7_3D`, `nangate45_3D`, `asap7_nangate45_3D` × `gcd`, `aes`, `jpeg`, `ibex`).  
+> You can also repeat `--tech` and/or `--case` to select a subset (order is preserved and duplicates are ignored):
+>
+> **Other experiment entry points (advanced / one-off studies)**
+>
+> In addition to `run_experiments.py`, this repo includes standalone scripts intended for targeted debugging or for reproducing specific studies:
+>
+> * `test/*/*.sh` — per-design wrappers to run a **single** design/tech/flow pipeline (often mirrors the exact `make` target sequence used in papers/plots).
+> * `experiment_scripts/*.sh` — convenience scripts for sweeps or ablations (e.g., iterate parameters, rerun specific stages, compare variants).
+>
+> These scripts may assume local conventions (paths, environment variables, tool availability). If you use them directly, ensure `env.sh` is configured and prefer running from the repo root so relative paths resolve correctly.
+> ```bash
+> # OpenROAD end-to-end: local run.sh + eval.sh (eval is local unless ORD_EVAL_MODE=remote)
+> python3 run_experiments.py --flow ord --tech asap7_3D --case aes
+>
+> # Cadence end-to-end: run.sh + eval.sh locally; partitioning behavior depends on CDS_PARTITION_MODE
+> # - CDS_PARTITION_MODE=docker: requires a working Docker daemon + configured container paths
+> # - CDS_PARTITION_MODE=local: requires a local OpenROAD install for TritonPart
+> python3 run_experiments.py --flow cds --tech asap7_3D --case aes
+>
+> # Full preset suite (all techs/cases, both flows). Run only if your environment supports everything.
+> python3 run_experiments.py --flow all
+>
+> # Eval only (skip run.sh). Useful when you already have completed results.
+> python3 run_experiments.py --flow ord --tech asap7_nangate45_3D --case gcd --eval-only
+>
+> # Run only (skip eval.sh). Useful when eval requires a different host/license setup.
+> python3 run_experiments.py --flow cds --tech asap7_3D --case aes --run-only
+>
+> # Optional: override remote settings from CLI (takes priority over env.sh defaults)
+> python3 run_experiments.py \
+>   --flow ord --tech asap7_3D --case aes \
+>   --ord-eval-mode remote \
+>   --remote-user <user> \
+>   --remote-host <host> \
+>   --remote-project-dir <remote_repo_root> \
+>   --ord-eval-ssh-opts "-o StrictHostKeyChecking=no"
+> ```
+
+> **Note on Hybrid Flows**
+>
+> For experimental runs that combine OpenROAD and Cadence tools, you can set `FLOW_VARIANT=hybrid`. The flow stages can be customized in `config.mk`. Please be aware that this feature is still under development. For implementation details, refer to the example scripts in `test/` and the design configurations in `designs/`.
+
 ## Our Method
 
 ### ORFS-Research Pin-3D Flow Overview
@@ -179,36 +290,6 @@ High‑level stages and the **actual make targets** used in this repo are:
   *   For the Cadence flow, ensure that its tool executables are in your system's `PATH`.
 *   **Container for Partitioning (Optional)**:
   *   If you run the Cadence flow without a local OpenROAD installation, a container with OpenROAD is needed to execute the open-source TritonPart partitioner. This is done via the `cds-docker-partition` `make` target.
-
-### One-line End-to-End Runs
-
-```bash
-# 1) Configure env.sh (Docker / Innovus eval host)
-#    - CDS_PARTITION_MODE=docker|local
-#    - ORD_EVAL_MODE=local|remote
-#    - ORD_EVAL_REMOTE_HOST / ORD_EVAL_REMOTE_PROJECT_DIR if remote
-
-# OpenROAD end‑to‑end (ord run + eval)
-python3 run_experiments.py --flow ord --tech asap7_3D --case aes
-
-# Cadence end‑to‑end (cds run + eval; partition uses CDS_PARTITION_MODE)
-python3 run_experiments.py --flow cds --tech asap7_3D --case aes
-
-# Full preset suite (all techs/cases)
-python3 run_experiments.py --flow all
-
-# Eval only (skip run.sh)
-python3 run_experiments.py --flow ord --tech nangate45_3D --case gcd --eval-only
-
-# Run only (skip eval.sh)
-python3 run_experiments.py --flow cds --tech asap7_3D --case aes --run-only
-```
-
-> `run_experiments.py` will auto-load `env.sh`. The `test/**/run.sh` and `test/**/eval.sh` scripts also source `env.sh` from the repo root, so you can run them directly without extra setup.
-
-> **Note on Hybrid Flows**
->
-> For experimental runs that combine OpenROAD and Cadence tools, you can set `FLOW_VARIANT=hybrid`. The flow stages can be customized in `config.mk`. Please be aware that this feature is still under development. For implementation details, refer to the example scripts in `test/` and the design configurations in `designs/`.
 
 ### Stage-by-Stage (Make targets)
 

@@ -7,7 +7,7 @@ if {[info exists ::env(CLK_PERIOD)]} {
 	set clk_period $::env(CLK_PERIOD)
 }
 set clk_io_pct 0.2
-0
+set_propagated_clock [get_clocks {clk}]
 set clk_port [get_ports $clk_port_name]
 
 create_clock -name $clk_name -period $clk_period $clk_port

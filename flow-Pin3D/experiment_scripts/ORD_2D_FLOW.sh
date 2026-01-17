@@ -72,40 +72,42 @@ export DESIGN_NICKNAME="jpeg"
 export FLOW_VARIANT="openroad"
 export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
 
 export DESIGN_DIMENSION="2D"
 export DESIGN_NICKNAME="aes" 
 export FLOW_VARIANT="openroad"
 export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
 
 export DESIGN_DIMENSION="2D"
 export DESIGN_NICKNAME="ibex" 
 export FLOW_VARIANT="openroad"
 export USE_FLOW="openroad"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
 
-# export DESIGN_DIMENSION="2D"
-# export DESIGN_NICKNAME="jpeg" 
-# export FLOW_VARIANT="openroad"
-# export USE_FLOW="openroad"
+export DESIGN_DIMENSION="2D"
+export DESIGN_NICKNAME="jpeg" 
+export FLOW_VARIANT="openroad"
+export USE_FLOW="openroad"
 
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
 
-# export DESIGN_DIMENSION="2D"
-# export DESIGN_NICKNAME="aes" 
-# export FLOW_VARIANT="openroad"
-# export USE_FLOW="openroad"
+export DESIGN_DIMENSION="2D"
+export DESIGN_NICKNAME="aes" 
+export FLOW_VARIANT="openroad"
+export USE_FLOW="openroad"
 
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
 
-# export DESIGN_DIMENSION="2D"
-# export DESIGN_NICKNAME="ibex" 
-# export FLOW_VARIANT="openroad"
-# export USE_FLOW="openroad"
+export DESIGN_DIMENSION="2D"
+export DESIGN_NICKNAME="ibex" 
+export FLOW_VARIANT="openroad"
+export USE_FLOW="openroad"
 
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-final & 
+
+wait
 EOF

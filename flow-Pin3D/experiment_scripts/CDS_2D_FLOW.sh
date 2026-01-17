@@ -30,6 +30,13 @@ export DESIGN_NICKNAME="jpeg"
 export FLOW_VARIANT="cadence"
 export USE_FLOW="cadence"
 
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config2d.mk cds-2d_flow &
+
+export DESIGN_DIMENSION="2D"
+export DESIGN_NICKNAME="jpeg" 
+export FLOW_VARIANT="cadence"
+export USE_FLOW="cadence"
+
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk cds-2d_flow &
 
 export DESIGN_DIMENSION="2D"
