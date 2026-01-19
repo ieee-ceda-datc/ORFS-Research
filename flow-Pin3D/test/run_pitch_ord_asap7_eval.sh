@@ -16,7 +16,7 @@ for p in "${pitches[@]}"; do
         echo "Start: ${SCRIPT_DIR}/eval_${p}.sh"
         export hbPitch="hbPitch_${p}"
         bash "${SCRIPT_DIR}/eval.sh" > "${LOG_DIR}/eval_${p}.log" 2>&1
-        echo "Done: eval.sh ${p}"
+        echo "Done: ${LOG_DIR}/eval_${p}.log"
     ) &
 done
 

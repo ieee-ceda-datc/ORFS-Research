@@ -14,5 +14,5 @@ export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="aes"
 export USE_FLOW="cadence"
 export FLOW_VARIANT="cadence_${hbPitch}"
-
+export TECH_LEF="platforms/asap7_3D/lef/cds_pitch_variant/asap7_tech_1x_6M7M.${hbPitch}.lef"
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-final 

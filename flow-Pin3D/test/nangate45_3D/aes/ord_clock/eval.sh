@@ -13,23 +13,22 @@ source "${FLOW_ROOT}/env.sh"
 export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="aes"
 export USE_FLOW="openroad"
-export FLOW_VARIANT="openroad_${hbPitch}"
-export TECH_LEF="platforms/asap7_3D/lef/ord_pitch_variant/asap7_tech_1x_2A6M7M.${hbPitch}.lef"
+export FLOW_VARIANT="openroad_clock_${CLK_PERIOD}"
 if [[ "${ORD_EVAL_MODE}" == "remote" ]]; then
     SSH_OPTS=()
     if [[ -n "${ORD_EVAL_SSH_OPTS:-}" ]]; then
         read -r -a SSH_OPTS <<< "${ORD_EVAL_SSH_OPTS}"
     fi
-    ssh "${SSH_OPTS[@]}" -t "${ORD_EVAL_REMOTE_USER}@${ORD_EVAL_REMOTE_HOST}" "
+    ssh -Y "${SSH_OPTS[@]}" -t "${ORD_EVAL_REMOTE_USER}@${ORD_EVAL_REMOTE_HOST}" "
         cd ${ORD_EVAL_REMOTE_PROJECT_DIR} || exit
         source env.sh
         export DESIGN_DIMENSION=\"${DESIGN_DIMENSION}\"
         export DESIGN_NICKNAME=\"${DESIGN_NICKNAME}\"
         export USE_FLOW=\"${USE_FLOW}\"
         export FLOW_VARIANT=\"${FLOW_VARIANT}\"
-        export TECH_LEF=\"${TECH_LEF}\"
-        make DESIGN_CONFIG=designs/asap7_3D/\${DESIGN_NICKNAME}/config.mk cds-final
+        export CLK_PERIOD=\"${CLK_PERIOD}\"
+        make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-final
     "
 else
-    make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-final
+    make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-final
 fi

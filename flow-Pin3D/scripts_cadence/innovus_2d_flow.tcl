@@ -116,33 +116,33 @@ fit
 dumpToGIF $LOG_DIR/5_route.png
 puts "INFO: Routing done. DEF: $DEF_OUT  V: $V_OUT  ENC: $ENC_OUT"
 
-# Run unified extractor directly into LOG_DIR
-file mkdir [file join $LOG_DIR timingReports]
+# # Run unified extractor directly into LOG_DIR
+# file mkdir [file join $LOG_DIR timingReports]
 
-set EXTRACT_TCL [file join $::env(CADENCE_SCRIPTS_DIR) extract_report.tcl]
-if {![file exists $EXTRACT_TCL]} { puts "ERROR: Cannot find $EXTRACT_TCL"; exit 1 }
-source $EXTRACT_TCL
+# set EXTRACT_TCL [file join $::env(CADENCE_SCRIPTS_DIR) extract_report.tcl]
+# if {![file exists $EXTRACT_TCL]} { puts "ERROR: Cannot find $EXTRACT_TCL"; exit 1 }
+# source $EXTRACT_TCL
 
-set CSV_PATH [file join $LOG_DIR "final_metrics.csv"]
-set SUMMARY  [file join $LOG_DIR "final_summary.txt"]
+# set CSV_PATH [file join $LOG_DIR "final_metrics.csv"]
+# set SUMMARY  [file join $LOG_DIR "final_summary.txt"]
 
-set csv_line [extract_report -postRoute \
-                            -outdir $LOG_DIR \
-                            -write_csv $CSV_PATH \
-                            -write_summary $SUMMARY]
+# set csv_line [extract_report -postRoute \
+#                             -outdir $LOG_DIR \
+#                             -write_csv $CSV_PATH \
+#                             -write_summary $SUMMARY]
 
-catch { file mkdir [file join $LOG_DIR final] }
-catch { dumpPictures -dir [file join $LOG_DIR final] -prefix final }
+# catch { file mkdir [file join $LOG_DIR final] }
+# catch { dumpPictures -dir [file join $LOG_DIR final] -prefix final }
 
-puts "INFO: Final metrics CSV -> $CSV_PATH"
-puts "INFO: Final summary     -> $SUMMARY"
-puts "INFO: timingReports/, power_Final.rpt, drc.rpt, fep.rpt are under $LOG_DIR."
+# puts "INFO: Final metrics CSV -> $CSV_PATH"
+# puts "INFO: Final summary     -> $SUMMARY"
+# puts "INFO: timingReports/, power_Final.rpt, drc.rpt, fep.rpt are under $LOG_DIR."
 
-set VISUALIZE_FINAL [_get VISUALIZE_FINAL "0"]
-if {$VISUALIZE_FINAL eq "1"} {
-  puts "INFO: Pausing for Final Design Visualization. Type 'resume' to continue or exit manually."
-  win
-  suspend
-}
+# set VISUALIZE_FINAL [_get VISUALIZE_FINAL "0"]
+# if {$VISUALIZE_FINAL eq "1"} {
+#   puts "INFO: Pausing for Final Design Visualization. Type 'resume' to continue or exit manually."
+#   win
+#   suspend
+# }
 
 exit

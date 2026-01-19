@@ -17,7 +17,8 @@ for p in "${pitches[@]}"; do
         export hbPitch="hbPitch_${p}"
         bash "${SCRIPT_DIR}/run.sh" > "${LOG_DIR}/run_${p}.tmp.log" 2>&1
         mv "${LOG_DIR}/run_${p}.tmp.log" "${LOG_DIR}/run_${p}.log"
-        echo "Done: run.sh"
+        bash "${SCRIPT_DIR}/eval.sh" > "${LOG_DIR}/eval_${p}.log" 2>&1
+        echo "Done: ${LOG_DIR}/run_${p}.log"
     ) &
 done
 

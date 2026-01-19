@@ -18,8 +18,10 @@ for clk in "${clocks[@]}"; do
     (
         echo "Start: ${SCRIPT_DIR}/run.sh with CLK_PERIOD=$clk"
         export CLK_PERIOD=$clk
-        bash "${SCRIPT_DIR}/run.sh" > "${LOG_DIR}/run_${clk}.log" 2>&1
-        echo "Done: ${clk}.sh"
+        bash "${SCRIPT_DIR}/run.sh" > "${LOG_DIR}/run_${p}.tmp.log" 2>&1
+        mv "${LOG_DIR}/run_${p}.tmp.log" "${LOG_DIR}/run_${p}.log"
+        bash "${SCRIPT_DIR}/eval.sh" > "${LOG_DIR}/eval_${clk}.log" 2>&1
+        echo "Done: ${LOG_DIR}/eval_${clk}.log"
     ) &
 done
 

@@ -68,8 +68,8 @@ export UPPER_TIELO_CELL_AND_PORT  = TIELOx1_ASAP7_75t_R_upper  L
 export PLACE_SITE  = FreePDK45_38x28_10R_NP_162NW_34O
 export UPPER_SITE  = asap7sc7p5t
 export BOTTOM_SITE = FreePDK45_38x28_10R_NP_162NW_34O
-export IO_PLACER_H ?= M5
-export IO_PLACER_V ?= M6
+export IO_PLACER_H ?= M4_m
+export IO_PLACER_V ?= M3_m
 
 # PDN / Endcap / Welltie（3D 策略）
 export PDN_TCL      ?= $(PLATFORM_DIR)/openRoad/pdn/grid_strategy-3D.tcl

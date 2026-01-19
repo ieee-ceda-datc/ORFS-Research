@@ -29,17 +29,25 @@ proc _set_dont_use {cells {flag true}} {
     catch { set_dont_use $c $flag }
     # Some versions don't accept the boolean second argument, so fallback to single-argument syntax (sets to true)
     if {$flag} { catch { set_dont_use $c } }
+    puts "set_dont_use $c"
   }
 }
 
 # Expand wildcard names into lib cell objects/names, as robustly as possible
+# Expand wildcard names into lib cell objects/names, robustly for Common UI
 proc _expand_libcells {patterns} {
   set out {}
   foreach p $patterns {
-    # Prefer get_lib_cells; if unavailable, use the wildcard name directly (for set_dont_use to accept)
     if {![catch {set hits [get_lib_cells $p]}]} {
       if {[llength $hits] > 0} {
-        foreach h $hits { lappend out $h }
+        foreach h $hits {
+          if {[catch {set name [get_object_name $h]} err]} {
+             if {[catch {set name [get_property $h name]} err2]} {
+                set name $h
+             }
+          }
+          lappend out $name
+        }
         continue
       }
     }

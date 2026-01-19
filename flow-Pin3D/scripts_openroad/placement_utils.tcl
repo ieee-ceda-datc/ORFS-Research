@@ -205,22 +205,26 @@ proc _as_list {envname} {
 proc _expand_libcells {patterns} {
   set out {}
   foreach p $patterns {
-  if {![catch {set hits [get_lib_cells $p]}]} {
-    if {[llength $hits] > 0} {
-    foreach h $hits { lappend out $h }
-    continue
+    # 1. Try to find cells matching the pattern
+    if {![catch {set hits [get_lib_cells $p]}]} {
+      if {[llength $hits] > 0} {
+        foreach h $hits { 
+          lappend out [::sta::LibertyCell_name $h] 
+        }
+        continue
+      }
     }
-  }
-  lappend out $p
   }
   return [lsort -unique $out]
 }
 
 # set_dont_use prefers batch; if it fails, fall back to per-cell
 proc _set_dont_use {cells} {
+  puts "_set_dont_use $cells"
   if {![llength $cells]} { return }
-  if {[catch {set_dont_use $cells}]} {
-  foreach c $cells { catch { set_dont_use $c } }
+  foreach c $cells { 
+    set_dont_use $c 
+    puts "set_dont_use $c"
   }
 }
 
@@ -409,7 +413,13 @@ proc apply_tier_policy {tier args} {
 
   if {$tier eq "upper"} {
     # dont_use for synthesis/placement choices
-    if {[llength $dnu_up]} { _set_dont_use [_expand_libcells $dnu_up] } else { _set_dont_use [_expand_libcells "*_bottom"] }
+    if {[llength $dnu_up]} { 
+      puts "1"
+      _set_dont_use [_expand_libcells $dnu_up] 
+    } else { 
+      puts "2"
+      _set_dont_use [_expand_libcells "*_bottom"] 
+    }
 
     set ::env(TIEHI_CELL_AND_PORT) $::env(UPPER_TIEHI_CELL_AND_PORT)
     set ::env(TIELO_CELL_AND_PORT) $::env(UPPER_TIELO_CELL_AND_PORT)

@@ -2,7 +2,7 @@ utl::set_metrics_stage "cts__{}"
 source $::env(OPENROAD_SCRIPTS_DIR)/load.tcl
 source $::env(OPENROAD_SCRIPTS_DIR)/util.tcl
 
-load_design 3_place.def 3_place.sdc "Starting CTS..."
+load_design 3_place.v 3_place.sdc "Starting CTS..."
 
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 

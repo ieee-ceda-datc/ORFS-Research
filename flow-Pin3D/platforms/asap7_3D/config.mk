@@ -81,9 +81,10 @@ export ADDER_MAP_FILE  ?= $(PLATFORM_DIR)/yoSys/cells_adders_R.v
 
 # -------- Floorplan --------
 export PLACE_SITE   = asap7sc7p5t
+# export IO_PLACER_H ?= M4
+# export IO_PLACER_V ?= M5
 export IO_PLACER_H ?= M4
-export IO_PLACER_V ?= M5
-
+export IO_PLACER_V ?= M3
 # PDN / Endcap / Welltie（3D 策略）
 export PDN_TCL      ?= $(PLATFORM_DIR)/openRoad/pdn/grid_strategy-M1-M2-M5-M6.tcl
 export TAPCELL_TCL  ?= $(PLATFORM_DIR)/tapcell.tcl

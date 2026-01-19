@@ -48,6 +48,7 @@ puts "INFO: restoreDesign $DESIGN from def, verilog"
 init_design -setup {WC_VIEW} -hold {BC_VIEW}
 defIn $DEF_IN
 # }
+set_default_switching_activity -seq_activity 0.2
 
 # Analysis knobs
 setAnalysisMode -reset

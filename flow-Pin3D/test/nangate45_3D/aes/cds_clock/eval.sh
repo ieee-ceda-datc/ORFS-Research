@@ -9,11 +9,9 @@ if [[ ! -f "${FLOW_ROOT}/env.sh" ]]; then
   exit 1
 fi
 source "${FLOW_ROOT}/env.sh"
-export NUM_CORES=40
-export DESIGN_DIMENSION="3D"
-export DESIGN_NICKNAME="gcd" 
-export FLOW_VARIANT="kunpeng"
-export USE_FLOW="openroad"
 
-export VISUALIZE_FINAL=1
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-final 
+export DESIGN_DIMENSION="3D"
+export DESIGN_NICKNAME="aes"
+export USE_FLOW="cadence"
+export FLOW_VARIANT="cadence_clock_${CLK_PERIOD}"
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-final 
