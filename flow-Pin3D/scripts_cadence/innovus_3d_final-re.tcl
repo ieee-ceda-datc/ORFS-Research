@@ -38,14 +38,16 @@ set init_design_netlisttype "Verilog"
 
 # ---- Restore routed DB (no DEF fallback) ----
 # set ENC_PRIMARY   [file join $OBJECTS_DIR "_postRoute.enc"]
-# set ENC_FILE [file join $OBJECTS_DIR "${DESIGN}_postRoute.enc.dat"]
-# if {[file exists $ENC_FILE]} {
-#   puts "INFO: restoreDesign $ENC_FILE $DESIGN"
-#   restoreDesign $ENC_FILE $DESIGN
-# } else {
-#   puts "Missing routed ENC file: $ENC_FILE"
+set ENC_FILE [file join $OBJECTS_DIR "${DESIGN}_postRoute.enc.dat"]
+if {[file exists $ENC_FILE]} {
+  puts "INFO: restoreDesign $ENC_FILE $DESIGN"
+  restoreDesign $ENC_FILE $DESIGN
+} else {
+  init_design -setup {WC_VIEW} -hold {BC_VIEW}
+  defIn $DEF_IN
+  puts "Missing routed ENC file: $ENC_FILE"
+}
 puts "INFO: restoreDesign $DESIGN from def, verilog"
-init_design -setup {WC_VIEW} -hold {BC_VIEW}
 
 setAnalysisMode -reset
 set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
@@ -60,9 +62,9 @@ generateVias
 # basic path groups
 createBasicPathGroups -expanded
 
-defIn $DEF_IN
+
 # }
-puts "READ DEF: $DEF_IN"
+
 set_default_switching_activity -seq_activity 0.2
 
 # Analysis knobs

@@ -578,6 +578,11 @@ cds-final:
 	@$(call _mkstdirs)
 	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_final.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_final.tcl,$(LOG_DIR)/6_final.log)
 
+.PHONY: cds-restore
+cds-restore:
+	@$(call _mkstdirs)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_3d_final-re.log -files $(CADENCE_SCRIPTS_DIR)/innovus_3d_final-re.tcl,$(LOG_DIR)/6_final-re.log)
+
 .PHONY: clean_all
 clean_all:
 	@echo "[ORD] Cleaning results, logs, objects, reports for $(DESIGN_NAME) on $(PLATFORM)/$(FLOW_VARIANT)"

@@ -9,7 +9,7 @@ mkdir -p "$LOG_DIR"
 
 # Generate clock periods from 1.0 down to 0.5 with a step of 0.05
 clocks=()
-for i in $(seq 1.0 -0.05 0.5); do
+for i in $(seq 0.99 -0.05 0.49); do
     clocks+=("$i")
 done
 

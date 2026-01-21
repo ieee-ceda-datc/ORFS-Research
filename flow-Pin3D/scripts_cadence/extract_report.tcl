@@ -178,7 +178,7 @@ proc extract_fep {report_file_path} {
 # DRC
 # --------------------------
 proc extract_drc {drc_rpt} {
-  verify_drc -exclude_pg_net -limit 100000 -report $drc_rpt
+  verify_drc -exclude_pg_net -limit 0 -report $drc_rpt
   set v ""
   set fp [open $drc_rpt r]
   while {[gets $fp line] >= 0} {
@@ -254,7 +254,7 @@ proc _parse_verifyConnectivity {rpt} {
 }
 
 proc run_connectivity_report {rpt} {
-  if {![catch {verifyConnectivity -report $rpt} err]} { return 1 }
+  if {![catch {erify_connectivity -error 0 -geom_connect -no_antenna -report $rpt} err]} { return 1 }
   _write_failed_report $rpt $err
   return 0
 }

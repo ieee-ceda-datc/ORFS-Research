@@ -82,16 +82,43 @@ proc box_flat4 {box} {
   return $box
 }
 
-# 在 Innovus 中按指定 site 重构 rows
-#   site_name : 目标 site（例如 "asap7sc7p5t" / "FreePDK45_38x28_10R_NP_162NW_34O"）
-#   out_def   : 可选，如非空则顺便导出 floorplan DEF
-proc rebuild_rows_for_site {site_name} {
+proc rebuild_rows_for_site {site_name {core_margin 0}} {
+  # 1. Basic validation
   if {$site_name eq ""} {
     puts "ERROR(INV): rebuild_rows_for_site: empty site_name."
     return
   }
+
+  # 2. Retrieve DieBox
+  set die_bbox [get_db current_design .bbox]
+  
+  # --- ROBUSTNESS FIX ---
+  # If die_bbox is nested like {{0.0 0.0 11.4 11.2}}, llength will be 1.
+  # If die_bbox is flat like {0.0 0.0 11.4 11.2}, llength will be 4.
+  # We peel off the outer layer if it is nested.
+  set die_bbox [lindex $die_bbox 0]
+  set core_margin $::env(CORE_MARGIN)
+  # Now die_bbox is guaranteed to be flat: {0.0 0.0 11.4 11.2}
+  lassign $die_bbox die_x1 die_y1 die_x2 die_y2
+
+  # 3. Calculate new area with margin applied
+  set new_x1 [expr $die_x1 + $core_margin]
+  set new_y1 [expr $die_y1 + $core_margin]
+  set new_x2 [expr $die_x2 - $core_margin]
+  set new_y2 [expr $die_y2 - $core_margin]
+
+  # Sanity check
+  if {$new_x1 >= $new_x2 || $new_y1 >= $new_y2} {
+    puts "ERROR(INV): CORE_MARGIN ($core_margin) is too large for the current DieBox {$die_bbox}."
+    return
+  }
+
+  puts "INFO(INV): Rebuilding rows for site '$site_name'"
+  puts "INFO(INV): Row Area: {$new_x1 $new_y1 $new_x2 $new_y2}"
+
+  # 4. Delete and Re-create
   deleteRow -all
-  createRow -site $site_name
+  createRow -site $site_name -area [list $new_x1 $new_y1 $new_x2 $new_y2]
 }
 
 # Sets the placement status of tier-specific cells.
