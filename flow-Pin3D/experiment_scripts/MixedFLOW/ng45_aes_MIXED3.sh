@@ -19,7 +19,7 @@ rm -rf results/nangate45_3D/aes/mixed3
 cp -r results/nangate45_3D/aes/openroad results/nangate45_3D/aes/mixed3
 
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
-ssh -Y zhiyuzheng@hnode33 "
+ssh -Y zhiyuzheng@hnode27 "
     cd ~/Projects/3DIC/scripts/ORFS-Research/flow-Pin3D || exit
     source env.sh
     export NUM_CORES=16

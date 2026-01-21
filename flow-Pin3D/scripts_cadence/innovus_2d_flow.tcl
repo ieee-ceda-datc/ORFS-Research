@@ -79,6 +79,9 @@ setOptMode -unfixClkInstForOpt false
 create_ccopt_clock_tree_spec
 ccopt_design
 
+set_interactive_constraint_modes [all_constraint_modes -active]
+set_propagated_clock [all_clocks]
+set_clock_propagation propagated
 # ---------- Router Settings (Robust) ----------
 # GR: Disable timing if too slow; enable advanced node fix
 setNanoRouteMode -grouteExpWithTimingDriven false
