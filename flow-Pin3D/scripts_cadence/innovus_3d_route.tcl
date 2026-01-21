@@ -35,7 +35,9 @@ set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 set_interactive_constraint_modes {CON}
 setAnalysisMode -reset
 setAnalysisMode -analysisType onChipVariation -cppr both
-
+set_interactive_constraint_modes [all_constraint_modes -active]
+set_propagated_clock [all_clocks]
+set_clock_propagation propagated
 # Read DEF/SDC
 defIn $DEF_IN
 

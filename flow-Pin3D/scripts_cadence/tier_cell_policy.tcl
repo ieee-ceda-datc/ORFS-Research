@@ -232,11 +232,11 @@ proc apply_tier_policy {tier args} {
 
   if {$tier eq "upper"} {
     # (A) dont_use policy (unchanged)
-    if {[llength $DNU_UP]} {
-      _set_dont_use [_expand_libcells $DNU_UP] true
-    } else {
-      _set_dont_use [_expand_libcells "*_bottom"] true
-    }
+    # if {[llength $DNU_UP]} {
+    #   _set_dont_use [_expand_libcells $DNU_UP] true
+    # } else {
+    #   _set_dont_use [_expand_libcells "*_bottom"] true
+    # }
 
     if {[llength $FILL_UP]} { setFillerMode -core $FILL_UP }
 
@@ -245,17 +245,17 @@ proc apply_tier_policy {tier args} {
     }
 
     # (B) NEW: lock the OTHER tier by master suffix "*_bottom"
-    set_dont_touch_by_ref_suffix "*_bottom" \
-      -quiet $opt(-quiet)
+    # set_dont_touch_by_ref_suffix "*_bottom" \
+      # -quiet $opt(-quiet)
 
-    puts "INFO: Tier policy applied for UPPER: dont_use(bottom libs), dont_touch(bottom insts), filler=UPPER."
+    # puts "INFO: Tier policy applied for UPPER: dont_use(bottom libs), dont_touch(bottom insts), filler=UPPER."
   } else {
     # bottom
-    if {[llength $DNU_BOT]} {
-      _set_dont_use [_expand_libcells $DNU_BOT] true
-    } else {
-      _set_dont_use [_expand_libcells "*_upper"] true
-    }
+    # if {[llength $DNU_BOT]} {
+    #   _set_dont_use [_expand_libcells $DNU_BOT] true
+    # } else {
+    #   _set_dont_use [_expand_libcells "*_upper"] true
+    # }
 
     if {[llength $FILL_BOT]} { setFillerMode -core $FILL_BOT }
 
@@ -264,11 +264,11 @@ proc apply_tier_policy {tier args} {
     }
 
     # NEW: lock the OTHER tier by master suffix "*_upper"
-    set_dont_touch_by_ref_suffix "*_upper" \
-      -quiet $opt(-quiet)
+    # set_dont_touch_by_ref_suffix "*_upper" \
+    #   -quiet $opt(-quiet)
 
-    puts "INFO: Tier policy applied for BOTTOM: dont_use(upper libs), dont_touch(upper insts), filler=BOTTOM."
+    # puts "INFO: Tier policy applied for BOTTOM: dont_use(upper libs), dont_touch(upper insts), filler=BOTTOM."
   }
-
+  puts "Rebuild Row for $tier"
   rebuild_rows_for_site $::env(PLACE_SITE)
 }

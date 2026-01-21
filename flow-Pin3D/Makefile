@@ -453,7 +453,6 @@ cds-synth:
 	@$(call _mkstdirs)
 	@echo "[CDS] Genus synthesis"
 	@$(call _cad,$(GENUS_CMD) -overwrite -log $(LOG_DIR)/cadence_1_genus.log -f $(CADENCE_SCRIPTS_DIR)/run_genus.tcl,$(LOG_DIR)/1_genus.log)
-	@cp $(SDC_FILE) $(RESULTS_DIR)/1_synth.sdc 2>/dev/null || true
 
 .PHONY: cds-preplace
 cds-preplace:

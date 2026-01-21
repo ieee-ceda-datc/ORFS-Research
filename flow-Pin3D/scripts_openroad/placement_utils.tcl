@@ -220,7 +220,7 @@ proc _expand_libcells {patterns} {
 
 # set_dont_use prefers batch; if it fails, fall back to per-cell
 proc _set_dont_use {cells} {
-  puts "_set_dont_use $cells"
+  # puts "_set_dont_use $cells"
   if {![llength $cells]} { return }
   foreach c $cells { 
     set_dont_use $c 
@@ -413,13 +413,13 @@ proc apply_tier_policy {tier args} {
 
   if {$tier eq "upper"} {
     # dont_use for synthesis/placement choices
-    if {[llength $dnu_up]} { 
-      puts "1"
-      _set_dont_use [_expand_libcells $dnu_up] 
-    } else { 
-      puts "2"
-      _set_dont_use [_expand_libcells "*_bottom"] 
-    }
+    # if {[llength $dnu_up]} { 
+    #   puts "1"
+    #   _set_dont_use [_expand_libcells $dnu_up] 
+    # } else { 
+    #   puts "2"
+    #   _set_dont_use [_expand_libcells "*_bottom"] 
+    # }
 
     set ::env(TIEHI_CELL_AND_PORT) $::env(UPPER_TIEHI_CELL_AND_PORT)
     set ::env(TIELO_CELL_AND_PORT) $::env(UPPER_TIELO_CELL_AND_PORT)
@@ -438,7 +438,11 @@ proc apply_tier_policy {tier args} {
       puts "INFO(OR): Tier=UPPER applied. cts_safe=$opt(-cts_safe)"
     }
   } else {
-    if {[llength $dnu_bot]} { _set_dont_use [_expand_libcells $dnu_bot] } else { _set_dont_use [_expand_libcells "*_upper"] }
+    # if {[llength $dnu_bot]} { 
+    #   _set_dont_use [_expand_libcells $dnu_bot] 
+    # } else { 
+    #   _set_dont_use [_expand_libcells "*_upper"] 
+    # }
 
     set ::env(TIEHI_CELL_AND_PORT) $::env(BOTTOM_TIEHI_CELL_AND_PORT)
     set ::env(TIELO_CELL_AND_PORT) $::env(BOTTOM_TIELO_CELL_AND_PORT)
