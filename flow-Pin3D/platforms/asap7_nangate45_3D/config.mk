@@ -3,7 +3,7 @@
 # =========================================
 
 # -------- Process --------
-export PROCESS = 45
+export PROCESS ?= 45
 export PLATFORM = asap7_nangate45_3D
 # -------- Tech / Libs --------
 ifeq ($(USE_FLOW),openroad)

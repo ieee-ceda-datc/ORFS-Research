@@ -2,7 +2,7 @@
 # Platform / Process
 # =====================================================
 export PLATFORM                  = asap7
-export PROCESS                   ?= 45
+export PROCESS                   ?= 7
 
 # =====================================================
 # Tech / LEF / LIB (aggregation-friendly)
@@ -10,7 +10,7 @@ export PROCESS                   ?= 45
 # Tech LEF
 export TECH_LEF                  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_201209.lef
 # Standard-cell LEF (fixed RVT -> tag "R")
-export SC_LEF                    = $(PLATFORM_DIR)/lef/asap7sc7p5t_28_R_1x_220121a.lef
+export SC_LEF                    ?= $(PLATFORM_DIR)/lef/asap7sc7p5t_28_R_1x_220121a.lef
 
 # Library root (fixed NLDM)
 export LIB_DIR                   = $(PLATFORM_DIR)/lib/NLDM

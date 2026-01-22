@@ -39,7 +39,7 @@ setFillerMode -fitGap true
 source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
 
 set_tier_placement_status upper fixed
-apply_tier_policy bottom
+apply_tier_policy bottom -fixlib 1
 
 catch { place_opt_design -out_dir $REPORTS_DIR -prefix legalize_bottom }
 checkPlace

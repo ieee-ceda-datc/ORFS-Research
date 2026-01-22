@@ -3,7 +3,7 @@
 # =========================================
 
 # -------- Process --------
-export PROCESS = 45
+export PROCESS ?= 7
 
 # -------- Tech / Libs --------
 ifeq ($(USE_FLOW),openroad)

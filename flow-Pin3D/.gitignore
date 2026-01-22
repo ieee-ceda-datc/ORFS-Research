@@ -33,3 +33,4 @@ partition_log
 genus_reports
 env.bak
 *.bin
+*.rpt.old

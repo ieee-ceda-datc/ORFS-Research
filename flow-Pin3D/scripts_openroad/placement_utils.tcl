@@ -387,7 +387,7 @@ proc or_set_dont_touch_by_master {pattern args} {
 #   - default: set_dont_touch on the other tier instances
 #   - if -cts_safe 1: do NOT set_dont_touch (avoid ODB-0370 in CTS rewiring)
 # Options:
-#   -cts_safe 0/1   (default 0)
+#   -cts_safe 0/1   (default 1)
 #   -quiet    0/1   (default 0)
 # ------------------------------------------------------------
 proc apply_tier_policy {tier args} {
@@ -399,6 +399,7 @@ proc apply_tier_policy {tier args} {
   array set opt {
     -cts_safe 0
     -quiet    0
+    -fixlib   0
   }
   if {([llength $args] % 2) != 0} {
     error "apply_tier_policy: args must be key-value pairs, got: $args"
@@ -413,13 +414,9 @@ proc apply_tier_policy {tier args} {
 
   if {$tier eq "upper"} {
     # dont_use for synthesis/placement choices
-    # if {[llength $dnu_up]} { 
-    #   puts "1"
-    #   _set_dont_use [_expand_libcells $dnu_up] 
-    # } else { 
-    #   puts "2"
-    #   _set_dont_use [_expand_libcells "*_bottom"] 
-    # }
+    if {$opt(-fixlib)} { 
+      _set_dont_use [_expand_libcells $dnu_up] 
+    }
 
     set ::env(TIEHI_CELL_AND_PORT) $::env(UPPER_TIEHI_CELL_AND_PORT)
     set ::env(TIELO_CELL_AND_PORT) $::env(UPPER_TIELO_CELL_AND_PORT)
@@ -438,11 +435,9 @@ proc apply_tier_policy {tier args} {
       puts "INFO(OR): Tier=UPPER applied. cts_safe=$opt(-cts_safe)"
     }
   } else {
-    # if {[llength $dnu_bot]} { 
-    #   _set_dont_use [_expand_libcells $dnu_bot] 
-    # } else { 
-    #   _set_dont_use [_expand_libcells "*_upper"] 
-    # }
+    if {$opt(-fixlib)} { 
+      _set_dont_use [_expand_libcells $dnu_bot] 
+    }
 
     set ::env(TIEHI_CELL_AND_PORT) $::env(BOTTOM_TIEHI_CELL_AND_PORT)
     set ::env(TIELO_CELL_AND_PORT) $::env(BOTTOM_TIELO_CELL_AND_PORT)

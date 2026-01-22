@@ -56,7 +56,7 @@ if {[info exists ::env(CTS_LAYER)]} {
 }
 
 set_tier_placement_status $fix_layer fixed
-apply_tier_policy $cts_layer 
+apply_tier_policy $cts_layer -fixlib 1 
 
 # --- run ccopt ---
 create_ccopt_clock_tree_spec

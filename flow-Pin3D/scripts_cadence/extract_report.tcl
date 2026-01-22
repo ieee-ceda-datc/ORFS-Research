@@ -178,7 +178,15 @@ proc extract_fep {report_file_path} {
 # DRC
 # --------------------------
 proc extract_drc {drc_rpt} {
+  set node_map {
+    7  N7
+    45 {}
+  }
+  set proc $::env(PROCESS)
+  set node [dict get $node_map $proc]
+  setDesignMode -process $proc -node $node
   verify_drc -exclude_pg_net -limit 0 -report $drc_rpt
+  # verify_drc -limit 0 -report $drc_rpt
   set v ""
   set fp [open $drc_rpt r]
   while {[gets $fp line] >= 0} {
@@ -190,6 +198,7 @@ proc extract_drc {drc_rpt} {
   }
   close $fp
   if {$v eq ""} { set v 0 }
+  setDesignMode -process 45 -node {}
   return $v
 }
 

@@ -34,4 +34,6 @@ set qrc_min $QRC_FILE
 
 puts "  QRC_FILE: $QRC_FILE"
 
-setDesignMode -process $::env(PROCESS)
+# setDesignMode -process $::env(PROCESS)
+# We do this because we don't have a real 3D QRC file.
+setDesignMode -process 45
