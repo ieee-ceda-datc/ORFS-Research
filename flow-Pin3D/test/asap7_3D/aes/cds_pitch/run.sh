@@ -15,22 +15,22 @@ export DESIGN_NICKNAME="aes"
 export USE_FLOW="cadence"
 export FLOW_VARIANT="cadence_${hbPitch}"
 
-# rm -rf logs/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
-# rm -rf results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
-# cp -r results/asap7_3D/${DESIGN_NICKNAME}/${USE_FLOW} results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT} 
-# export TECH_LEF="platforms/asap7_3D/lef/cds_pitch_variant/asap7_tech_1x_6M7M.${hbPitch}.lef"
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-3d-pdn
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
-# iteration=1
-# for ((i=1;i<=iteration;i++))
-# do
-#     echo "Iteration: $i"
-#     make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper
-#     make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-bottom
-# done
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-place-finish
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-legalize-bottom
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-legalize-upper
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-cts 
+rm -rf logs/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
+rm -rf results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
+cp -r results/asap7_3D/${DESIGN_NICKNAME}/${USE_FLOW} results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT} 
+export TECH_LEF="platforms/asap7_3D/lef/cds_pitch_variant/asap7_tech_1x_6M7M.${hbPitch}.lef"
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-3d-pdn
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
+iteration=1
+for ((i=1;i<=iteration;i++))
+do
+    echo "Iteration: $i"
+    make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper
+    make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-bottom
+done
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-place-finish
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-legalize-bottom
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-legalize-upper
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-cts 
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-route 
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-final 

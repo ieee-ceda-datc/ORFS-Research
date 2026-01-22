@@ -9,7 +9,7 @@ mkdir -p "$LOG_DIR"
 
 # List of pitch suffixes to run
 pitches=("0p2" "0p3" "0p4" "0p5" "0p6" "0p7" "0p8" "0p9" "1")
-# pitches=("V6")
+# pitches=("0p3")
 # Loop through each pitch and run in background
 for p in "${pitches[@]}"; do
     (
