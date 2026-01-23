@@ -12,7 +12,7 @@ clocks=()
 for i in $(seq 0.99 -0.05 0.49); do
     clocks+=("$i")
 done
-
+# clocks=("0.49" "0.64")
 # Loop through each pitch and run in background
 for clk in "${clocks[@]}"; do
     (

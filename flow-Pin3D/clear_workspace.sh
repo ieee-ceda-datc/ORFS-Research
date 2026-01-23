@@ -10,3 +10,6 @@ rm -rf .st_launch*
 rm -f .timing_file_*.tif.gz
 rm -f *.opennet
 rm -f core.*
+rm -rf *.bin
+rm -rf *.rpt.old
+

@@ -12,26 +12,29 @@ source "${FLOW_ROOT}/env.sh"
 
 export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="aes"
-export USE_FLOW="cadence"
-export hbPitch=hbPitch_0p5
-export FLOW_VARIANT="cadence_${hbPitch}_2"
-
-# rm -rf logs/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
-# rm -rf results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
-# cp -r results/asap7_3D/${DESIGN_NICKNAME}/${USE_FLOW} results/asap7_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT} 
-export TECH_LEF="platforms/asap7_3D/lef/cds_pitch_variant/asap7_tech_1x_6M7M.${hbPitch}.lef"
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-3d-pdn
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
+export USE_FLOW="openroad"
+# export hbPitch=hbPitch_V6
+export CLK_PERIOD=5000
+export FLOW_VARIANT="openroad_clock_5000"
+export TECH_LEF=platforms/asap7_3D/lef/ord_pitch_variant/asap7_tech_1x_2A6M7M.hbPitch_V6.lef
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk clean_all
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk clean_all
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-synth
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-preplace
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config2d.mk ord-tier-partition
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-pre
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init
 # iteration=1
-# for ((i=1;i<=iteration;i++))
-# do
-#     echo "Iteration: $i"
-#     make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper
-#     make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-bottom
+# for ((i=1;i<=iteration;i++)); do
+#   echo "Iteration: $i"
+#   make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-upper
+#   make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk  ord-place-bottom
 # done
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-place-finish
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-legalize-bottom
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-legalize-upper
-# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-cts 
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-route 
-make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-final 
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-pre-opt
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-legalize-bottom
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-legalize-upper
+# make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-cts
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk ord-route
+
+bash test/asap7_3D/aes/ord_clock/eval.sh

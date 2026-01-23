@@ -263,7 +263,7 @@ proc _parse_verifyConnectivity {rpt} {
 }
 
 proc run_connectivity_report {rpt} {
-  if {![catch {erify_connectivity -error 0 -geom_connect -no_antenna -report $rpt} err]} { return 1 }
+  if {![catch {verify_connectivity -error 0 -geom_connect -no_antenna -report $rpt} err]} { return 1 }
   _write_failed_report $rpt $err
   return 0
 }
