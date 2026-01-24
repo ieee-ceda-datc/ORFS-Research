@@ -8,6 +8,7 @@ export CORE_MARGIN = 2
 export CORE_ASPECT_RATIO = 1.0
 export CORE_UTILIZATION ?= 60
 export PLACE_DENSITY_LB_ADDON = 0.10
+export DETAILED_ROUTE_END_ITERATION = 5
 export GLOBAL_ROUTE_ARGS = -verbose -congestion_iterations 30
 
 export CORE_UTILIZATION ?= 60

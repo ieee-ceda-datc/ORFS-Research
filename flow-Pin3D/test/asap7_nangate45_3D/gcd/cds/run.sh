@@ -34,5 +34,5 @@ make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-p
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-legalize-bottom
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-legalize-upper
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-cts 
-# make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-cts-eval 
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-cts-eval 
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-route 
