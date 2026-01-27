@@ -34,3 +34,4 @@ genus_reports
 env.bak
 *.bin
 *.rpt.old
+platforms/process_scripts
