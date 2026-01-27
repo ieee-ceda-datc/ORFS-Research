@@ -65,7 +65,7 @@ if {[info exist ::env(RCX_RULES)]} {
 
 source $::env(OPENROAD_SCRIPTS_DIR)/report_metrics.tcl
 report_metrics "finish" "finish"
-puts "Final report metrics written to $::env(REPORTS_DIR)/final_ord.rpt"
+puts "Final report metrics written to $::env(REPORTS_DIR)/final_final.rpt"
 # Save a final image if openroad is compiled with the gui
 source $::env(OPENROAD_SCRIPTS_DIR)/save_images.tcl
  
