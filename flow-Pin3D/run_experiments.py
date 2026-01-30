@@ -188,18 +188,19 @@ def run_one(cfg: RunConfig) -> str:
         ok = f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}"
         print(ok)
         return ok
-        if cfg.flow == "cds":
-            if not eval_script.exists():
-                msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
-                print(msg)
-                return msg
-            try:
-                _run_command_with_log(
-                    ["bash", str(eval_script)],
-                    eval_log,
-                    cwd=cfg.repo_root,
-                    env=script_env,
-                )
+
+    if cfg.flow == "cds":
+        if not eval_script.exists():
+            msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
+            print(msg)
+            return msg
+        try:
+            _run_command_with_log(
+                ["bash", str(eval_script)],
+                eval_log,
+                cwd=cfg.repo_root,
+                env=script_env,
+            )
         except subprocess.CalledProcessError:
             msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
             print(msg)
