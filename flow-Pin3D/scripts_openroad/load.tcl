@@ -47,3 +47,8 @@ proc load_design {design_file sdc_file msg} {
     puts $msg
   }
 }
+
+proc _get {name {def ""}} {
+  if {[info exists ::env($name)] && $::env($name) ne ""} { return $::env($name) }
+  return $def
+}

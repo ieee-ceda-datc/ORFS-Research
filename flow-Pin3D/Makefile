@@ -271,6 +271,16 @@ ord-place-init:
 	@$(call _mkstdirs)
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/place_init.tcl,$(LOG_DIR)/3_place_init.log)
 
+.PHONY: ord-place-init-upper
+ord-place-init-upper:
+	@$(call _mkstdirs)
+	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/place_init_upper.tcl,$(LOG_DIR)/3_place_init_upper.log)
+
+.PHONY: ord-place-init-bottom
+ord-place-init-bottom:
+	@$(call _mkstdirs)
+	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/place_init_bottom.tcl,$(LOG_DIR)/3_place_init_bottom.log)
+
 .PHONY: ord-place-upper
 ord-place-upper:
 	@$(call _or,$(OPENROAD_SCRIPTS_DIR)/place_upper.tcl,$(LOG_DIR)/3_place_upper.log)
@@ -529,6 +539,16 @@ cds-3d-pdn:
 cds-place-init:
 	@$(call _mkstdirs)
 	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_init.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_init.tcl,$(LOG_DIR)/3_place_init.log)
+
+.PHONY: cds-place-init-upper
+cds-place-init-upper:
+	@$(call _mkstdirs)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_init_upper.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_init_upper.tcl,$(LOG_DIR)/3_place_init_upper.log)
+
+.PHONY: cds-place-init-bottom
+cds-place-init-bottom:
+	@$(call _mkstdirs)
+	@$(call _cad,$(INNOVUS_CMD) -overwrite -log $(LOG_DIR)/cadence_innovus_place_init_bottom.log -files $(CADENCE_SCRIPTS_DIR)/innovus_place3D_init_bottom.tcl,$(LOG_DIR)/3_place_init_bottom.log)
 
 .PHONY: cds-place-upper
 cds-place-upper:
