@@ -11,6 +11,8 @@ ssh -Y zhiyuzheng@hnode33 "
     cp -r results/nangate45_3D/aes/cadence results/nangate45_3D/aes/COMM
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-3d-pdn
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
+    make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-init-upper
+    make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init-bottom
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-upper
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-bottom
     make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-place-finish

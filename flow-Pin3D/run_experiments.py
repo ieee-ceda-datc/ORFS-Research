@@ -159,6 +159,11 @@ def run_one(cfg: RunConfig) -> str:
         mode = "eval-only"
     print(f"[{pid}] Start {cfg.flow.upper()} tech={cfg.tech} case={cfg.case} mode={mode} on host={host}")
 
+    # Shared environment for run/eval scripts.
+    script_env = os.environ.copy()
+    script_env["ENABLEMENT"] = cfg.tech
+    script_env["DESIGN_NICKNAME"] = cfg.case
+
     # --- run.sh (local) ---
     if cfg.do_run:
         if not run_script.exists():
@@ -171,7 +176,7 @@ def run_one(cfg: RunConfig) -> str:
                 ["bash", str(run_script)],
                 run_log,
                 cwd=cfg.repo_root,
-                env=os.environ.copy(),
+                env=script_env,
             )
         except subprocess.CalledProcessError:
             msg = f"[{pid}] ERROR: run.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {run_log}"
@@ -183,18 +188,18 @@ def run_one(cfg: RunConfig) -> str:
         ok = f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}"
         print(ok)
         return ok
-    if cfg.flow == "cds":
-        if not eval_script.exists():
-            msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
-            print(msg)
-            return msg
-        try:
-            _run_command_with_log(
-                ["bash", str(eval_script)],
-                eval_log,
-                cwd=cfg.repo_root,
-                env=os.environ.copy(),
-            )
+        if cfg.flow == "cds":
+            if not eval_script.exists():
+                msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
+                print(msg)
+                return msg
+            try:
+                _run_command_with_log(
+                    ["bash", str(eval_script)],
+                    eval_log,
+                    cwd=cfg.repo_root,
+                    env=script_env,
+                )
         except subprocess.CalledProcessError:
             msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
             print(msg)
@@ -213,7 +218,7 @@ def run_one(cfg: RunConfig) -> str:
                 "set -euo pipefail; "
                 f"cd {cfg.remote_project_dir}; "
                 'echo "[remote] CWD=$PWD"; '
-                f"bash {remote_eval_script}"
+                f"ENABLEMENT={cfg.tech} DESIGN_NICKNAME={cfg.case} bash {remote_eval_script}"
             )
 
             ssh_target = f"{cfg.remote_user}@{cfg.remote_host}"
@@ -226,7 +231,7 @@ def run_one(cfg: RunConfig) -> str:
                     ssh_cmd,
                     eval_log,
                     cwd=cfg.repo_root,
-                    env=os.environ.copy(),
+                    env=script_env,
                 )
             except subprocess.CalledProcessError:
                 msg = f"[{pid}] ERROR: remote eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
@@ -238,7 +243,7 @@ def run_one(cfg: RunConfig) -> str:
                     ["bash", str(eval_script)],
                     eval_log,
                     cwd=cfg.repo_root,
-                    env=os.environ.copy(),
+                    env=script_env,
                 )
             except subprocess.CalledProcessError:
                 msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"

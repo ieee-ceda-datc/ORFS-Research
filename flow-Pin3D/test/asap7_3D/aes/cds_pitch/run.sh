@@ -21,6 +21,8 @@ cp -r results/asap7_3D/${DESIGN_NICKNAME}/${USE_FLOW} results/asap7_3D/${DESIGN_
 export TECH_LEF="platforms/asap7_3D/lef/cds_pitch_variant/asap7_tech_1x_6M7M.${hbPitch}.lef"
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config.mk cds-3d-pdn
 make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk cds-place-init-upper
+make DESIGN_CONFIG=designs/asap7_3D/${DESIGN_NICKNAME}/config_upper_cover.mk cds-place-init-bottom
 iteration=1
 for ((i=1;i<=iteration;i++))
 do

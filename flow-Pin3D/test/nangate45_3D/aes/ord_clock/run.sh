@@ -22,6 +22,8 @@ export FLOW_VARIANT="openroad_clock_${CLK_PERIOD}"
 # make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-pre
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
 make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-init-upper
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init-bottom
 iteration=1
 for ((i=1;i<=iteration;i++)); do
   echo "Iteration: $i"

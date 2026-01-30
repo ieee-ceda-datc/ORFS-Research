@@ -18,7 +18,9 @@ export VISUALIZE_FINAL=1
 export ENABLEMENTS=asap7_3D
 make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config.mk ord-synth
 make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
-make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config.mk ord-place-init
+make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init
+make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-init-upper
+make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init-bottom
 make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-upper
 cp -r results/${ENABLEMENTS}/gcd/cadence/gcd_3D.tmp.v results/${ENABLEMENTS}/gcd/cadence/gcd_3D.tmp.upper.v
 make DESIGN_CONFIG=designs/${ENABLEMENTS}/${DESIGN_NICKNAME}/config_upper_cover.mk  ord-place-bottom
