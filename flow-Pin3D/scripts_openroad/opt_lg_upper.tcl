@@ -13,8 +13,8 @@ load_design $DEF_IN 2_floorplan.sdc "Starting upper optimization and legalizatio
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
 mark_insts_by_master "*bottom*" FIRM
-# ==== 在 upper opt & lg 前 set 好 dont_use_cell ====
-apply_tier_policy upper -cts_safe 1
+
+apply_tier_policy upper -cts_safe 1 -fixlib 1
 
 source $::env(OPENROAD_SCRIPTS_DIR)/opt_lg_design.tcl
 

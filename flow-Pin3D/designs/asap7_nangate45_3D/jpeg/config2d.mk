@@ -15,5 +15,5 @@ export TNS_END_PERCENT        = 100
 export GEN_EFF medium
 export MAP_EFF high
 
-export OPEN_GUI ?= 1
+
 export NUM_CORES   ?= 32

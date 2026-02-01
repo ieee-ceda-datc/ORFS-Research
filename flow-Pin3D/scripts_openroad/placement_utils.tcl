@@ -90,50 +90,22 @@ proc calculate_placement_density {} {
 
   # 1) If no addon requested, just use base
   if {![info exists ::env(PLACE_DENSITY_LB_ADDON)]} {
-  puts "INFO: PLACE_DENSITY_LB_ADDON not set, using PLACE_DENSITY=$base_density"
-  return $base_density
-  }
-
-  # 2) DB preflight
-  set db   [ord::get_db]
-  if {$db eq ""} {
-  puts "WARN: no DB; fallback density $base_density"
-  return $base_density
-  }
-  set chip [$db getChip]
-  if {$chip eq ""} {
-  puts "WARN: no chip; fallback density $base_density"
-  return $base_density
-  }
-  set block [$chip getBlock]
-  if {$block eq ""} {
-  puts "WARN: no block; fallback density $base_density"
-  return $base_density
-  }
-  if {[llength [$block getRows]] == 0} {
-  puts "WARN: no rows in block (DEF may lack ROWS); fallback density $base_density"
-  return $base_density
+    puts "INFO: PLACE_DENSITY_LB_ADDON not set, using PLACE_DENSITY=$base_density"
+    return $base_density
   }
 
   # 3) Pad arguments must be integers; default to 0 if missing
   set pad_l [::_as_int $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) 0]
   set pad_r [::_as_int $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) 0]
-
-  # 4) Compute LB with catch to absorb GPL-0301 on older builds / invalid states
+  # 4) Compute LB with catch to absorb GPL-0301 on older builds / invalid states 
   set lb 0.0
   set rc [catch {
-  if {[info procs gpl::get_global_placement_uniform_density] ne ""} {
     set lb [gpl::get_global_placement_uniform_density -pad_left $pad_l -pad_right $pad_r]
-  } elseif {[info procs gpl::get_global_placement_uniform_density_cmd] ne ""} {
-    set lb [gpl::get_global_placement_uniform_density_cmd -pad_left $pad_l -pad_right $pad_r]
-  } else {
-    error "No GPL uniform-density helper in this build"
-  }
   } err]
 
   if {$rc} {
-  puts "WARN: failed to get density LB (GPL-0301/compat): $err ; fallback $base_density"
-  return $base_density
+    puts "ERRORINFO:\n$::errorInfo"
+    return $base_density
   }
 
   # 5) Apply addon blend and a tiny nudge
@@ -387,7 +359,7 @@ proc or_set_dont_touch_by_master {pattern args} {
 #   - default: set_dont_touch on the other tier instances
 #   - if -cts_safe 1: do NOT set_dont_touch (avoid ODB-0370 in CTS rewiring)
 # Options:
-#   -cts_safe 0/1   (default 1)
+#   -cts_safe 0/1   (default 0)
 #   -quiet    0/1   (default 0)
 # ------------------------------------------------------------
 proc apply_tier_policy {tier args} {
@@ -426,8 +398,9 @@ proc apply_tier_policy {tier args} {
 
     # default: set_dont_touch other tier; CTS-safe: skip
     if {!$opt(-cts_safe)} {
+      puts "INFO(OR): cts_safe=0."
       or_set_dont_touch_by_master "*_bottom" -quiet $opt(-quiet)
-    } elseif {!$opt(-quiet)} {
+    } else {
       puts "INFO(OR): cts_safe=1 -> skip set_dont_touch for other tier."
     }
 
@@ -444,8 +417,9 @@ proc apply_tier_policy {tier args} {
     if {[info exists ::env(BOTTOM_SITE)]} { set ::env(PLACE_SITE) $::env(BOTTOM_SITE) }
 
     if {!$opt(-cts_safe)} {
+      puts "INFO(OR): cts_safe=0."
       or_set_dont_touch_by_master "*_upper" -quiet $opt(-quiet)
-    } elseif {!$opt(-quiet)} {
+    } else {
       puts "INFO(OR): cts_safe=1 -> skip set_dont_touch for other tier."
     }
 

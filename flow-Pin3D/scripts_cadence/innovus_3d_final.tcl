@@ -68,7 +68,7 @@ set_default_switching_activity -seq_activity 0.2
 # Analysis knobs
 
 setMultiCpuUsage -localCpu [_get NUM_CORES 16]
-
+fit
 dumpToGIF $LOG_DIR/6_final.png
 # Newer Voltus API hint (do not error if views absent)
 

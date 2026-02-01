@@ -10,5 +10,5 @@ export TNS_END_PERCENT        = 100
 export SKIP_GATE_CLONING   = 1
 export CORE_MARGIN = 0.2
 export CORE_UTILIZATION ?= 60
-export OPEN_GUI ?= 1
+
 export NUM_CORES   ?= 32

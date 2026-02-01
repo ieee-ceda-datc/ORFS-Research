@@ -15,18 +15,19 @@ set place_density [calculate_placement_density]
 mark_insts_by_master "*upper*" FIRM
 puts "Marked upper instances as FIRM"
 
+# apply_tier_policy bottom -cts_safe 1 -fixlib 1
 apply_tier_policy bottom -cts_safe 1
 fastroute_setup
 
-global_placement -density $place_density \
-    -skip_initial_place \
+log_cmd global_placement -density $place_density \
+    -incremental \
     -pad_left $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) \
     -pad_right $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) 
 
 set global_placement_args "-routability_driven -timing_driven"
 puts "Running global placement with density: $place_density"
-global_placement -density $place_density \
-    -skip_initial_place \
+log_cmd global_placement -density $place_density \
+    -incremental \
     -pad_left $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) \
     -pad_right $::env(CELL_PAD_IN_SITES_GLOBAL_PLACEMENT) \
     {*}$global_placement_args

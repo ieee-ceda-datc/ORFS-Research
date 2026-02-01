@@ -13,5 +13,5 @@ export SKIP_INCREMENTAL_REPAIR = 1
 export GLOBAL_ROUTE_ARGS = -verbose -congestion_iterations 30
 
 export CORE_UTILIZATION ?= 60
-export OPEN_GUI ?= 1
+
 export NUM_CORES   ?= 32

@@ -12,5 +12,5 @@ export SKIP_GATE_CLONING   = 1
 export CORE_MARGIN = 2
 
 export CORE_UTILIZATION ?= 60
-export OPEN_GUI ?= 1
+
 export NUM_CORES  ?= 32

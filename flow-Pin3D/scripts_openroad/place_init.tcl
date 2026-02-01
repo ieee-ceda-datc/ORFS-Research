@@ -21,8 +21,8 @@ log_cmd global_placement -density $place_density \
 write_def $env(RESULTS_DIR)/$DEF_OUT
 write_verilog $env(RESULTS_DIR)/$VERILOG_OUT
 
-write_def $env(RESULTS_DIR)/$env(DESIGN_NAME)_$env(DESIGN_DIMENSION).tmp.def
-write_verilog $env(RESULTS_DIR)/$env(DESIGN_NAME)_$env(DESIGN_DIMENSION).tmp.v
+write_def $env(RESULTS_DIR)/$env(DESIGN_NAME)_3D.tmp.def
+write_verilog $env(RESULTS_DIR)/$env(DESIGN_NAME)_3D.tmp.v
 
 save_image -resolution 0.1 $::env(LOG_DIR)/3_place_init.webp 
 

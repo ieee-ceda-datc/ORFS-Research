@@ -12,10 +12,9 @@ load_design $DEF_IN 2_floorplan.sdc "Starting bottom optimization and legalizati
 # 引入工具函数
 source $::env(OPENROAD_SCRIPTS_DIR)/placement_utils.tcl
 
-# ==== 在 bottom opt & lg 前 set 好 dont_use_cell ====
 mark_insts_by_master "*upper*" FIRM
 
-apply_tier_policy bottom -cts_safe 1
+apply_tier_policy bottom -cts_safe 1 -fixlib 1
 
 source $::env(OPENROAD_SCRIPTS_DIR)/opt_lg_design.tcl
 

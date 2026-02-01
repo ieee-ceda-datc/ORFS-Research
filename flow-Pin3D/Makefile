@@ -93,8 +93,7 @@ export INNOVUS_EXE ?= $(shell which innovus)
 GENUS_CMD   = $(GENUS_EXE)
 INNOVUS_CMD = $(INNOVUS_EXE) -64 -abort_on_error
 export OPEN_GUI ?= 0
-override OPENROAD_CMD = $(OPENROAD_EXE) $(OPENROAD_ARGS)
-ifneq ($(strip $(OPEN_GUI)),0)
+ifeq ($(strip $(OPEN_GUI)),1)
 override OPENROAD_CMD += -gui
 endif
 

@@ -339,7 +339,7 @@ def parse_args(
     p.add_argument(
         "--jobs",
         type=int,
-        default=9,
+        default=12,
         help="Parallel workers.",
     )
     stage_group = p.add_mutually_exclusive_group()

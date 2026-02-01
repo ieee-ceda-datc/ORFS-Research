@@ -25,6 +25,6 @@ mark_insts_by_master "*upper*" PLACED
 write_def $env(RESULTS_DIR)/$DEF_OUT
 write_verilog $env(RESULTS_DIR)/$VERILOG_OUT
 
-save_image -resolution 0.1 $::env(LOG_DIR)/3_place_init_upper.webp 
+save_image -resolution 0.1 $::env(LOG_DIR)/3_place_init_bottom.webp 
 
 exit

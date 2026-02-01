@@ -38,13 +38,15 @@ set_power_analysis_mode -leakage_power_view WC_VIEW -dynamic_power_view WC_VIEW
 # Read in the floorplan DEF file
 defIn $FPDEF
 
-set_tier_placement_status bottom fixed
+source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
+
+set_tier_placement_status upper fixed
 apply_tier_policy upper
 
 setPlaceMode -place_design_refine_place false
 place_design
 
-set_tier_placement_status bottom placed
+set_tier_placement_status upper placed
 
 # Define output file paths for the placed design
 set GPDEFOUT [file join $RESULTS_DIR "${DESIGN}_3D.tmp.def"]
@@ -56,7 +58,7 @@ saveNetlist $GPVOUT
 # Fit the design view to the window
 fit
 # Dump a screenshot of the layout
-dumpToGIF $LOG_DIR/init_place.png
+dumpToGIF $LOG_DIR/init_place_bottom.png
 # Print completion message
 puts "INFO: 3D place init done. DEF: $GPDEFOUT  V: $GPVOUT"
 

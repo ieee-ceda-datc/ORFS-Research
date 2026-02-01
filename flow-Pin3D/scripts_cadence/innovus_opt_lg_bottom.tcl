@@ -40,7 +40,7 @@ source $::env(CADENCE_SCRIPTS_DIR)/tier_cell_policy.tcl
 
 set_tier_placement_status upper fixed
 apply_tier_policy bottom -fixlib 1
-
+# apply_tier_policy bottom
 catch { place_opt_design -out_dir $REPORTS_DIR -prefix legalize_bottom }
 checkPlace
 
