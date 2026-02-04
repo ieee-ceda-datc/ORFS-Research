@@ -291,17 +291,17 @@ __local_build()
         # CMAKE_FLAGS added to work around yosys-slang#141 (unable to build outside of git checkout)
         ${NICE} make install -C tools/yosys-slang -j "${PROC}" YOSYS_PREFIX="${INSTALL_PATH}/yosys/bin/" CMAKE_FLAGS="-DYOSYS_SLANG_REVISION=unknown -DSLANG_REVISION=unknown"
 
-        echo "[INFO FLW-0031] Compiling kepler-formal"
-        ${NICE} cmake -B tools/kepler-formal/build tools/kepler-formal \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_FLAGS_RELEASE="-Ofast -march=native -ffast-math -flto" \
-                -DCMAKE_EXE_LINKER_FLAGS="-flto" \
-                -DCMAKE_BUILD_RPATH="${DIR}/tools/kepler-formal/build/thirdparty/naja/src/dnl:${DIR}/tools/kepler-formal/build/thirdparty/naja/src/nl/nl:${DIR}/tools/kepler-formal/build/thirdparty/naja/src/optimization" \
-                -DCMAKE_INSTALL_RPATH="${INSTALL_PATH}/kepler-formal/lib" \
-                -DCMAKE_BUILD_WITH_INSTALL_RPATH=OFF \
-                -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF \
-                -DCMAKE_INSTALL_PREFIX="${INSTALL_PATH}/kepler-formal"
-        ${NICE} cmake --build tools/kepler-formal/build --target install -j "${PROC}"
+        # echo "[INFO FLW-0031] Compiling kepler-formal"
+        # ${NICE} cmake -B tools/kepler-formal/build tools/kepler-formal \
+        #         -DCMAKE_BUILD_TYPE=Release \
+        #         -DCMAKE_CXX_FLAGS_RELEASE="-Ofast -march=native -ffast-math -flto" \
+        #         -DCMAKE_EXE_LINKER_FLAGS="-flto" \
+        #         -DCMAKE_BUILD_RPATH="${DIR}/tools/kepler-formal/build/thirdparty/naja/src/dnl:${DIR}/tools/kepler-formal/build/thirdparty/naja/src/nl/nl:${DIR}/tools/kepler-formal/build/thirdparty/naja/src/optimization" \
+        #         -DCMAKE_INSTALL_RPATH="${INSTALL_PATH}/kepler-formal/lib" \
+        #         -DCMAKE_BUILD_WITH_INSTALL_RPATH=OFF \
+        #         -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF \
+        #         -DCMAKE_INSTALL_PREFIX="${INSTALL_PATH}/kepler-formal"
+        # ${NICE} cmake --build tools/kepler-formal/build --target install -j "${PROC}"
 
         if [ ${WITH_VERIFIC} -eq 1 ]; then
                 echo "[INFO FLW-0032] Cleaning up Verific components."
