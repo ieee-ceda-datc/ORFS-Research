@@ -53,8 +53,8 @@ if [[ "${ORD_EVAL_MODE}" == "remote" ]]; then
         export USE_FLOW=\"${USE_FLOW}\"
         export FLOW_VARIANT=\"${FLOW_VARIANT}\"
         export TECH_LEF=\"${TECH_LEF}\"
-        make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-final
+        make DESIGN_CONFIG=designs/nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-restore
     "
 else
-    make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-final
+    make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-restore
 fi

@@ -15,4 +15,4 @@ export DESIGN_NICKNAME="jpeg"
 export USE_FLOW="cadence"
 export FLOW_VARIANT="cadence"
 
-make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-final
+make DESIGN_CONFIG=designs/nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-restore

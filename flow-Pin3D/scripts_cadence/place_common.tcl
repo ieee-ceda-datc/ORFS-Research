@@ -48,15 +48,6 @@ proc pc::setup_basic {} {
   set disable_scan [pc::_env_or DISABLE_SCAN_REORDER 1]
   catch { setPlaceMode -place_global_reorder_scan [expr {$disable_scan ? "false" : "true"}] }
 
-  # --- Timing-Driven (can be disabled for prototyping) ---
-  set non_timing [pc::_env_or NON_TIMING_PLACE 0]
-  if {$non_timing} { catch { setPlaceMode -place_global_timing_effort false } }
-
-  # --- Strictly Honor Instance Padding (Optional) ---
-  if {[pc::_env_or HONOR_INST_PAD 0]} {
-    catch { setPlaceMode -place_detail_honor_inst_pad true }
-  }
-
   # --- Add instance-level padding as needed ---
   set pad_l   [pc::_env_or PAD_LEFT  0]
   set pad_r   [pc::_env_or PAD_RIGHT 0]
@@ -79,7 +70,7 @@ proc pc::setup_basic {} {
   }
 }
 
-# Single-step: place_opt_design (recommended)
+# Single-step: place_opt_design
 proc pc::run_place {} {
   set use_pod           [pc::_env_or USE_PLACE_OPT 1]
   set do_concurrent_mac [pc::_env_or USE_CONCURRENT_MACRO 0]
