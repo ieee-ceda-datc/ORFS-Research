@@ -3,7 +3,7 @@ export PROCESS                 = 55
 export ASAP7_USE_VT           ?= RVT
 
 export LIB_MODEL               = NLDM
-export TECH_LEF                = $(PLATFORM_DIR)/prtech/techLEF/N551P6M_ieda.lef
+export TECH_LEF                = $(PLATFORM_DIR)/prtech/techLEF/N551P6M_orfs_research.lef
 
 export BC_TEMPERATURE          = 125C
 export TC_TEMPERATURE          = 25C
@@ -60,8 +60,8 @@ export TAP_CELL_NAME = FILLTAPH7$(PRIMARY_VT_TAG_SHORT)
 
 #RC?
 export SET_RC_TCL              = $(PLATFORM_DIR)/setRC.tcl
-# OpenRCX extRules?
-
+# OpenRCX extRules
+export RCX_RULES               = $(PLATFORM_DIR)/N551P6M_orfs_research.rcx_patterns.rules
 # Route options
 export MIN_ROUTING_LAYER       ?= MET2
 export MIN_CLK_ROUTING_LAYER   ?= MET4
@@ -73,9 +73,9 @@ export MAKE_TRACKS             = $(PLATFORM_DIR)/make_tracks.tcl
 export FASTROUTE_TCL ?= $(PLATFORM_DIR)/fastroute.tcl
 
 # PLACEHOLDER gets replaced with the appropriate VT tag in the following templates
-export BC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_ff_cbest_1p32_125_nldm.lib
-export WC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_ss_cworst_1p08_m40_nldm.lib
-export TC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_typ_tt_1p2_25_nldm.lib
+export BC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_ff_cbest_1p32_125_nldm.lib.gz
+export WC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_ss_cworst_1p08_m40_nldm.lib.gz
+export TC_NLDM_LIB_FILES_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/liberty/ics55_LLSC_PLACEHOLDER_typ_tt_1p2_25_nldm.lib.gz
 export LEF_FILE_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/lef/ics55_LLSC_PLACEHOLDER_ieda.lef
 export CDL_FILE_T = $(PLATFORM_DIR)/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_PLACEHOLDER/cdl/ics55_LLSC_PLACEHOLDER.cdl
 
