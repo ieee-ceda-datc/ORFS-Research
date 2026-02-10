@@ -15,6 +15,10 @@ export DESIGN_DIMENSION="3D"
 export DESIGN_NICKNAME="jpeg"
 export USE_FLOW="openroad"
 export FLOW_VARIANT="openroad_clock_${CLK_PERIOD}"
+export LOG_DIR=./logs/asap7_nangate45_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
+export OBJECTS_DIR=./objects/asap7_nangate45_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
+export REPORTS_DIR=./reports/asap7_nangate45_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
+export RESULTS_DIR=./results/asap7_nangate45_3D/${DESIGN_NICKNAME}/${FLOW_VARIANT}
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config2d.mk clean_all
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk clean_all
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-synth
@@ -22,35 +26,18 @@ make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config2d.mk ord-tier-partition
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-pre
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-3d-pdn
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-init-upper
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-place-init-bottom
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-place-init
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-place-init-upper
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-place-init-bottom
 iteration=1
 for ((i=1;i<=iteration;i++)); do
   echo "Iteration: $i"
-  make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-place-upper
-  make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk  ord-place-bottom
+  make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-place-upper
+  make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk  ord-place-bottom
 done
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-pre-opt
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-legalize-bottom
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_bottom_cover.mk ord-legalize-upper
-make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config_upper_cover.mk ord-cts
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-legalize-bottom
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-legalize-upper
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-cts
 make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-route
-if [[ "${ORD_EVAL_MODE}" == "remote" ]]; then
-    SSH_OPTS=()
-    if [[ -n "${ORD_EVAL_SSH_OPTS:-}" ]]; then
-        read -r -a SSH_OPTS <<< "${ORD_EVAL_SSH_OPTS}"
-    fi
-    ssh "${SSH_OPTS[@]}" -t "${ORD_EVAL_REMOTE_USER}@${ORD_EVAL_REMOTE_HOST}" "
-        cd ${ORD_EVAL_REMOTE_PROJECT_DIR} || exit
-        source env.sh
-        export DESIGN_DIMENSION=\"${DESIGN_DIMENSION}\"
-        export DESIGN_NICKNAME=\"${DESIGN_NICKNAME}\"
-        export USE_FLOW=\"${USE_FLOW}\"
-        export FLOW_VARIANT=\"${FLOW_VARIANT}\"
-        export CLK_PERIOD=\"${CLK_PERIOD}\"
-        make DESIGN_CONFIG=designs/asap7_nangate45_3D/\${DESIGN_NICKNAME}/config.mk cds-final
-    "
-else
-    make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk cds-final
-fi
+make DESIGN_CONFIG=designs/asap7_nangate45_3D/${DESIGN_NICKNAME}/config.mk ord-final

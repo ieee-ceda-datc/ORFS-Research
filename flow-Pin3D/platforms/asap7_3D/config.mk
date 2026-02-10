@@ -12,6 +12,7 @@ ifeq ($(USE_FLOW),openroad)
   export MIN_ROUTING_LAYER ?= M2
   export MAX_ROUTING_LAYER ?= M3_add
   export SET_RC_TCL               ?= $(PLATFORM_DIR)/setRC_2A6M7M.tcl
+  export MAKE_TRACKS       ?= $(PLATFORM_DIR)/openRoad/make_tracks.2A6M7M.tcl
 endif
 export MIN_CLK_ROUTING_LAYER ?= M2
 export TECH_LEF  ?= $(PLATFORM_DIR)/lef/asap7_tech_1x_6M7M.lef
@@ -89,7 +90,7 @@ export IO_PLACER_V ?= M3
 export PDN_TCL      ?= $(PLATFORM_DIR)/openRoad/pdn/grid_strategy-M1-M2-M5-M6.tcl
 export TAPCELL_TCL  ?= $(PLATFORM_DIR)/tapcell.tcl
 export TAP_CELL_NAME = TAPCELL_ASAP7_75t_R_bottom
-export MAKE_TRACKS       ?= $(PLATFORM_DIR)/openRoad/make_tracks.tcl
+export MAKE_TRACKS       ?= $(PLATFORM_DIR)/openRoad/make_tracks.6M7M.tcl
 
 # -------- Placement --------
 export CELL_PAD_IN_SITES_GLOBAL_PLACEMENT ?= 0
@@ -126,7 +127,6 @@ export FASTROUTE_TCL     ?= $(PLATFORM_DIR)/fastroute.tcl
 # -------- Signoff / RCX / IR --------
 export CDL_FILE           ?=
 export TEMPLATE_PGA_CFG  ?= $(PLATFORM_DIR)/template_pga.cfg
-export RCX_RULES          = $(PLATFORM_DIR)/asap7_tech_1x_9M10M.rcx_patterns.rules
 
 # IR drop（两层同电压；如需区分 T1/T2，可改为 "VDD_T1 0.77 VDD_T2 0.77"）
 export PWR_NETS_VOLTAGES ?= "VDD 0.77"
