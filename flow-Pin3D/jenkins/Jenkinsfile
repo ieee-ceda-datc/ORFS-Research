@@ -1,0 +1,56 @@
+pipeline {
+    agent { label 'console5' } // 指定在你的 console5 服务器上运行
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // 检出你指定的研究分支
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: 'maple/pin3Dflow']],
+                    userRemoteConfigs: [[url: '你的仓库地址.git']],
+                    extensions: [[$class: 'SubmoduleOption', recursiveSubmodules: true]]
+                ])
+            }
+        }
+
+        stage('Run 3D Experiments') {
+            steps {
+                sh '''
+                    source env.sh
+                    python3 run_experiment.py \
+                        --flow ord \
+                        --run-CI \
+                        --run-only \
+                        --jobs 12
+                '''
+            }
+        }
+
+        stage('Results & Comparison Board') {
+            steps {
+                script {
+                    // 在 Jenkins 控制台直接打印出提取的 CSV 结果，方便快速查看
+                    if (fileExists('ci_metrics_summary.csv')) {
+                        echo "======= ISPD 2026 Experiment Metrics Summary ======="
+                        sh 'column -t -s, ci_metrics_summary.csv'
+                    } else {
+                        error "Metric extraction failed, ci_metrics_summary.csv not found."
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // 归档实验日志和生成的 CSV 数据包
+            archiveArtifacts artifacts: 'run_logs/**/*.log, ci_metrics_summary.csv', allowEmptyArchive: true
+        }
+        success {
+            echo "Successfully completed 3D Macroplacement experiments for Pin3D."
+        }
+        failure {
+            echo "CI Failed. Please check the run_logs and 6_finish.rpt for errors."
+        }
+    }
+}

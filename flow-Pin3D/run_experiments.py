@@ -5,28 +5,25 @@ import signal
 import socket
 import subprocess
 import sys
-import shlex
+import re
+import csv
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
-
 
 # ==============================================================================
 # Safety: signals + process-group kill
 # ==============================================================================
 
 def _install_signal_handlers():
-    """Install signal handlers so that SIGINT/SIGTERM raise KeyboardInterrupt."""
     def _handler(signum, frame):
         raise KeyboardInterrupt()
-
     for sig in (signal.SIGINT, signal.SIGTERM):
         try:
             signal.signal(sig, _handler)
         except Exception:
             pass
-
 
 def _run_command_with_log(
     cmd: Sequence[str],
@@ -34,15 +31,8 @@ def _run_command_with_log(
     cwd: Optional[Path] = None,
     env: Optional[dict] = None,
 ):
-    """
-    Run a command, redirect stdout/stderr to log_path.
-    Start a new process group so we can kill the whole tree via killpg on interrupt.
-    """
     log_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # 兼容性处理：Windows/非POSIX环境没有 os.setsid
     preexec = getattr(os, "setsid", None)
-
     with open(log_path, "w") as log_file:
         proc = subprocess.Popen(
             list(cmd),
@@ -52,7 +42,6 @@ def _run_command_with_log(
             preexec_fn=preexec,
             env=env,
         )
-
         try:
             ret = proc.wait()
             if ret != 0:
@@ -76,399 +65,198 @@ def _run_command_with_log(
                 pass
             raise
 
+# ==============================================================================
+# Metrics Extraction
+# ==============================================================================
+
+def extract_metrics(cfg: 'RunConfig') -> Optional[dict]:
+    """解析 OpenROAD 报告以提取关键 CI 指标"""
+    report_base = cfg.repo_root / "reports" / cfg.tech / cfg.case / "openroad"
+    finish_rpt = report_base / "6_finish.rpt"
+    drc_rpt = report_base / "5_route_drc.rpt"
+
+    metrics = {
+        "tech": cfg.tech,
+        "case": cfg.case,
+        "wns": "N/A",
+        "tns": "N/A",
+        "power_watts": "N/A",
+        "drc_count": "0"
+    }
+
+    if finish_rpt.exists():
+        try:
+            content = finish_rpt.read_text()
+            # 提取 Timing
+            tns_m = re.search(r"tns\s+max\s+([-+]?\d*\.\d+|\d+)", content)
+            wns_m = re.search(r"wns\s+max\s+([-+]?\d*\.\d+|\d+)", content)
+            if tns_m: metrics["tns"] = tns_m.group(1)
+            if wns_m: metrics["wns"] = wns_m.group(1)
+
+            # 提取 Power (匹配 Total 行 100.0% 前的数值)
+            power_p = r"Total\s+[\d\.e+-]+\s+[\d\.e+-]+\s+[\d\.e+-]+\s+([\d\.e+-]+)\s+100\.0%"
+            power_m = re.search(power_p, content)
+            if power_m: metrics["power_watts"] = power_m.group(1)
+        except Exception as e:
+            print(f"Error parsing {finish_rpt}: {e}")
+
+    if drc_rpt.exists():
+        try:
+            metrics["drc_count"] = str(drc_rpt.read_text().count("violation type:"))
+        except Exception as e:
+            print(f"Error parsing {drc_rpt}: {e}")
+
+    return metrics
+
+def save_summary_csv(all_results: List[dict], repo_root: Path):
+    output_path = repo_root / "ci_metrics_summary.csv"
+    if not all_results:
+        return
+    keys = all_results[0].keys()
+    with open(output_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=keys)
+        writer.writeheader()
+        writer.writerows(all_results)
+    print(f"\n[CI] Summary metrics saved to: {output_path}")
 
 # ==============================================================================
-# Experiment definitions
+# Execution Logic
 # ==============================================================================
 
 @dataclass(frozen=True)
 class RunConfig:
-    flow: str                 # "ord" or "cds"
+    flow: str
     tech: str
     case: str
-    remote_user: str
-    remote_host: str
-    remote_project_dir: str   # only for ord eval (ssh)
-    repo_root: Path           # local repo root (where test/ exists)
-    ord_eval_mode: str        # "local" or "remote"
-    ord_eval_ssh_opts: str
+    repo_root: Path
     do_run: bool
     do_eval: bool
+    run_ci: bool
 
-
-def _log_paths(flow: str, tech: str, case: str) -> Tuple[Path, Path]:
-    base = Path(f"run_logs/{tech}/{flow}")
-    run_log = base / "run" / f"{case}_run.log"
-    eval_log = base / "eval" / f"{case}_eval.log"
-    return run_log, eval_log
-
-
-def _script_paths(repo_root: Path, flow: str, tech: str, case: str) -> Tuple[Path, Path]:
-    run_script = repo_root / "test" / tech / case / flow / "run.sh"
-    eval_script = repo_root / "test" / tech / case / flow / "eval.sh"
-    return run_script, eval_script
-
-
-def _load_env_from_script(env_script: Path) -> None:
-    if not env_script.exists():
-        return
-    cmd = [
-        "bash",
-        "-lc",
-        f'export FLOW_ENV_QUIET=1; source "{env_script}"; env -0',
-    ]
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    for entry in proc.stdout.split(b"\0"):
-        if not entry:
-            continue
-        key, _, value = entry.partition(b"=")
-        os.environ[key.decode(errors="ignore")] = value.decode(errors="ignore")
-
-
-def run_one(cfg: RunConfig) -> str:
-    """
-    Execute one (flow, tech, case) task.
-    - cds: run.sh + eval.sh locally
-    - ord: run.sh locally; eval.sh via ssh (logs local)
-    """
+def run_one(cfg: RunConfig) -> Tuple[str, Optional[dict]]:
+    """执行单个任务，返回状态消息和提取的指标（如果是 CI 模式）"""
     _install_signal_handlers()
     _load_env_from_script(cfg.repo_root / "env.sh")
 
     pid = os.getpid()
-    host = socket.gethostname()
-
     run_log, eval_log = _log_paths(cfg.flow, cfg.tech, cfg.case)
-    # 兼容 Python 3.6: unlink(missing_ok=True) 改为 try-except
-    if cfg.do_run:
-        try:
-            run_log.unlink()
-        except FileNotFoundError:
-            pass
-    if cfg.do_eval:
-        try:
-            eval_log.unlink()
-        except FileNotFoundError:
-            pass
-
     run_script, eval_script = _script_paths(cfg.repo_root, cfg.flow, cfg.tech, cfg.case)
 
-    mode = "run+eval"
-    if cfg.do_run and not cfg.do_eval:
-        mode = "run-only"
-    elif cfg.do_eval and not cfg.do_run:
-        mode = "eval-only"
-    print(f"[{pid}] Start {cfg.flow.upper()} tech={cfg.tech} case={cfg.case} mode={mode} on host={host}")
-
-    # Shared environment for run/eval scripts.
-    script_env = os.environ.copy()
-    script_env["ENABLEMENT"] = cfg.tech
-    script_env["DESIGN_NICKNAME"] = cfg.case
-
-    # --- run.sh (local) ---
+    # --- Run Stage ---
     if cfg.do_run:
         if not run_script.exists():
-            msg = f"[{pid}] ERROR: run.sh not found: {run_script}"
-            print(msg)
-            return msg
-
+            return f"[{pid}] ERROR: run.sh not found: {run_script}", None
         try:
-            _run_command_with_log(
-                ["bash", str(run_script)],
-                run_log,
-                cwd=cfg.repo_root,
-                env=script_env,
-            )
+            _run_command_with_log(["bash", str(run_script)], run_log, cwd=cfg.repo_root, env=os.environ.copy())
         except subprocess.CalledProcessError:
-            msg = f"[{pid}] ERROR: run.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {run_log}"
-            print(msg)
-            return msg
+            return f"[{pid}] ERROR: run.sh failed: {cfg.case}", None
 
-    # --- eval.sh ---
-    if not cfg.do_eval:
-        ok = f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}"
-        print(ok)
-        return ok
-
-    if cfg.flow == "cds":
+    # --- Eval Stage ---
+    if cfg.do_eval:
         if not eval_script.exists():
-            msg = f"[{pid}] ERROR: eval.sh not found: {eval_script}"
-            print(msg)
-            return msg
+            return f"[{pid}] ERROR: eval.sh not found: {eval_script}", None
         try:
-            _run_command_with_log(
-                ["bash", str(eval_script)],
-                eval_log,
-                cwd=cfg.repo_root,
-                env=script_env,
-            )
+            _run_command_with_log(["bash", str(eval_script)], eval_log, cwd=cfg.repo_root, env=os.environ.copy())
         except subprocess.CalledProcessError:
-            msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
-            print(msg)
-            return msg
+            return f"[{pid}] ERROR: eval.sh failed: {cfg.case}", None
 
-    elif cfg.flow == "ord":
-        # Local path exists check (remote may differ, but at least validate naming)
-        if not eval_script.exists():
-            msg = f"[{pid}] ERROR: eval.sh not found locally (for naming sanity): {eval_script}"
-            print(msg)
-            return msg
-
-        if cfg.ord_eval_mode == "remote":
-            remote_eval_script = f"test/{cfg.tech}/{cfg.case}/ord/eval.sh"
-            remote_cmd = (
-                "set -euo pipefail; "
-                f"cd {cfg.remote_project_dir}; "
-                'echo "[remote] CWD=$PWD"; '
-                f"ENABLEMENT={cfg.tech} DESIGN_NICKNAME={cfg.case} bash {remote_eval_script}"
-            )
-
-            ssh_target = f"{cfg.remote_user}@{cfg.remote_host}"
-            ssh_cmd = ["ssh"]
-            if cfg.ord_eval_ssh_opts:
-                ssh_cmd.extend(shlex.split(cfg.ord_eval_ssh_opts))
-            ssh_cmd.extend(["-t", ssh_target, "bash", "-lc", "--", remote_cmd])
-            try:
-                _run_command_with_log(
-                    ssh_cmd,
-                    eval_log,
-                    cwd=cfg.repo_root,
-                    env=script_env,
-                )
-            except subprocess.CalledProcessError:
-                msg = f"[{pid}] ERROR: remote eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
-                print(msg)
-                return msg
-        else:
-            try:
-                _run_command_with_log(
-                    ["bash", str(eval_script)],
-                    eval_log,
-                    cwd=cfg.repo_root,
-                    env=script_env,
-                )
-            except subprocess.CalledProcessError:
-                msg = f"[{pid}] ERROR: eval.sh failed ({cfg.flow}/{cfg.tech}/{cfg.case}). See {eval_log}"
-                print(msg)
-                return msg
-    else:
-        return f"[{pid}] ERROR: unknown flow={cfg.flow}"
-
-    ok = f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}"
-    print(ok)
-    return ok
-
+    # --- Metrics Extraction ---
+    metrics = extract_metrics(cfg) if cfg.run_ci else None
+    
+    return f"[{pid}] OK: {cfg.flow}/{cfg.tech}/{cfg.case}", metrics
 
 # ==============================================================================
-# CLI + orchestration
+# Helper functions (Log paths, Env, etc.)
 # ==============================================================================
+
+def _log_paths(flow: str, tech: str, case: str) -> Tuple[Path, Path]:
+    base = Path(f"run_logs/{tech}/{flow}")
+    return base / "run" / f"{case}_run.log", base / "eval" / f"{case}_eval.log"
+
+def _script_paths(repo_root: Path, flow: str, tech: str, case: str) -> Tuple[Path, Path]:
+    base = repo_root / "test" / tech / case / flow
+    return base / "run.sh", base / "eval.sh"
+
+def _load_env_from_script(env_script: Path) -> None:
+    if not env_script.exists(): return
+    cmd = ["bash", "-lc", f'export FLOW_ENV_QUIET=1; source "{env_script}"; env -0']
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
+    for entry in proc.stdout.split(b"\0"):
+        if not entry: continue
+        key, _, value = entry.partition(b"=")
+        os.environ[key.decode(errors="ignore")] = value.decode(errors="ignore")
 
 def _dedup_keep_order(xs: Iterable[str]) -> List[str]:
-    seen = set()
-    out = []
+    seen, out = set(), []
     for x in xs:
         if x not in seen:
-            seen.add(x)
-            out.append(x)
+            seen.add(x); out.append(x)
     return out
 
+# ==============================================================================
+# CLI + Main
+# ==============================================================================
 
-def build_tasks(
-    flows: List[str],
-    techs: List[str],
-    cases: List[str],
-    remote_user: str,
-    remote_host: str,
-    remote_project_dir: str,
-    repo_root: Path,
-    ord_eval_mode: str,
-    ord_eval_ssh_opts: str,
-    do_run: bool,
-    do_eval: bool,
-) -> List[RunConfig]:
-    tasks: List[RunConfig] = []
-    for flow in flows:
-        for tech in techs:
-            for case in cases:
-                tasks.append(
-                    RunConfig(
-                        flow=flow,
-                        tech=tech,
-                        case=case,
-                        remote_user=remote_user,
-                        remote_host=remote_host,
-                        remote_project_dir=remote_project_dir,
-                        repo_root=repo_root,
-                        ord_eval_mode=ord_eval_mode,
-                        ord_eval_ssh_opts=ord_eval_ssh_opts,
-                        do_run=do_run,
-                        do_eval=do_eval,
-                    )
-                )
-    return tasks
-
-
-def parse_args(
-    default_remote_user: str,
-    default_remote_host: str,
-    default_remote_project_dir: str,
-    default_repo_root: Optional[str],
-    default_ord_eval_mode: str,
-    default_ord_eval_ssh_opts: str,
-) -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="Run ORFS experiments (ORD/CDS) in parallel with per-task logs."
-    )
-    p.add_argument(
-        "--flow",
-        choices=["ord", "cds", "all"],
-        default="all",
-        help="Which flow to run (default: all).",
-    )
-    p.add_argument(
-        "--tech",
-        action="append",
-        default=[],
-        help="Tech name. Repeatable. Default: run all preset techs.",
-    )
-    p.add_argument(
-        "--case",
-        action="append",
-        default=[],
-        help="Case/design name. Repeatable. Default: run all preset cases.",
-    )
-    p.add_argument(
-        "--jobs",
-        type=int,
-        default=12,
-        help="Parallel workers.",
-    )
-    stage_group = p.add_mutually_exclusive_group()
-    stage_group.add_argument(
-        "--eval-only",
-        action="store_true",
-        help="Only run eval.sh for each task.",
-    )
-    stage_group.add_argument(
-        "--run-only",
-        action="store_true",
-        help="Only run run.sh for each task.",
-    )
-
-    # ORD remote eval controls (kept explicit)
-    p.add_argument("--remote-user", default=default_remote_user, help="SSH user for ORD eval.")
-    p.add_argument("--remote-host", default=default_remote_host, help="SSH host for ORD eval.")
-    p.add_argument(
-        "--remote-project-dir",
-        default=default_remote_project_dir,
-        help="Remote repo root for ORD eval.",
-    )
-    p.add_argument(
-        "--ord-eval-mode",
-        choices=["local", "remote"],
-        default=default_ord_eval_mode,
-        help="Where to run ORD eval.sh (default from env: ORD_EVAL_MODE).",
-    )
-    p.add_argument(
-        "--ord-eval-ssh-opts",
-        default=default_ord_eval_ssh_opts,
-        help="Extra ssh options for remote ORD eval (default from env: ORD_EVAL_SSH_OPTS).",
-    )
-
-    p.add_argument(
-        "--repo-root",
-        default=default_repo_root,
-        help="Local repo root path (default: env FLOW_HOME or script parent).",
-    )
+def parse_args(default_repo_root: Optional[str]) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="ORFS Runner with CI mode.")
+    p.add_argument("--flow", choices=["ord", "cds", "all"], default="all")
+    p.add_argument("--tech", action="append", default=[])
+    p.add_argument("--case", action="append", default=[])
+    p.add_argument("--jobs", type=int, default=12)
+    p.add_argument("--repo-root", default=default_repo_root)
+    p.add_argument("--run-CI", action="store_true", help="CI mode: force flow=ord, run-only, and extract metrics.")
+    
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--eval-only", action="store_true")
+    group.add_argument("--run-only", action="store_true")
     return p.parse_args()
-
 
 def main() -> int:
     _install_signal_handlers()
     script_root = Path(__file__).resolve().parent
-    _load_env_from_script(script_root / "env.sh")
-
     default_repo_root = os.environ.get("FLOW_HOME", str(script_root))
-    default_remote_user = os.environ.get("ORD_EVAL_REMOTE_USER", "zhiyuzheng")
-    default_remote_host = os.environ.get("ORD_EVAL_REMOTE_HOST", socket.gethostname())
-    default_remote_project_dir = os.environ.get(
-        "ORD_EVAL_REMOTE_PROJECT_DIR", default_repo_root
-    )
-    default_ord_eval_mode = os.environ.get("ORD_EVAL_MODE", "local").lower()
-    if default_ord_eval_mode not in {"local", "remote"}:
-        default_ord_eval_mode = "local"
-    default_ord_eval_ssh_opts = os.environ.get("ORD_EVAL_SSH_OPTS", "")
+    args = parse_args(default_repo_root)
+    repo_root = Path(args.repo_root).resolve()
 
-    args = parse_args(
-        default_remote_user=default_remote_user,
-        default_remote_host=default_remote_host,
-        default_remote_project_dir=default_remote_project_dir,
-        default_repo_root=default_repo_root,
-        default_ord_eval_mode=default_ord_eval_mode,
-        default_ord_eval_ssh_opts=default_ord_eval_ssh_opts,
-    )
+    # --- CI Mode Logic Override ---
+    if args.run_CI:
+        flows = ["ord"]
+        do_run, do_eval = True, False
+        print("[CI MODE] Forced flow=ord, run-only stage, and metrics extraction enabled.")
+    else:
+        flows = ["ord", "cds"] if args.flow == "all" else [args.flow]
+        do_run = not args.eval_only
+        do_eval = not args.run_only
 
-    repo_root = Path(args.repo_root).resolve() if args.repo_root else Path(__file__).resolve().parent
-
-    # Default suites (match your originals)
     default_techs = ["asap7_3D", "nangate45_3D", "asap7_nangate45_3D"]
     default_cases = ["gcd", "aes", "jpeg", "ibex"]
-
     techs = _dedup_keep_order(args.tech) if args.tech else default_techs
     cases = _dedup_keep_order(args.case) if args.case else default_cases
 
-    if args.flow == "all":
-        flows = ["ord", "cds"]
-    else:
-        flows = [args.flow]
+    tasks = [RunConfig(f, t, c, repo_root, do_run, do_eval, args.run_CI) 
+             for f in flows for t in techs for c in cases]
 
-    do_run = not args.eval_only
-    do_eval = not args.run_only
+    print(f"[MAIN] repo_root={repo_root} | total_tasks={len(tasks)} | jobs={args.jobs}")
 
-    tasks = build_tasks(
-        flows=flows,
-        techs=techs,
-        cases=cases,
-        remote_user=args.remote_user,
-        remote_host=args.remote_host,
-        remote_project_dir=args.remote_project_dir,
-        repo_root=repo_root,
-        ord_eval_mode=args.ord_eval_mode,
-        ord_eval_ssh_opts=args.ord_eval_ssh_opts,
-        do_run=do_run,
-        do_eval=do_eval,
-    )
-
-    print(f"[MAIN] repo_root={repo_root}")
-    print(f"[MAIN] flows={flows} techs={techs} cases={cases} jobs={args.jobs}")
-    print(f"[MAIN] stages: run={do_run} eval={do_eval}")
-    print(f"[MAIN] total_tasks={len(tasks)} logs under run_logs/<tech>/<flow>/...")
-    print(
-        "[MAIN] env CDS_PARTITION_MODE={}"
-        " ORD_EVAL_MODE={}".format(
-            os.environ.get("CDS_PARTITION_MODE", "docker"),
-            os.environ.get("ORD_EVAL_MODE", "local"),
-        )
-    )
-
-    # Run
+    all_metrics = []
     executor: Optional[ProcessPoolExecutor] = None
     try:
         with ProcessPoolExecutor(max_workers=args.jobs) as executor:
             futures = [executor.submit(run_one, t) for t in tasks]
             for fut in as_completed(futures):
-                _ = fut.result()
+                msg, metrics = fut.result()
+                print(msg)
+                if metrics:
+                    all_metrics.append(metrics)
     except KeyboardInterrupt:
-        print("[MAIN] KeyboardInterrupt received, shutting down...")
-        if executor is not None:
-            try:
-                executor.shutdown(wait=False, cancel_futures=True)
-            except Exception:
-                pass
+        if executor: executor.shutdown(wait=False)
         return 130
+
+    if args.run_CI:
+        save_summary_csv(all_metrics, repo_root)
 
     print("[MAIN] All experiments completed.")
     return 0
 
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
