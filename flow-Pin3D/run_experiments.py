@@ -205,6 +205,7 @@ def parse_args(default_repo_root: Optional[str]) -> argparse.Namespace:
     p.add_argument("--jobs", type=int, default=12)
     p.add_argument("--repo-root", default=default_repo_root)
     p.add_argument("--run-CI", action="store_true", help="CI mode: force flow=ord, run-only, and extract metrics.")
+    p.add_argument("--test-run", action="store_true", help="Test mode: only run the 'gcd' case.")
     
     group = p.add_mutually_exclusive_group()
     group.add_argument("--eval-only", action="store_true")
@@ -228,10 +229,16 @@ def main() -> int:
         do_run = not args.eval_only
         do_eval = not args.run_only
 
+    # --- Test Run Logic Override ---
+    if args.test_run:
+        cases = ["gcd"]
+        print("[TEST RUN] Mode enabled: only the 'gcd' case will be processed.")
+    else:
+        default_cases = ["gcd", "aes", "jpeg", "ibex"]
+        cases = _dedup_keep_order(args.case) if args.case else default_cases
+
     default_techs = ["asap7_3D", "nangate45_3D", "asap7_nangate45_3D"]
-    default_cases = ["gcd", "aes", "jpeg", "ibex"]
     techs = _dedup_keep_order(args.tech) if args.tech else default_techs
-    cases = _dedup_keep_order(args.case) if args.case else default_cases
 
     tasks = [RunConfig(f, t, c, repo_root, do_run, do_eval, args.run_CI) 
              for f in flows for t in techs for c in cases]
