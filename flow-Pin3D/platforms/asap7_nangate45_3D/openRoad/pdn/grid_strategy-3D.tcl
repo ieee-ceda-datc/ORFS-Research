@@ -75,6 +75,8 @@ rename_upper_bottom_insts
 # ==== 2. 只设置 BOT 的 global_connect ====
 
 puts "INFO: Setting up global connections for BOT only..."
+puts "INFO: Rebuilding rows for upper tier site = $::env(BOTTOM_SITE)"
+or_rebuild_rows_for_site $::env(BOTTOM_SITE)
 
 clear_global_connect
 
@@ -166,8 +168,9 @@ add_pdn_stripe \
 add_pdn_connect -grid {BOT} -layers {M1 M4}
 add_pdn_connect -grid {BOT} -layers {M4 M7}
 
-puts "INFO: Running for BOT..."
-puts "INFO: (BOT) finished."
+puts "INFO: Running pdngen for BOT..."
+pdngen
+puts "INFO: pdngen (BOT) finished."
 
 ############################################################
 # Part 2: rebuild upper rows + TOP global_connect + CoreTOP + TOP PDN
@@ -259,5 +262,6 @@ add_pdn_connect -grid {TOP} -layers {M1_m M2_m}
 add_pdn_connect -grid {TOP} -layers {M2_m M5_m}
 add_pdn_connect -grid {TOP} -layers {M5_m M6_m}
 
-puts "INFO: 'TOP' grid defined."
-puts "INFO: PDN grid definition complete."
+puts "INFO: Running pdngen for TOP..."
+pdngen
+puts "INFO: pdngen (TOP) finished."
