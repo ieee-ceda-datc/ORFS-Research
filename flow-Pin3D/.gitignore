@@ -24,7 +24,7 @@ run_logs
 test*.sh
 test.tcl
 .st_launch_*
-*.csv
+ci_metrics_summary.csv
 *.opennet
 summary_reports*
 pics

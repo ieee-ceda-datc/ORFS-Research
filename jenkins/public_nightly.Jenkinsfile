@@ -1,72 +1,164 @@
 @Library('utils@orfs-v2.3.5') _
 
-node {
+node('hnode35') {
 
-    properties([copyArtifactPermission('${JOB_NAME},'+env.BRANCH_NAME)]);
+  properties([
+    buildDiscarder(logRotator(daysToKeepStr: '30', numToKeepStr: '60')),
+    parameters([
+      string(name: 'ORFS_RESEARCH_URL',
+             defaultValue: 'https://github.com/ieee-ceda-datc/ORFS-Research.git',
+             description: 'ORFS-Research repo URL'),
+      string(name: 'ORFS_BRANCH',
+             defaultValue: 'maple/pin3Dflow',
+             description: 'ORFS-Research branch for nightly'),
 
-    stage('Checkout ORFS') {
-        checkout([
-            $class: 'GitSCM',
-            branches: [[name: scm.branches[0].name]],
-            doGenerateSubmoduleConfigurations: false,
-            extensions: [
-                [$class: 'CloneOption', noTags: false],
-                [$class: 'SubmoduleOption', recursiveSubmodules: true]
-            ],
-            submoduleCfg: [],
-            userRemoteConfigs: scm.userRemoteConfigs
-        ]);
-        def description = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim();
-        if (description.contains('ci') && description.contains('skip')) {
-            currentBuild.result = 'SKIPPED'; // 'SUCCESS', 'SKIPPED'
-            return;
-        }
+      string(name: 'OPENROAD_RESEARCH_URL',
+             defaultValue: 'https://github.com/ieee-ceda-datc/OpenROAD-Research.git',
+             description: 'OpenROAD-Research repo URL'),
+      string(name: 'OPENROAD_RESEARCH_BRANCH',
+             defaultValue: 'arxiv',
+             description: 'OpenROAD-Research branch (default: arxiv)'),
+
+      string(name: 'PIN3D_DIR',
+             defaultValue: 'flow-Pin3D',
+             description: 'Pin3D working directory'),
+      string(name: 'PIN3D_CMD',
+             defaultValue: 'python3 run_experiment.py --run-CI',
+             description: 'Command to run in flow-Pin3D'),
+
+      string(name: 'METRICS_SUMMARY',
+             defaultValue: 'ci_metrics_summary.csv',
+             description: 'Metrics summary csv (relative to flow-Pin3D)'),
+      string(name: 'METRICS_GOLDEN',
+             defaultValue: 'test/ci_metrics_golden.csv',
+             description: 'Golden csv (relative to flow-Pin3D)'),
+      booleanParam(name: 'FAIL_ON_REGRESSION',
+                   defaultValue: true,
+                   description: 'Fail build when metrics regression detected')
+    ])
+    // 定时建议在 Jenkins UI 配 cron（更灵活）
+  ])
+
+  try {
+    stage('Clean Workspace') {
+      deleteDir()
     }
 
+    stage('Checkout ORFS-Research (maple/pin3Dflow) + submodules') {
+      checkout([
+        $class: 'GitSCM',
+        branches: [[name: "*/${params.ORFS_BRANCH}"]],
+        doGenerateSubmoduleConfigurations: false,
+        userRemoteConfigs: [[url: params.ORFS_RESEARCH_URL]],
+        extensions: [
+          [$class: 'CloneOption', noTags: false, timeout: 30],
+          [$class: 'SubmoduleOption', recursiveSubmodules: true, parentCredentials: true, timeout: 60]
+        ]
+      ])
 
-    stage('Checkout OpenROAD Latest') {
-        checkout([$class: "GitSCM",
-              branches: [[name: "*/master"]],
-              doGenerateSubmoduleConfigurations: false,
-              extensions: [
-                [
-                  $class: "SubmoduleOption",
-                  disableSubmodules: false,
-                  parentCredentials: true,
-                  recursiveSubmodules: true,
-                  reference: "",
-                  trackingSubmodules: false
-                ],
-                [
-                  $class: "RelativeTargetDirectory",
-                  relativeTargetDir: "tools/OpenROAD"
-                ]
-              ]
-            ]);
+      def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+      if (msg.contains('ci') && msg.contains('skip')) {
+        currentBuild.result = 'SKIPPED'
+        return
+      }
+
+      sh '''#!/usr/bin/env bash
+        set -euo pipefail
+        echo "[ORFS-Research] branch=${params.ORFS_BRANCH}"
+        echo "[ORFS-Research] HEAD=$(git rev-parse --short HEAD)"
+      '''
     }
 
-    def DOCKER_IMAGE;
-    stage('Build and Push Docker Image') {
-        DOCKER_IMAGE = dockerPush('ubuntu22.04', 'orfs');
-        echo "Docker image is $DOCKER_IMAGE";
+    stage('Checkout OpenROAD-Research (arxiv) -> tools/OpenROAD') {
+      sh '''#!/usr/bin/env bash
+        set -euo pipefail
+        rm -rf tools/OpenROAD
+      '''
+
+      checkout([
+        $class: 'GitSCM',
+        branches: [[name: "*/${params.OPENROAD_RESEARCH_BRANCH}"]],
+        doGenerateSubmoduleConfigurations: false,
+        userRemoteConfigs: [[url: params.OPENROAD_RESEARCH_URL]],
+        extensions: [
+          [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tools/OpenROAD'],
+          [$class: 'CloneOption', noTags: false, timeout: 30],
+          [$class: 'SubmoduleOption', recursiveSubmodules: true, parentCredentials: true, timeout: 60]
+        ]
+      ])
+
+      sh '''#!/usr/bin/env bash
+        set -euo pipefail
+        echo "[OpenROAD-Research] HEAD=$(cd tools/OpenROAD && git rev-parse --short HEAD)"
+      '''
     }
 
-    stage('Build ORFS and Stash bins') {
-        buildBins(DOCKER_IMAGE, '--local --no_init --latest');
+    stage('Run Pin3D CI') {
+      dir(params.PIN3D_DIR) {
+        sh """#!/usr/bin/env bash
+          set -euo pipefail
+          echo "[Pin3D Nightly] PWD=\$PWD"
+          echo "[Pin3D Nightly] CMD: ${params.PIN3D_CMD}"
+          ${params.PIN3D_CMD}
+        """
+      }
     }
 
-    stage('Run Tests') {
-        if (env.CHANGE_BRANCH && env.CHANGE_BRANCH.contains('ci-dev')) {
-            runTests(DOCKER_IMAGE, 'dev');
+    stage('Metrics Board') {
+      def csvPath = "${params.PIN3D_DIR}/${params.METRICS_SUMMARY}"
+      if (!fileExists(csvPath)) {
+        error "Metrics summary not found: ${csvPath}"
+      }
+
+      echo "======= Pin3D Nightly Metrics Summary ======="
+      sh """#!/usr/bin/env bash
+        set -euo pipefail
+        (command -v column >/dev/null 2>&1 && column -t -s, "${csvPath}") || cat "${csvPath}"
+      """
+    }
+
+    stage('Compare Metrics (optional)') {
+      def flowDir = params.PIN3D_DIR
+      def summary = params.METRICS_SUMMARY
+      def golden  = params.METRICS_GOLDEN
+
+      if (!fileExists("${flowDir}/${golden}")) {
+        echo "[Compare] Golden not found: ${flowDir}/${golden}. Skip comparison."
+        return
+      }
+
+      def rc = sh(
+        script: """#!/usr/bin/env bash
+          set -euo pipefail
+          cd "${flowDir}"
+          python3 test/metrics_comparison.py \\
+            --summary "${summary}" \\
+            --golden "${golden}" \\
+            --keys "tech,case" \\
+            2>&1 | tee ci_metrics_compare.log
+        """,
+        returnStatus: true
+      )
+
+      if (rc != 0) {
+        if (params.FAIL_ON_REGRESSION) {
+          error "Metrics comparison failed (exit=${rc}). See ${flowDir}/ci_metrics_compare.log"
         } else {
-            runTests(DOCKER_IMAGE, 'nightly');
+          currentBuild.result = 'UNSTABLE'
+          echo "Metrics comparison failed but marked UNSTABLE."
         }
+      } else {
+        echo "Metrics comparison passed."
+      }
     }
 
-    stage ('Cleanup and Reporting') {
-        env.CHANGE_BRANCH = 'nightly'
-        env.BRANCH_NAME = 'nightly'
-        finalReport(DOCKER_IMAGE);
-    }
-
+  } finally {
+    archiveArtifacts artifacts: """
+      ${params.PIN3D_DIR}/run_logs/**/*.log,
+      ${params.PIN3D_DIR}/reports/**/*.rpt,
+      ${params.PIN3D_DIR}/${params.METRICS_SUMMARY},
+      ${params.PIN3D_DIR}/ci_metrics_compare.log,
+      ${params.PIN3D_DIR}/ci_metrics_compare_report.csv
+    """, allowEmptyArchive: true
+  }
 }
