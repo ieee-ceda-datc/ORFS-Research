@@ -36,7 +36,6 @@ node('hnode35') {
                    defaultValue: true,
                    description: 'Fail build when metrics regression detected')
     ])
-    // 定时建议在 Jenkins UI 配 cron（更灵活）
   ])
 
   try {

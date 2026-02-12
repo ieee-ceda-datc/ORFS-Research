@@ -34,7 +34,7 @@ node('hnode35') {
     ])
   ])
 
-  // PR 分支优先级：CHANGE_BRANCH > BRANCH_NAME > maple/pin3Dflow
+  // PR ：CHANGE_BRANCH > BRANCH_NAME > maple/pin3Dflow
   def orfsBranch = (env.CHANGE_BRANCH ?: (env.BRANCH_NAME ?: 'maple/pin3Dflow'))
 
   try {
