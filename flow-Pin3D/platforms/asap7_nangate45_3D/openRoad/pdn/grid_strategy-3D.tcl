@@ -166,9 +166,8 @@ add_pdn_stripe \
 add_pdn_connect -grid {BOT} -layers {M1 M4}
 add_pdn_connect -grid {BOT} -layers {M4 M7}
 
-puts "INFO: Running pdngen for BOT..."
-pdngen
-puts "INFO: pdngen(BOT) finished."
+puts "INFO: Running for BOT..."
+puts "INFO: (BOT) finished."
 
 ############################################################
 # Part 2: rebuild upper rows + TOP global_connect + CoreTOP + TOP PDN
@@ -212,7 +211,7 @@ set_voltage_domain -name {Core} \
 
 report_voltage_domains
 
-# 4) TOP PDN grid + 第二次 pdngen
+# 4) TOP PDN grid
 
 puts "INFO: Defining 'TOP' PDN grid..."
 
@@ -260,6 +259,5 @@ add_pdn_connect -grid {TOP} -layers {M1_m M2_m}
 add_pdn_connect -grid {TOP} -layers {M2_m M5_m}
 add_pdn_connect -grid {TOP} -layers {M5_m M6_m}
 
-puts "INFO: Running pdngen for TOP..."
-pdngen
-puts "INFO: pdngen(TOP) finished."
+puts "INFO: 'TOP' grid defined."
+puts "INFO: PDN grid definition complete."
