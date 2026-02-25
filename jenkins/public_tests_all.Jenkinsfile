@@ -8,6 +8,9 @@ node('hnode35') {
       string(name: 'ORFS_RESEARCH_URL',
              defaultValue: 'https://github.com/ieee-ceda-datc/ORFS-Research.git',
              description: 'ORFS-Research repo URL'),
+      string(name: 'ORFS_BRANCH',
+             defaultValue: 'maple/pin3Dflow',
+             description: 'ORFS-Research branch for Pin3D CI (default: maple/pin3Dflow)'),
       string(name: 'OPENROAD_RESEARCH_URL',
              defaultValue: 'https://github.com/ieee-ceda-datc/OpenROAD-Research.git',
              description: 'OpenROAD-Research repo URL'),
@@ -19,7 +22,7 @@ node('hnode35') {
              defaultValue: 'flow-Pin3D',
              description: 'Pin3D working directory'),
       string(name: 'PIN3D_CMD',
-             defaultValue: 'python3 run_experiment.py --run-CI',
+             defaultValue: 'python3 run_experiments.py --run-CI',
              description: 'Command to run in flow-Pin3D'),
 
       string(name: 'METRICS_SUMMARY',
@@ -34,9 +37,6 @@ node('hnode35') {
     ])
   ])
 
-  // PR ：CHANGE_BRANCH > BRANCH_NAME > maple/pin3Dflow
-  def orfsBranch = (env.CHANGE_BRANCH ?: (env.BRANCH_NAME ?: 'maple/pin3Dflow'))
-
   try {
     stage('Clean Workspace') {
       deleteDir()
@@ -45,7 +45,7 @@ node('hnode35') {
     stage('Checkout ORFS-Research + submodules') {
       checkout([
         $class: 'GitSCM',
-        branches: [[name: "*/${orfsBranch}"]],
+        branches: [[name: "*/${params.ORFS_BRANCH}"]],
         doGenerateSubmoduleConfigurations: false,
         userRemoteConfigs: [[url: params.ORFS_RESEARCH_URL]],
         extensions: [
@@ -55,17 +55,17 @@ node('hnode35') {
       ])
 
       def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
-      if (msg.contains('ci') && msg.contains('skip')) {
+      if (msg ==~ /(?is).*\[(ci skip|skip ci)\].*/) {
         currentBuild.result = 'SKIPPED'
         return
       }
 
-      sh '''#!/usr/bin/env bash
+      sh """#!/usr/bin/env bash
         set -euo pipefail
-        echo "[ORFS-Research] branch=${orfsBranch}"
+        echo "[ORFS-Research] branch=${params.ORFS_BRANCH}"
         echo "[ORFS-Research] HEAD=$(git rev-parse --short HEAD)"
         git submodule status --recursive || true
-      '''
+      """
     }
 
     stage('Checkout OpenROAD-Research (arxiv) -> tools/OpenROAD') {

@@ -23,7 +23,7 @@ node('hnode35') {
              defaultValue: 'flow-Pin3D',
              description: 'Pin3D working directory'),
       string(name: 'PIN3D_CMD',
-             defaultValue: 'python3 run_experiment.py --run-CI',
+             defaultValue: 'python3 run_experiments.py --run-CI',
              description: 'Command to run in flow-Pin3D'),
 
       string(name: 'METRICS_SUMMARY',
@@ -56,16 +56,16 @@ node('hnode35') {
       ])
 
       def msg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
-      if (msg.contains('ci') && msg.contains('skip')) {
+      if (msg ==~ /(?is).*\[(ci skip|skip ci)\].*/) {
         currentBuild.result = 'SKIPPED'
         return
       }
 
-      sh '''#!/usr/bin/env bash
+      sh """#!/usr/bin/env bash
         set -euo pipefail
         echo "[ORFS-Research] branch=${params.ORFS_BRANCH}"
         echo "[ORFS-Research] HEAD=$(git rev-parse --short HEAD)"
-      '''
+      """
     }
 
     stage('Checkout OpenROAD-Research (arxiv) -> tools/OpenROAD') {
@@ -124,6 +124,9 @@ node('hnode35') {
       if (!fileExists("${flowDir}/${golden}")) {
         echo "[Compare] Golden not found: ${flowDir}/${golden}. Skip comparison."
         return
+      }
+      if (!fileExists("${flowDir}/test/metrics_comparison.py")) {
+        error "Compare script not found: ${flowDir}/test/metrics_comparison.py"
       }
 
       def rc = sh(
