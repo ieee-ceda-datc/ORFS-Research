@@ -10,3 +10,6 @@
 [submodule "tools/kepler-formal"]
 	path = tools/kepler-formal
 	url = https://github.com/keplertech/kepler-formal
+[submodule "tools/yosys-research"]
+	path = tools/yosys-research
+	url = https://github.com/CODA-Team/yosys-research.git
