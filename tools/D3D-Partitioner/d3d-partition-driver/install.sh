@@ -105,6 +105,8 @@ if [[ -z "$flex_executable" ]]; then
   fi
 fi
 [[ -n "$flex_executable" && -x "$flex_executable" ]] || fail "Flex was not found"
+flex_version="$("$flex_executable" --version | sed -n '1s/.* \([0-9][0-9.]*\)$/\1/p')"
+[[ -n "$flex_version" ]] || fail "cannot determine Flex version: $flex_executable"
 
 resolve_executable() {
   local candidate="$1"
@@ -129,21 +131,24 @@ find_compiler() {
   return 1
 }
 
+# Prefer the compiler pinned in the D3D environment over CC/CXX inherited from
+# an unrelated active environment (for example, the OpenROAD environment).
+# C_COMPILER/CXX_COMPILER remain the supported explicit overrides.
 c_compiler="$(find_compiler \
   "${C_COMPILER:-}" \
-  "${CC:-}" \
   "$env_prefix/bin/gcc" \
   "$env_prefix"/bin/*-gcc \
   "$env_prefix/bin/cc" \
   "$env_prefix"/bin/*-cc \
+  "${CC:-}" \
   gcc cc || true)"
 cxx_compiler="$(find_compiler \
   "${CXX_COMPILER:-}" \
-  "${CXX:-}" \
   "$env_prefix/bin/g++" \
   "$env_prefix"/bin/*-g++ \
   "$env_prefix/bin/c++" \
   "$env_prefix"/bin/*-c++ \
+  "${CXX:-}" \
   g++ c++ || true)"
 [[ -n "$c_compiler" && -x "$c_compiler" ]] || fail "C compiler was not found"
 [[ -n "$cxx_compiler" && -x "$cxx_compiler" ]] || fail "C++ compiler was not found"
@@ -194,6 +199,7 @@ echo "[INFO][D3D-INSTALL] install=$install_prefix"
 echo "[INFO][D3D-INSTALL] environment=$env_prefix"
 echo "[INFO][D3D-INSTALL] cmake=$cmake_executable ($cmake_version)"
 echo "[INFO][D3D-INSTALL] bison=$bison_executable ($bison_version)"
+echo "[INFO][D3D-INSTALL] flex=$flex_executable ($flex_version)"
 echo "[INFO][D3D-INSTALL] c_compiler=$c_compiler"
 echo "[INFO][D3D-INSTALL] cxx_compiler=$cxx_compiler (C++17 supported)"
 echo "[INFO][D3D-INSTALL] device=cpu"
@@ -203,7 +209,62 @@ if [[ "$preflight_only" -eq 1 ]]; then
   exit 0
 fi
 
+canonical_path() {
+  readlink -m -- "$1" 2>/dev/null || printf '%s\n' "$1"
+}
+
+cmake_cache_value() {
+  local cache_file="$1"
+  local variable_name="$2"
+  sed -n "s/^${variable_name}:[^=]*=//p" "$cache_file" | head -n1
+}
+
+# CMake cannot safely reuse objects after the compiler changes.  Cached paths
+# to host Bison/Flex are likewise not valid for this isolated toolchain.  Reset
+# only this configured build tree when it was created with different tools;
+# the Conda environment and installed files are deliberately left untouched.
+cache_file="$build_dir/CMakeCache.txt"
+if [[ -f "$cache_file" ]]; then
+  cache_mismatches=()
+  for tool_spec in \
+    "CMAKE_C_COMPILER|$c_compiler" \
+    "CMAKE_CXX_COMPILER|$cxx_compiler" \
+    "BISON_EXECUTABLE|$bison_executable" \
+    "FLEX_EXECUTABLE|$flex_executable"; do
+    cache_variable="${tool_spec%%|*}"
+    selected_tool="${tool_spec#*|}"
+    cached_tool="$(cmake_cache_value "$cache_file" "$cache_variable")"
+    if [[ -n "$cached_tool" ]] && \
+       [[ "$(canonical_path "$cached_tool")" != "$(canonical_path "$selected_tool")" ]]; then
+      cache_mismatches+=("$cache_variable: $cached_tool -> $selected_tool")
+    fi
+  done
+
+  if (( ${#cache_mismatches[@]} )); then
+    echo "[INFO][D3D-INSTALL] resetting build cache because the selected toolchain changed:"
+    printf '  %s\n' "${cache_mismatches[@]}"
+
+    cached_source="$(cmake_cache_value "$cache_file" CMAKE_HOME_DIRECTORY)"
+    build_dir_canonical="$(canonical_path "$build_dir")"
+    source_dir_canonical="$(canonical_path "$source_dir")"
+    orfs_root_canonical="$(canonical_path "$orfs_root")"
+    env_prefix_canonical="$(canonical_path "$env_prefix")"
+    install_prefix_canonical="$(canonical_path "$install_prefix")"
+    [[ -n "$cached_source" ]] || fail "cannot validate the existing CMake build directory: $build_dir"
+    [[ "$(canonical_path "$cached_source")" == "$source_dir_canonical" ]] || \
+      fail "refusing to reset a build directory configured for another source tree: $build_dir"
+    [[ "$build_dir_canonical" != "/" && \
+       "$build_dir_canonical" != "$source_dir_canonical" && \
+       "$build_dir_canonical" != "$orfs_root_canonical" && \
+       "$build_dir_canonical" != "$env_prefix_canonical" && \
+       "$build_dir_canonical" != "$install_prefix_canonical" ]] || \
+      fail "refusing to reset unsafe build directory: $build_dir"
+    "$cmake_executable" -E remove_directory "$build_dir"
+  fi
+fi
+
 mkdir -p "$build_dir" "$install_prefix"
+tool_path="$env_prefix/bin${PATH:+:$PATH}"
 runtime_library_path="$env_prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 make_args=(
@@ -219,11 +280,12 @@ make_args=(
   "CXX_COMPILER=$cxx_compiler"
   "BISON_EXECUTABLE=$bison_executable"
   "FLEX_EXECUTABLE=$flex_executable"
-  "BUILD_ENV=env LD_LIBRARY_PATH=$runtime_library_path"
+  "BUILD_ENV=env PATH=$tool_path LD_LIBRARY_PATH=$runtime_library_path"
 )
 
 make "${make_args[@]}"
 
+PATH="$tool_path" \
 LD_LIBRARY_PATH="$runtime_library_path" \
 PYTHONNOUSERSITE=1 \
 "$python_executable" "$driver_dir/check_install.py" \

@@ -49,3 +49,14 @@ unittest/
 
 # Ignore benchmark/ because it can be too large
 benchmark/
+
+# The upstream repository tracks source files below these otherwise ignored
+# output directories.  Keep the source needed by OpenTimer's unconditional
+# CMake example and unit-test targets while continuing to ignore executables
+# and runtime data generated there.
+!example/
+!example/*/
+!example/*/*.cpp
+!unittest/
+!unittest/*.cpp
+!unittest/doctest.h

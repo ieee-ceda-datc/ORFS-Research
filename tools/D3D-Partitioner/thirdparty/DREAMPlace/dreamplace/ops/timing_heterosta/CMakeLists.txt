@@ -33,6 +33,8 @@ file(GLOB CPP_SOURCES
   src/timing_hs_io_cpp.cpp
   src/timing_hs_pybind.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/PlaceDB.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/DefWriter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/BookshelfWriter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/Node.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/Net.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../place_io/src/Region.cpp

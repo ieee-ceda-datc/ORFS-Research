@@ -33,6 +33,18 @@ flow/*.def.v
 *PORT9.dat
 *POST9.dat
 *POWV9.dat
+
+# Bundled FLUTE lookup tables required by the integrated source trees
+!tools/OpenROAD/src/stt/src/flt/etc/POST9.dat
+!tools/OpenROAD/src/stt/src/flt/etc/POWV9.dat
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/flute/lut.ICCAD2015/POST9.dat
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/flute/lut.ICCAD2015/POWV9.dat
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/NCTUgr.ICCAD2012/PORT9.dat
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/NCTUgr.ICCAD2012/POST9.dat
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/NCTUgr.ICCAD2012/POWV9.dat
+!tools/D3D-Partitioner/thirdparty/3d-placer/ntuplace_MRT/GlobalRouting/PORT9.dat
+!tools/D3D-Partitioner/thirdparty/3d-placer/ntuplace_MRT/GlobalRouting/POST9.dat
+!tools/D3D-Partitioner/thirdparty/3d-placer/ntuplace_MRT/GlobalRouting/POWV9.dat
 # RePlAce debug dir
 plot
 
@@ -73,8 +85,11 @@ flow/private
 core
 core.*
 
-# D3D Partitioner algorithm package.  The generic core-dump rule above must
-# not hide the Python source directory named partitioner/core.
+# Source paths whose names also match the generic core-dump rule above
+!tools/D3D-Partitioner/thirdparty/DREAMPlace/thirdparty/Limbo/limbo/thirdparty/lemon/lemon/core.h
+!tools/kepler-formal/thirdparty/naja/docs/snl/classes/core.rst
+!tools/kepler-formal/thirdparty/naja/thirdparty/spdlog-1.15.3/include/spdlog/fmt/bundled/core.h
+!tools/yosys-slang/third_party/fmt/include/fmt/core.h
 !tools/D3D-Partitioner/thirdparty/Differentiable-3D-Partitioner/partitioner/core/
 !tools/D3D-Partitioner/thirdparty/Differentiable-3D-Partitioner/partitioner/core/**
 
