@@ -1,0 +1,19 @@
+{
+  "dependency_revisions": {
+    "3d_placer": "a94d23eb34a474f014968172aff030b695ee0ec6",
+    "differentiable_dreamplace": "89db67655757d0f488a7c076de15d69d56865348",
+    "dreamplace": "72f683d0c7bc3a8aa5d03be627cf12c4857e3f96",
+    "dreamplace_limbo": "6c115bfb1d4dca3a92044d505ee00456aac2bd45",
+    "dreamplace_munkres_cpp": "61086fcf5b3a8ad4bda578cdc2d1dca57b548786",
+    "dreamplace_openblas": "15cb124012c74e9b1b2a180699b2f008b7b99e0c",
+    "dreamplace_opentimer": "10dfd93668c1ed2511cc24daa6b460a1683255fe",
+    "dreamplace_cub": "c3cceac115c072fb63df1836ff46d8c60d9eb304",
+    "dreamplace_pybind11": "0bd8896a4010f2d91b2340570c24fa08606ec406",
+    "hypergraph_partitioning": "82cd297965ddcc6a5295a285b9d5bd580c6e9700"
+  },
+  "d2d_revision": "b7def9d600c9e7632302b5210f88f8bb5582a20b",
+  "differentiable_3d_partitioner_revision": "2800ea0eed56052738a1a2b2846df9fd277b6b3a",
+  "mode": "fully-vendored-private-test",
+  "schema": "taiwei.d3d-partition.vendored-source",
+  "schema_version": 1
+}

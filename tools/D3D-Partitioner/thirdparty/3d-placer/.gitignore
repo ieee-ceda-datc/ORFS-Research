@@ -1,0 +1,10 @@
+run_tmp
+output
+draw
+*.o
+*.a
+*.pyc
+install
+*.so
+.DS_Store
+.vscode/*

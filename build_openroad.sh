@@ -22,6 +22,8 @@ INSTALL_PATH="$(pwd)/tools/install"
 
 YOSYS_USER_ARGS=""
 YOSYS_ARGS=""
+# TaiWei 3D-Syn passes are maintained in the research Yosys submodule.
+YOSYS_SOURCE_DIR="${YOSYS_SOURCE_DIR:-tools/yosys-research}"
 
 OPENROAD_APP_USER_ARGS=""
 OPENROAD_APP_ARGS=""
@@ -269,7 +271,7 @@ __local_build()
             ${NICE} cmake --build tools/OpenROAD/build --target install -j "${PROC}"
         fi
 
-        YOSYS_ABC_PATH=tools/yosys/abc
+        YOSYS_ABC_PATH="${YOSYS_SOURCE_DIR}/abc"
         if [[ -d "${YOSYS_ABC_PATH}/.git" ]]; then
             # update indexes to make sure git diff-index uses correct data
             git --work-tree=${YOSYS_ABC_PATH} --git-dir=${YOSYS_ABC_PATH}/.git update-index --refresh
@@ -285,7 +287,7 @@ __local_build()
         fi
 
         echo "[INFO FLW-0017] Compiling Yosys."
-        eval ${NICE} make install -C tools/yosys -j "${PROC}" ${YOSYS_ARGS}
+        eval ${NICE} make install -C "${YOSYS_SOURCE_DIR}" -j "${PROC}" ${YOSYS_ARGS}
 
         echo "[INFO FLW-0030] Compiling yosys-slang."
         # CMAKE_FLAGS added to work around yosys-slang#141 (unable to build outside of git checkout)
@@ -381,7 +383,7 @@ __cleanup()
         fi
         echo "[INFO FLW-0026] Cleaning up previous binaries and build files."
         git clean ${CLEAN_CMD} tools
-        YOSYS_ABC_PATH="tools/yosys/abc"
+        YOSYS_ABC_PATH="${YOSYS_SOURCE_DIR}/abc"
         if [[ -d "${YOSYS_ABC_PATH}" ]]; then
                 echo "Entering '${YOSYS_ABC_PATH}'"
                 git --work-tree=${YOSYS_ABC_PATH} --git-dir=${YOSYS_ABC_PATH}/.git clean ${CLEAN_CMD}

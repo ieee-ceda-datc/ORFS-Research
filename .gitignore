@@ -73,6 +73,11 @@ flow/private
 core
 core.*
 
+# D3D Partitioner algorithm package.  The generic core-dump rule above must
+# not hide the Python source directory named partitioner/core.
+!tools/D3D-Partitioner/thirdparty/Differentiable-3D-Partitioner/partitioner/core/
+!tools/D3D-Partitioner/thirdparty/Differentiable-3D-Partitioner/partitioner/core/**
+
 *~
 
 # Python bytecode
